@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, effect, inject, input, output } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { CATEGORY_LABELS, EventCategory, EventStatus, TrailRoute, TrailRoutePayload } from '../../../../core/models/trail-route.model';
+import { CATEGORY_LABELS, EventCategory, EventStatus, Courses, CoursesPayload } from '../../../../core/models/courses.model';
 import { formatDateTimeLocal } from '../../../../shared/utils/format.util';
 @Component({selector:'app-route-form',standalone:true,changeDetection:ChangeDetectionStrategy.OnPush,imports:[ReactiveFormsModule],template:`
 <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-8 rounded-2xl border border-gray-200 bg-white p-6">
@@ -15,11 +15,11 @@ import { formatDateTimeLocal } from '../../../../shared/utils/format.util';
 @if(route()){<div><label class="form-label" for="status">Estado del evento</label><select id="status" class="form-input" formControlName="status">@for(option of statuses;track option.value){<option [value]="option.value">{{option.label}}</option>}</select></div>}
 </div></section><div class="flex justify-end gap-3"><button type="button" class="button-secondary" (click)="cancelled.emit()">Cancelar</button><button type="submit" class="button-primary">{{route()?'Guardar cambios':'Crear evento'}}</button></div></form>`})
 export class RouteForm {
- private readonly fb=inject(FormBuilder); route=input<TrailRoute|null>(null); formSubmit=output<TrailRoutePayload>(); cancelled=output<void>();
+ private readonly fb=inject(FormBuilder); route=input<Courses|null>(null); formSubmit=output<CoursesPayload>(); cancelled=output<void>();
  protected readonly categories=(Object.entries(CATEGORY_LABELS) as [EventCategory,string][]).map(([value,label])=>({value,label}));
  protected readonly statuses:Array<{value:EventStatus;label:string}>=[{value:'draft',label:'Borrador'},{value:'published',label:'Publicado'},{value:'cancelled',label:'Cancelado'},{value:'completed',label:'Completado'}];
  protected readonly form=this.fb.nonNullable.group({name:['',[Validators.required,Validators.minLength(2),Validators.maxLength(120)]],description:['',[Validators.required,Validators.minLength(5),Validators.maxLength(2000)]],date:['',[Validators.required]],price:[0,[Validators.required,Validators.min(0)]],category:['cocina' as EventCategory,[Validators.required]],capacity:[1,[Validators.required,Validators.min(1)]],slug:[''],status:['published' as EventStatus,[Validators.required]]});
  constructor(){effect(()=>{const e=this.route();if(e)this.form.patchValue({name:e.name,description:e.description,date:formatDateTimeLocal(e.date),price:e.price,category:e.category,capacity:e.capacity,slug:e.slug,status:e.status});});}
  protected errorFor(name:string):string|null{const c=this.form.get(name);if(!c||!c.touched||c.valid)return null;if(c.errors?.['required'])return 'Este campo es obligatorio.';if(c.errors?.['minlength'])return 'Introduce más caracteres.';if(c.errors?.['maxlength'])return 'Has superado la longitud máxima.';if(c.errors?.['min'])return 'El valor debe ser igual o superior al mínimo permitido.';return 'Revisa este campo.';}
- protected submit():void{this.form.markAllAsTouched();if(this.form.invalid)return;const v=this.form.getRawValue();const payload:TrailRoutePayload={name:v.name.trim(),description:v.description.trim(),date:new Date(v.date).toISOString(),price:Number(v.price),category:v.category,capacity:Number(v.capacity)};if(v.slug.trim())payload.slug=v.slug.trim();if(this.route())payload.status=v.status;this.formSubmit.emit(payload);}
+ protected submit():void{this.form.markAllAsTouched();if(this.form.invalid)return;const v=this.form.getRawValue();const payload:CoursesPayload={name:v.name.trim(),description:v.description.trim(),date:new Date(v.date).toISOString(),price:Number(v.price),category:v.category,capacity:Number(v.capacity)};if(v.slug.trim())payload.slug=v.slug.trim();if(this.route())payload.status=v.status;this.formSubmit.emit(payload);}
 }

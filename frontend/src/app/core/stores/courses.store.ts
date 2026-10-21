@@ -1,12 +1,12 @@
 import { Injectable, computed, effect, signal } from '@angular/core';
-import { TrailRoute } from '../models/trail-route.model';
+import { Courses } from '../models/courses.model';
 
 @Injectable({ providedIn: 'root' })
-export class TrailRoutesStore {
+export class CoursesStore {
   private readonly _loading = signal(false);
   private readonly _error = signal<string | null>(null);
-  private readonly _routes = signal<TrailRoute[]>([]);
-  private readonly _selectedRoute = signal<TrailRoute | null>(null);
+  private readonly _routes = signal<Courses[]>([]);
+  private readonly _selectedRoute = signal<Courses | null>(null);
   private readonly _loaded = signal(false);
   private readonly _stale = signal(false);
 
@@ -42,17 +42,17 @@ export class TrailRoutesStore {
     this._error.set(value);
   }
 
-  setRoutes(list: TrailRoute[]): void {
+  setRoutes(list: Courses[]): void {
     this._routes.set(list);
     this._loaded.set(true);
     this._stale.set(false);
   }
 
-  setSelectedRoute(route: TrailRoute | null): void {
+  setSelectedRoute(route: Courses | null): void {
     this._selectedRoute.set(route);
   }
 
-  patchRoute(updated: TrailRoute): void {
+  patchRoute(updated: Courses): void {
     this._routes.update((list) =>
       list.map((route) => (route._id === updated._id ? updated : route))
     );

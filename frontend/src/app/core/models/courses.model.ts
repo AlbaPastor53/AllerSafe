@@ -1,11 +1,11 @@
 export type EventCategory = 'alergias' | 'cocina' | 'reposteria' | 'nutricion' | 'seguridad';
 export type EventStatus = 'draft' | 'published' | 'cancelled' | 'completed';
-export interface TrailRoute {
+export interface Courses {
   _id: string; name: string; slug: string; description: string; date: string;
   price: number; category: EventCategory; capacity: number; isActive: boolean;
   status: EventStatus; created_at?: string; updated_at?: string; deleted_at?: string | null;
 }
-export interface TrailRoutePayload {
+export interface CoursesPayload {
   name: string; description: string; date: string; price: number;
   category: EventCategory; capacity: number; slug?: string; isActive?: boolean; status?: EventStatus;
 }

@@ -28,7 +28,7 @@ salen desde el navegador hacia `http://localhost:3000` (CORS habilitado en la AP
 npm run build
 ```
 
-Los artefactos quedan en `dist/trail_running_frontend_v3/`.
+Los artefactos quedan en `dist/AllerSafe/`.
 
 ## Scripts
 
@@ -59,7 +59,7 @@ src/
     └── shared/              navbar, loader, skeleton, empty/error states, utils (validators, format, error.util)
 ```
 
-Flujo de datos: página → store → `TrailRouteService` → `ApiService` → `HttpClient`; los componentes
+Flujo de datos: página → store → `CoursesService` → `ApiService` → `HttpClient`; los componentes
 hijos solo reciben inputs/emiten outputs.
 
 ## Variables de entorno

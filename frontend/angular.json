@@ -7,7 +7,7 @@
   },
   "newProjectRoot": "projects",
   "projects": {
-    "trail_running_frontend_v3": {
+    "AllerSafe": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -17,7 +17,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/trail_running_frontend_v3",
+            "outputPath": "dist/AllerSafe",
             "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": [
@@ -72,10 +72,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "trail_running_frontend_v3:build:production"
+              "buildTarget": "AllerSafe:build:production"
             },
             "development": {
-              "buildTarget": "trail_running_frontend_v3:build:development"
+              "buildTarget": "AllerSafe:build:development"
             }
           },
           "defaultConfiguration": "development"
