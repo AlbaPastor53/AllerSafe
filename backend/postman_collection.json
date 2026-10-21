@@ -1,0 +1,105 @@
+{
+  "info": {
+    "name": "AllerSafe API",
+    "_postman_id": "allersafe-api-collection",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/health"
+      }
+    },
+    {
+      "name": "List events",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/events"
+      }
+    },
+    {
+      "name": "List including deleted",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/events?includeDeleted=true"
+      }
+    },
+    {
+      "name": "Get by slug",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/events/slug/cocina-segura-para-alergias"
+      }
+    },
+    {
+      "name": "Create event",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"name\": \"Taller de cocina sin frutos secos\", \"description\": \"Recetas seguras y técnicas para evitar contaminación cruzada.\", \"date\": \"2026-12-20T17:00:00.000Z\", \"price\": 22, \"category\": \"alergias\", \"capacity\": 15}"
+        },
+        "url": "{{baseUrl}}/events"
+      }
+    },
+    {
+      "name": "Get by id",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/events/{{eventId}}"
+      }
+    },
+    {
+      "name": "Update event",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"price\": 24, \"capacity\": 18}"
+        },
+        "url": "{{baseUrl}}/events/{{eventId}}"
+      }
+    },
+    {
+      "name": "Activate",
+      "request": {
+        "method": "PATCH",
+        "url": "{{baseUrl}}/events/{{eventId}}/activate"
+      }
+    },
+    {
+      "name": "Deactivate",
+      "request": {
+        "method": "PATCH",
+        "url": "{{baseUrl}}/events/{{eventId}}/deactivate"
+      }
+    },
+    {
+      "name": "Soft delete",
+      "request": {
+        "method": "DELETE",
+        "url": "{{baseUrl}}/events/{{eventId}}"
+      }
+    }
+  ]
+}
