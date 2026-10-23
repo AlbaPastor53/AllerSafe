@@ -44,7 +44,7 @@ Inserta 5 clases culinarias de prueba.
 - `GET /api/events/:id`
 - `GET /api/events/slug/:slug`
 - `POST /api/events`
-- `PUT /api/events/:id`
+- `PATCH /api/events/:id`
 - `PATCH /api/events/:id/activate`
 - `PATCH /api/events/:id/deactivate`
 - `DELETE /api/events/:id` (soft delete)

@@ -61,7 +61,7 @@ El `slug` es opcional: si no se envía, se genera a partir de `name`.
 
 ## 7. Actualizar evento
 
-**PUT** `/events/:id`
+**PATCH** `/events/:id`
 
 Body de ejemplo:
 
