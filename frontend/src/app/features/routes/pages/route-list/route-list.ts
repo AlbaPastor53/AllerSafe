@@ -46,11 +46,11 @@ import {
             <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
 
                 <div>
-                    <h1 class="text-2xl font-semibold text-gray-900">
+                    <h1 class="text-2xl font-semibold tracking-tight text-[#F5F0E6]">
                         Eventos AllerSafe
                     </h1>
 
-                    <p class="mt-0.5 text-sm text-gray-500">
+                    <p class="mt-1 text-sm text-[#A8B0A5]">
                         {{filteredEvents().length}} eventos encontrados
                     </p>
                 </div>
@@ -87,7 +87,7 @@ import {
                 </app-empty-state>
 
             } @else {
-                <div class="divide-y divide-gray-100 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+                <div class="divide-y divide-[#394239] overflow-hidden rounded-2xl border border-[#394239] bg-[#202720] shadow-xl shadow-black/10">
 
                     @for(event of filteredEvents(); track event._id) {
                         <app-route-row

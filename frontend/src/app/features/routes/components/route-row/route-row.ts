@@ -9,14 +9,16 @@ import { formatDate, formatPrice } from '../../../../shared/utils/format.util';
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [RouterLink],
     template: `
-        <article class="flex flex-col gap-4 p-5 transition hover:bg-gray-50 sm:flex-row sm:items-center" [class.opacity-60]="!route().isActive">
+        <article
+  class="flex flex-col gap-4 p-5 transition-colors hover:bg-[#29332A] sm:flex-row sm:items-center"
+ [class.opacity-60]="!route().isActive">
             <div class="flex min-w-0 flex-1 items-start gap-4">
-                <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+                <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#8C7548]/40 bg-[#3B3425] text-[#D6B66E]">
                     <span class="text-lg font-bold">{{ route().name.slice(0,1).toUpperCase() }}</span>
                 </div>
 
                 <div class="min-w-0 flex-1">
-                    <a [routerLink]="['/routes',route()._id]" class="font-semibold text-gray-900 hover:underline">{{ route().name }}</a>
+                    <a [routerLink]="['/routes',route()._id]" class="font-semibold text-[#F5F0E6] transition-colors hover:text-[#D6B66E] hover:underline">{{ route().name }}</a>
                     <p class="mt-1 line-clamp-2 text-sm text-gray-500">{{ route().description }}</p>
 
                     <div class="mt-2 flex flex-wrap gap-2 text-xs">
