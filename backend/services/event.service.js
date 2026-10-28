@@ -55,8 +55,8 @@ class EventService {
     return eventRepository.create({
       ...data,
       slug,
-      isActive: data.isActive ?? true,
-      status: data.status ?? "published"
+      isActive: data.isActive ?? false,
+      status: data.status ?? "draft"
     });
   }
 

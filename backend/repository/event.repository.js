@@ -41,7 +41,7 @@ class EventRepository {
   async softDelete(id) {
     return Event.findOneAndUpdate(
       { _id: id, deleted_at: null },
-      { deleted_at: new Date(), isActive: false, status: "cancelled" },
+      { deleted_at: new Date(), isActive: false, status: "draft" },
       { new: true, runValidators: true }
     );
   }

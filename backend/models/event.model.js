@@ -23,35 +23,68 @@ const eventSchema = new mongoose.Schema(
       trim: true,
       maxlength: 2000
     },
+    host: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true
+    },
+    categories: {
+      type: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Category",
+          required: true
+        }
+      ],
+      validate: {
+        validator: function (arr) {
+          return Array.isArray(arr) && arr.length > 0;
+        },
+        message: "Debe asignar al menos una categoría."
+      },
+      required: true
+    },
+    location: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Location",
+      required: true,
+      index: true
+    },
+    classNumber: {
+      type: Number,
+      required: true,
+      min: 1
+    },
     date: {
       type: Date,
       required: true
+    },
+    time: {
+      type: String,
+      required: true,
+      trim: true,
+      match: [/^([01]\d|2[0-3]):([0-5]\d)$/, "El campo time debe tener formato HH:mm"]
     },
     price: {
       type: Number,
       required: true,
       min: 0
     },
-    category: {
-      type: String,
-      required: true,
-      trim: true,
-      enum: ["alergias", "cocina", "reposteria", "nutricion", "seguridad"]
-    },
     capacity: {
       type: Number,
       required: true,
       min: 1
     },
-    isActive: {
-      type: Boolean,
-      default: true,
-      index: true
-    },
     status: {
       type: String,
-      enum: ["draft", "published", "cancelled", "completed"],
-      default: "published",
+      enum: ["draft", "published"],
+      default: "draft",
+      index: true
+    },
+    isActive: {
+      type: Boolean,
+      default: false,
       index: true
     },
     created_at: {
