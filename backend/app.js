@@ -7,6 +7,9 @@ const eventRoutes = require("./routes/event.routes");
 const userRoutes = require("./routes/user.routes");
 const categoryRoutes = require("./routes/category.routes");
 const locationRoutes = require("./routes/location.routes");
+const eventImageRoutes = require("./routes/eventImage.routes");
+const hostRoutes = require("./routes/host.routes");
+const departureRoutes = require("./routes/departure.routes");
 const errorHandler = require("./middlewares/errorHandler");
 
 const app = express();
@@ -28,6 +31,9 @@ app.use("/api/events", eventRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/locations", locationRoutes);
+app.use("/api/event-images", eventImageRoutes);
+app.use("/api/hosts", hostRoutes);
+app.use("/api/departures", departureRoutes);
 
 app.use((req, res) => {
   res.status(404).json({

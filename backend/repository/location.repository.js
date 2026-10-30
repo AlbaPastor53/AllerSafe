@@ -11,6 +11,13 @@ class LocationRepository {
     return Location.findOne(filter);
   }
 
+  async findBySlug(slug, { includeDeleted = false } = {}) {
+    const filter = includeDeleted
+      ? { slug: slug.toLowerCase() }
+      : { slug: slug.toLowerCase(), deleted_at: null };
+    return Location.findOne(filter);
+  }
+
   async create(data) {
     return Location.create(data);
   }
@@ -23,18 +30,10 @@ class LocationRepository {
     );
   }
 
-  async setActive(id, isActive) {
-    return Location.findOneAndUpdate(
-      { _id: id, deleted_at: null },
-      { isActive },
-      { new: true, runValidators: true }
-    );
-  }
-
   async softDelete(id) {
     return Location.findOneAndUpdate(
       { _id: id, deleted_at: null },
-      { deleted_at: new Date(), isActive: false },
+      { deleted_at: new Date(), is_active: false },
       { new: true, runValidators: true }
     );
   }

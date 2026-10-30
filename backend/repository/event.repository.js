@@ -30,18 +30,10 @@ class EventRepository {
     );
   }
 
-  async setActive(id, isActive) {
-    return Event.findOneAndUpdate(
-      { _id: id, deleted_at: null },
-      { isActive },
-      { new: true, runValidators: true }
-    );
-  }
-
   async softDelete(id) {
     return Event.findOneAndUpdate(
       { _id: id, deleted_at: null },
-      { deleted_at: new Date(), isActive: false, status: "draft" },
+      { deleted_at: new Date(), is_active: false },
       { new: true, runValidators: true }
     );
   }

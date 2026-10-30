@@ -37,28 +37,10 @@ class UserController {
     }
   }
 
-  async activate(req, res, next) {
-    try {
-      const user = await userService.activate(req.params.id);
-      res.json({ success: true, data: user });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  async deactivate(req, res, next) {
-    try {
-      const user = await userService.deactivate(req.params.id);
-      res.json({ success: true, data: user });
-    } catch (error) {
-      next(error);
-    }
-  }
-
   async softDelete(req, res, next) {
     try {
-      const user = await userService.softDelete(req.params.id);
-      res.json({ success: true, data: user });
+      await userService.softDelete(req.params.id);
+      res.status(204).end();
     } catch (error) {
       next(error);
     }

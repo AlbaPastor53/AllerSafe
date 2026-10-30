@@ -25,7 +25,7 @@ const eventSchema = new mongoose.Schema(
     },
     host: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "Host",
       required: true,
       index: true
     },
@@ -82,9 +82,9 @@ const eventSchema = new mongoose.Schema(
       default: "draft",
       index: true
     },
-    isActive: {
+    is_active: {
       type: Boolean,
-      default: false,
+      default: true,
       index: true
     },
     created_at: {
@@ -115,5 +115,16 @@ eventSchema.pre(["findOneAndUpdate", "updateOne", "updateMany"], function (next)
   this.set({ updated_at: new Date() });
   next();
 });
+
+eventSchema.virtual("images", {
+  ref: "EventImage",
+  localField: "_id",
+  foreignField: "event",
+  match: { deleted_at: null },
+  options: { sort: { position: 1, created_at: 1 } }
+});
+
+eventSchema.set("toJSON", { virtuals: true });
+eventSchema.set("toObject", { virtuals: true });
 
 module.exports = mongoose.model("Event", eventSchema);

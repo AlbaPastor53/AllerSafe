@@ -46,28 +46,10 @@ class CategoryController {
     }
   }
 
-  async activate(req, res, next) {
-    try {
-      const category = await categoryService.activate(req.params.id);
-      res.json({ success: true, data: category });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  async deactivate(req, res, next) {
-    try {
-      const category = await categoryService.deactivate(req.params.id);
-      res.json({ success: true, data: category });
-    } catch (error) {
-      next(error);
-    }
-  }
-
   async softDelete(req, res, next) {
     try {
-      const category = await categoryService.softDelete(req.params.id);
-      res.json({ success: true, data: category });
+      await categoryService.softDelete(req.params.id);
+      res.status(204).end();
     } catch (error) {
       next(error);
     }

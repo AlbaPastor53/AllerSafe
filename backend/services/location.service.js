@@ -1,5 +1,6 @@
 const locationRepository = require("../repository/location.repository");
 const AppError = require("./utils/appError");
+const { buildUniqueSlug } = require("./utils/slug");
 
 class LocationService {
   async getAll(options = {}) {
@@ -20,32 +21,54 @@ class LocationService {
     }
   }
 
+  async getBySlug(slug) {
+    const location = await locationRepository.findBySlug(slug);
+    if (!location) {
+      throw new AppError("Ubicación no encontrada para ese slug.", 404, "LOCATION_NOT_FOUND");
+    }
+    return location;
+  }
+
   async create(data) {
-    return locationRepository.create(data);
+    const slug = await buildUniqueSlug(locationRepository, data.slug || data.name);
+    if (!slug) {
+      throw new AppError("No se puede generar un slug válido.", 400, "INVALID_SLUG");
+    }
+
+    return locationRepository.create({
+      ...data,
+      slug,
+      status: data.status ?? "active",
+      is_active: data.is_active ?? true
+    });
   }
 
   async update(id, data) {
-    await this.getById(id);
-    return locationRepository.updateById(id, data);
-  }
+    const current = await this.getById(id);
+    const updateData = { ...data };
 
-  async activate(id) {
-    await this.getById(id);
-    return locationRepository.setActive(id, true);
-  }
+    if (data.name || data.slug) {
+      updateData.slug = await buildUniqueSlug(
+        locationRepository,
+        data.slug || data.name,
+        current._id
+      );
+    }
 
-  async deactivate(id) {
-    await this.getById(id);
-    return locationRepository.setActive(id, false);
+    return locationRepository.updateById(id, updateData);
   }
 
   async softDelete(id) {
-    await this.getById(id);
-    const deleted = await locationRepository.softDelete(id);
-    if (!deleted) {
-      throw new AppError("No se pudo eliminar ubicación.", 500, "DELETE_FAILED");
+    const location = await locationRepository.findById(id, { includeDeleted: true });
+
+    if (!location) {
+      throw new AppError("Ubicación no encontrada.", 404, "LOCATION_NOT_FOUND");
     }
-    return deleted;
+
+    if (location.deleted_at) return false;
+
+    await locationRepository.softDelete(id);
+    return true;
   }
 }
 

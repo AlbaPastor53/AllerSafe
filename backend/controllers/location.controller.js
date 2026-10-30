@@ -19,6 +19,15 @@ class LocationController {
     }
   }
 
+  async getBySlug(req, res, next) {
+    try {
+      const location = await locationService.getBySlug(req.params.slug);
+      res.json({ success: true, data: location });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async create(req, res, next) {
     try {
       const location = await locationService.create(req.body);
@@ -37,28 +46,10 @@ class LocationController {
     }
   }
 
-  async activate(req, res, next) {
-    try {
-      const location = await locationService.activate(req.params.id);
-      res.json({ success: true, data: location });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  async deactivate(req, res, next) {
-    try {
-      const location = await locationService.deactivate(req.params.id);
-      res.json({ success: true, data: location });
-    } catch (error) {
-      next(error);
-    }
-  }
-
   async softDelete(req, res, next) {
     try {
-      const location = await locationService.softDelete(req.params.id);
-      res.json({ success: true, data: location });
+      await locationService.softDelete(req.params.id);
+      res.status(204).end();
     } catch (error) {
       next(error);
     }

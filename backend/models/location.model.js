@@ -15,7 +15,21 @@ const locationSchema = new mongoose.Schema(
       trim: true,
       maxlength: 255
     },
-    isActive: {
+    slug: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+      index: true
+    },
+    status: {
+      type: String,
+      enum: ["active", "inactive"],
+      default: "active",
+      index: true
+    },
+    is_active: {
       type: Boolean,
       default: true,
       index: true

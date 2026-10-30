@@ -17,13 +17,38 @@ const userSchema = new mongoose.Schema(
       trim: true,
       index: true
     },
+    password_hash: {
+      type: String,
+      required: false,
+      select: false
+    },
     role: {
       type: String,
-      enum: ["user", "teacher", "admin"],
-      default: "user",
+      enum: ["Admin", "Client"],
+      default: "Client",
       index: true
     },
-    isActive: {
+    host_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Host",
+      default: null,
+      index: true
+    },
+    slug: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+      index: true
+    },
+    status: {
+      type: String,
+      enum: ["active", "inactive", "blocked"],
+      default: "active",
+      index: true
+    },
+    is_active: {
       type: Boolean,
       default: true,
       index: true
@@ -55,6 +80,13 @@ userSchema.pre("save", function (next) {
 userSchema.pre(["findOneAndUpdate", "updateOne", "updateMany"], function (next) {
   this.set({ updated_at: new Date() });
   next();
+});
+
+userSchema.set("toJSON", {
+  transform: (_doc, ret) => {
+    delete ret.password_hash;
+    return ret;
+  }
 });
 
 module.exports = mongoose.model("User", userSchema);

@@ -10,10 +10,25 @@ function validate(schema, source = "body") {
         message: issue.message
       }));
 
-      return next(new AppError("Datos de entrada no válidos.", 400, "VALIDATION_ERROR"));
+      const error = new AppError("Datos de entrada no válidos.", 400, "VALIDATION_ERROR");
+      error.details = details;
+
+      return next(error);
     }
 
-    req[source] = result.data;
+    if (source === "query") {
+      // Express 5 defines req.query as a getter on the prototype, so a plain
+      // assignment is ignored. Shadow it with the validated object instead.
+      Object.defineProperty(req, "query", {
+        value: result.data,
+        writable: true,
+        enumerable: true,
+        configurable: true
+      });
+    } else {
+      req[source] = result.data;
+    }
+
     next();
   };
 }

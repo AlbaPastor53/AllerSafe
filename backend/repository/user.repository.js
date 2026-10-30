@@ -18,6 +18,13 @@ class UserRepository {
     return User.findOne(filter);
   }
 
+  async findBySlug(slug, { includeDeleted = false } = {}) {
+    const filter = includeDeleted
+      ? { slug: slug.toLowerCase() }
+      : { slug: slug.toLowerCase(), deleted_at: null };
+    return User.findOne(filter);
+  }
+
   async create(data) {
     return User.create(data);
   }
@@ -30,10 +37,10 @@ class UserRepository {
     );
   }
 
-  async setActive(id, isActive) {
+  async setHostId(id, hostId) {
     return User.findOneAndUpdate(
       { _id: id, deleted_at: null },
-      { isActive },
+      { host_id: hostId },
       { new: true, runValidators: true }
     );
   }
@@ -41,7 +48,7 @@ class UserRepository {
   async softDelete(id) {
     return User.findOneAndUpdate(
       { _id: id, deleted_at: null },
-      { deleted_at: new Date(), isActive: false },
+      { deleted_at: new Date(), is_active: false },
       { new: true, runValidators: true }
     );
   }

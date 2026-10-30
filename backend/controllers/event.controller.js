@@ -46,18 +46,36 @@ class EventController {
     }
   }
 
-  async activate(req, res, next) {
+  async updateHost(req, res, next) {
     try {
-      const event = await eventService.activate(req.params.id);
+      const event = await eventService.updateHost(req.params.id, req.body.host);
       res.json({ success: true, data: event });
     } catch (error) {
       next(error);
     }
   }
 
-  async deactivate(req, res, next) {
+  async updateLocation(req, res, next) {
     try {
-      const event = await eventService.deactivate(req.params.id);
+      const event = await eventService.updateLocation(req.params.id, req.body.location);
+      res.json({ success: true, data: event });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async addCategories(req, res, next) {
+    try {
+      const event = await eventService.addCategories(req.params.id, req.body.categories);
+      res.json({ success: true, data: event });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async removeCategory(req, res, next) {
+    try {
+      const event = await eventService.removeCategory(req.params.id, req.params.categoryId);
       res.json({ success: true, data: event });
     } catch (error) {
       next(error);
@@ -66,8 +84,8 @@ class EventController {
 
   async softDelete(req, res, next) {
     try {
-      const event = await eventService.softDelete(req.params.id);
-      res.json({ success: true, data: event });
+      await eventService.softDelete(req.params.id);
+      res.status(204).end();
     } catch (error) {
       next(error);
     }

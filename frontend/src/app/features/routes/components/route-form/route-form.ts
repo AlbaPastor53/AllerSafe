@@ -1,6 +1,24 @@
-import {ChangeDetectionStrategy,Component,effect,inject,input,output} from '@angular/core';
-import {FormBuilder, ReactiveFormsModule,Validators} from '@angular/forms';
-import {CATEGORY_LABELS,EventCategory,EventStatus,Courses,CoursesPayload} from '../../../../core/models/courses.model';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    effect,
+    inject,
+    input,
+    output,
+    signal
+} from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { firstValueFrom } from 'rxjs';
+import {
+    Category,
+    Courses,
+    CoursesPayload,
+    EventStatus,
+    Host,
+    Location,
+    refId
+} from '../../../../core/models/courses.model';
+import { CatalogService } from '../../../../core/services/catalog.service';
 import { formatDateTimeLocal } from '../../../../shared/utils/format.util';
 
 @Component({
@@ -16,6 +34,12 @@ import { formatDateTimeLocal } from '../../../../shared/utils/format.util';
             (ngSubmit)="submit()"
             class="space-y-8 rounded-2xl border border-gray-200 bg-white p-6"
         >
+            @if (catalogError()) {
+                <p class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+                    {{ catalogError() }}
+                </p>
+            }
+
             <section class="space-y-4">
                 <h2 class="text-base font-semibold text-gray-900">
                     Datos del evento
@@ -64,9 +88,32 @@ import { formatDateTimeLocal } from '../../../../shared/utils/format.util';
                         }
                     </div>
 
+                    <div class="sm:col-span-2">
+                        <label class="form-label" for="slug">
+                            Slug (opcional)
+                        </label>
+
+                        <input
+                            id="slug"
+                            class="form-input"
+                            formControlName="slug"
+                            placeholder="Se genera automáticamente si se deja vacío"
+                        />
+                    </div>
+
+                </div>
+            </section>
+
+            <section class="space-y-4">
+                <h2 class="text-base font-semibold text-gray-900">
+                    Programación
+                </h2>
+
+                <div class="grid gap-4 sm:grid-cols-2">
+
                     <div>
                         <label class="form-label" for="date">
-                            Fecha y hora *
+                            Fecha y hora de inicio *
                         </label>
 
                         <input
@@ -84,21 +131,43 @@ import { formatDateTimeLocal } from '../../../../shared/utils/format.util';
                     </div>
 
                     <div>
-                        <label class="form-label" for="category">
-                            Categoría *
+                        <label class="form-label" for="time">
+                            Hora (HH:mm) *
                         </label>
 
-                        <select
-                            id="category"
+                        <input
+                            id="time"
+                            type="time"
                             class="form-input"
-                            formControlName="category"
-                        >
-                            @for (option of categories; track option.value) {
-                                <option [value]="option.value">
-                                    {{ option.label }}
-                                </option>
-                            }
-                        </select>
+                            formControlName="time"
+                        />
+
+                        @if (errorFor('time')) {
+                            <p class="form-error">
+                                {{ errorFor('time') }}
+                            </p>
+                        }
+                    </div>
+
+                    <div>
+                        <label class="form-label" for="classNumber">
+                            Número de clase *
+                        </label>
+
+                        <input
+                            id="classNumber"
+                            type="number"
+                            min="1"
+                            step="1"
+                            class="form-input"
+                            formControlName="classNumber"
+                        />
+
+                        @if (errorFor('classNumber')) {
+                            <p class="form-error">
+                                {{ errorFor('classNumber') }}
+                            </p>
+                        }
                     </div>
 
                     <div>
@@ -143,38 +212,111 @@ import { formatDateTimeLocal } from '../../../../shared/utils/format.util';
                         }
                     </div>
 
-                    <div class="sm:col-span-2">
-                        <label class="form-label" for="slug">
-                            Slug (opcional)
+                    <div>
+                        <label class="form-label" for="status">
+                            Estado del evento
                         </label>
 
-                        <input
-                            id="slug"
+                        <select
+                            id="status"
                             class="form-input"
-                            formControlName="slug"
-                            placeholder="Se genera automáticamente si se deja vacío"
-                        />
+                            formControlName="status"
+                        >
+                            @for (option of statuses; track option.value) {
+                                <option [value]="option.value">
+                                    {{ option.label }}
+                                </option>
+                            }
+                        </select>
                     </div>
 
-                    @if (route()) {
-                        <div>
-                            <label class="form-label" for="status">
-                                Estado del evento
-                            </label>
+                </div>
+            </section>
 
-                            <select
-                                id="status"
-                                class="form-input"
-                                formControlName="status"
-                            >
-                                @for (option of statuses; track option.value) {
-                                    <option [value]="option.value">
-                                        {{ option.label }}
-                                    </option>
-                                }
-                            </select>
-                        </div>
-                    }
+            <section class="space-y-4">
+                <h2 class="text-base font-semibold text-gray-900">
+                    Relaciones
+                </h2>
+
+                <div class="grid gap-4 sm:grid-cols-2">
+
+                    <div>
+                        <label class="form-label" for="host">
+                            Anfitrión *
+                        </label>
+
+                        <select
+                            id="host"
+                            class="form-input"
+                            formControlName="host"
+                        >
+                            <option value="">Selecciona un anfitrión</option>
+
+                            @for (host of hosts(); track host._id) {
+                                <option [value]="host._id">
+                                    {{ hostLabel(host) }}
+                                </option>
+                            }
+                        </select>
+
+                        @if (errorFor('host')) {
+                            <p class="form-error">
+                                {{ errorFor('host') }}
+                            </p>
+                        }
+                    </div>
+
+                    <div>
+                        <label class="form-label" for="location">
+                            Ubicación *
+                        </label>
+
+                        <select
+                            id="location"
+                            class="form-input"
+                            formControlName="location"
+                        >
+                            <option value="">Selecciona una ubicación</option>
+
+                            @for (location of locations(); track location._id) {
+                                <option [value]="location._id">
+                                    {{ location.name }} — {{ location.address }}
+                                </option>
+                            }
+                        </select>
+
+                        @if (errorFor('location')) {
+                            <p class="form-error">
+                                {{ errorFor('location') }}
+                            </p>
+                        }
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label class="form-label" for="categories">
+                            Categorías * (mantén pulsado Ctrl para seleccionar varias)
+                        </label>
+
+                        <select
+                            id="categories"
+                            class="form-input"
+                            formControlName="categories"
+                            multiple
+                            size="5"
+                        >
+                            @for (category of categories(); track category._id) {
+                                <option [value]="category._id">
+                                    {{ category.name }}
+                                </option>
+                            }
+                        </select>
+
+                        @if (errorFor('categories')) {
+                            <p class="form-error">
+                                {{ errorFor('categories') }}
+                            </p>
+                        }
+                    </div>
 
                 </div>
             </section>
@@ -204,6 +346,8 @@ export class RouteForm {
 
     private readonly fb = inject(FormBuilder);
 
+    private readonly catalog = inject(CatalogService);
+
 
     route = input<Courses | null>(null);
 
@@ -212,12 +356,13 @@ export class RouteForm {
     cancelled = output<void>();
 
 
-    protected readonly categories = (
-        Object.entries(CATEGORY_LABELS) as [EventCategory, string][]
-    ).map(([value, label]) => ({
-        value,
-        label
-    }));
+    protected readonly hosts = signal<Host[]>([]);
+
+    protected readonly categories = signal<Category[]>([]);
+
+    protected readonly locations = signal<Location[]>([]);
+
+    protected readonly catalogError = signal<string | null>(null);
 
 
     protected readonly statuses: Array<{
@@ -231,14 +376,6 @@ export class RouteForm {
         {
             value: 'published',
             label: 'Publicado'
-        },
-        {
-            value: 'cancelled',
-            label: 'Cancelado'
-        },
-        {
-            value: 'completed',
-            label: 'Completado'
         }
     ];
 
@@ -266,17 +403,25 @@ export class RouteForm {
                 Validators.required
             ]
         ],
+        time: [
+            '',
+            [
+                Validators.required,
+                Validators.pattern(/^([01]\d|2[0-3]):[0-5]\d$/)
+            ]
+        ],
+        classNumber: [
+            1,
+            [
+                Validators.required,
+                Validators.min(1)
+            ]
+        ],
         price: [
             0,
             [
                 Validators.required,
                 Validators.min(0)
-            ]
-        ],
-        category: [
-            'cocina' as EventCategory,
-            [
-                Validators.required
             ]
         ],
         capacity: [
@@ -288,7 +433,25 @@ export class RouteForm {
         ],
         slug: [''],
         status: [
-            'published' as EventStatus,
+            'draft' as EventStatus,
+            [
+                Validators.required
+            ]
+        ],
+        host: [
+            '',
+            [
+                Validators.required
+            ]
+        ],
+        categories: this.fb.nonNullable.control<string[]>(
+            [],
+            [
+                Validators.required
+            ]
+        ),
+        location: [
+            '',
             [
                 Validators.required
             ]
@@ -297,6 +460,8 @@ export class RouteForm {
 
 
     constructor() {
+        void this.loadCatalogs();
+
         effect(() => {
             const e = this.route();
 
@@ -305,14 +470,27 @@ export class RouteForm {
                     name: e.name,
                     description: e.description,
                     date: formatDateTimeLocal(e.date),
+                    time: e.time,
+                    classNumber: e.classNumber,
                     price: e.price,
-                    category: e.category,
                     capacity: e.capacity,
                     slug: e.slug,
-                    status: e.status
+                    status: e.status,
+                    host: refId(e.host),
+                    categories: (e.categories ?? []).map(category => category._id),
+                    location: refId(e.location)
                 });
             }
         });
+    }
+
+
+    protected hostLabel(host: Host): string {
+        if (!host.user_id || typeof host.user_id === 'string') {
+            return host.slug;
+        }
+
+        return host.user_id.name;
     }
 
 
@@ -324,7 +502,9 @@ export class RouteForm {
         }
 
         if (c.errors?.['required']) {
-            return 'Este campo es obligatorio.';
+            return name === 'categories'
+                ? 'Selecciona al menos una categoría.'
+                : 'Este campo es obligatorio.';
         }
 
         if (c.errors?.['minlength']) {
@@ -337,6 +517,10 @@ export class RouteForm {
 
         if (c.errors?.['min']) {
             return 'El valor debe ser igual o superior al mínimo permitido.';
+        }
+
+        if (c.errors?.['pattern']) {
+            return 'El formato no es válido (usa HH:mm).';
         }
 
         return 'Revisa este campo.';
@@ -356,20 +540,42 @@ export class RouteForm {
             name: v.name.trim(),
             description: v.description.trim(),
             date: new Date(v.date).toISOString(),
+            time: v.time,
+            classNumber: Number(v.classNumber),
             price: Number(v.price),
-            category: v.category,
-            capacity: Number(v.capacity)
+            capacity: Number(v.capacity),
+            status: v.status,
+            host: v.host,
+            categories: v.categories,
+            location: v.location
         };
 
         if (v.slug.trim()) {
             payload.slug = v.slug.trim();
         }
 
-        if (this.route()) {
-            payload.status = v.status;
-        }
-
         this.formSubmit.emit(payload);
+    }
+
+
+    private async loadCatalogs(): Promise<void> {
+        try {
+            const [hosts, categories, locations] = await Promise.all([
+                firstValueFrom(this.catalog.listHosts()),
+                firstValueFrom(this.catalog.listCategories()),
+                firstValueFrom(this.catalog.listLocations())
+            ]);
+
+            this.hosts.set(hosts);
+            this.categories.set(categories);
+            this.locations.set(locations);
+
+        } catch {
+            this.catalogError.set(
+                'No se han podido cargar anfitriones, categorías y ubicaciones. ' +
+                'Comprueba que el backend esté iniciado.'
+            );
+        }
     }
 
 }

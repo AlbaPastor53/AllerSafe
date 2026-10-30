@@ -171,9 +171,9 @@ export class RouteList implements OnInit {
         await this.withPending(event._id, async () => {
             try {
                 const updated = await firstValueFrom(
-                    this.service.setStatus(
+                    this.service.setActive(
                         event._id,
-                        event.isActive ? 'inactive' : 'active'
+                        !event.is_active
                     )
                 );
 

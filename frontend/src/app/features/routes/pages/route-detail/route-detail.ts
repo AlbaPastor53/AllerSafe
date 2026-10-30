@@ -2,6 +2,7 @@ import {
     ChangeDetectionStrategy,
     Component,
     OnInit,
+    computed,
     inject,
     signal
 } from '@angular/core';
@@ -36,8 +37,8 @@ import {
 } from '../../../../shared/utils/error.util';
 
 import {
-    CATEGORY_LABELS,
-    STATUS_LABELS
+    STATUS_LABELS,
+    categoryNames
 } from '../../../../core/models/courses.model';
 
 
@@ -100,6 +101,33 @@ import {
 
                     <section class="space-y-6 lg:col-span-2">
 
+                        @if(coverImage(); as cover) {
+                            <div class="rounded-2xl border border-gray-200 bg-white overflow-hidden">
+                                <div class="relative h-64 w-full sm:h-80 lg:h-96">
+                                    <img
+                                        [src]="cover.url"
+                                        [alt]="cover.alt || event()!.name"
+                                        class="h-full w-full object-cover"
+                                        loading="lazy"
+                                    />
+                                </div>
+                                @if(eventImages().length > 1) {
+                                    <div class="grid grid-cols-2 gap-2 p-3 sm:grid-cols-3 lg:grid-cols-4">
+                                        @for(img of eventImages(); track img._id) {
+                                            @if(img._id !== cover._id) {
+                                                <img
+                                                    [src]="img.url"
+                                                    [alt]="img.alt || event()!.name"
+                                                    class="h-24 w-full rounded-lg object-cover sm:h-28"
+                                                    loading="lazy"
+                                                />
+                                            }
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+
                         <div class="rounded-2xl border border-gray-200 bg-white p-6">
 
                             <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
@@ -116,11 +144,11 @@ import {
 
                                 <span
                                     class="rounded-full px-3 py-1 text-sm"
-                                    [class.bg-green-100]="event()!.isActive"
-                                    [class.text-green-800]="event()!.isActive"
-                                    [class.bg-gray-100]="!event()!.isActive"
+                                    [class.bg-green-100]="event()!.is_active"
+                                    [class.text-green-800]="event()!.is_active"
+                                    [class.bg-gray-100]="!event()!.is_active"
                                 >
-                                    {{event()!.isActive ? 'Activo' : 'Inactivo'}}
+                                    {{event()!.is_active ? 'Activo' : 'Inactivo'}}
                                 </span>
 
                             </div>
@@ -161,11 +189,51 @@ import {
 
                                 <div>
                                     <dt class="text-sm text-gray-500">
+                                        Hora
+                                    </dt>
+
+                                    <dd class="mt-1 font-semibold">
+                                        {{event()!.time || '-'}}
+                                    </dd>
+                                </div>
+
+                                <div>
+                                    <dt class="text-sm text-gray-500">
                                         Categoría
                                     </dt>
 
                                     <dd class="mt-1 font-semibold">
                                         {{categoryLabel()}}
+                                    </dd>
+                                </div>
+
+                                <div>
+                                    <dt class="text-sm text-gray-500">
+                                        Anfitrión
+                                    </dt>
+
+                                    <dd class="mt-1 font-semibold">
+                                        {{hostName()}}
+                                    </dd>
+                                </div>
+
+                                <div>
+                                    <dt class="text-sm text-gray-500">
+                                        Ubicación
+                                    </dt>
+
+                                    <dd class="mt-1 font-semibold">
+                                        {{locationLabel()}}
+                                    </dd>
+                                </div>
+
+                                <div>
+                                    <dt class="text-sm text-gray-500">
+                                        Número de clase
+                                    </dt>
+
+                                    <dd class="mt-1 font-semibold">
+                                        {{event()!.classNumber}}
                                     </dd>
                                 </div>
 
@@ -225,7 +293,7 @@ import {
                                 class="button-secondary"
                                 (click)="toggleStatus()"
                             >
-                                {{event()!.isActive ? 'Desactivar evento' : 'Activar evento'}}
+                                {{event()!.is_active ? 'Desactivar evento' : 'Activar evento'}}
                             </button>
 
                             <button
@@ -275,6 +343,15 @@ export class RouteDetail implements OnInit {
     protected readonly loadError = signal<string | null>(null);
 
 
+    protected readonly eventImages = computed(() => this.event()?.images ?? []);
+
+    protected readonly coverImage = computed(() => {
+        const imgs = this.eventImages();
+
+        return imgs.find(img => img.isCover) ?? imgs[0] ?? null;
+    });
+
+
     protected readonly formatDate = formatDate;
 
     protected readonly formatPrice = formatPrice;
@@ -283,8 +360,30 @@ export class RouteDetail implements OnInit {
     protected readonly categoryLabel = () => {
         const e = this.event();
 
-        return e ? CATEGORY_LABELS[e.category] : '';
+        return e ? categoryNames(e.categories) : '';
     };
+
+
+    protected readonly hostName = computed(() => {
+        const host = this.event()?.host;
+
+        if (!host || typeof host === 'string') return '-';
+
+        if (!host.user_id || typeof host.user_id === 'string') return host.slug;
+
+        return host.user_id.name;
+    });
+
+
+    protected readonly locationLabel = computed(() => {
+        const location = this.event()?.location;
+
+        if (!location || typeof location === 'string') return '-';
+
+        return location.address
+            ? `${location.name} (${location.address})`
+            : location.name;
+    });
 
 
     protected readonly statusLabel = () => {
@@ -353,13 +452,13 @@ export class RouteDetail implements OnInit {
 
         try {
             const updated = await firstValueFrom(
-                this.service.setStatus(
+                this.service.setActive(
                     e._id,
-                    e.isActive ? 'inactive' : 'active'
+                    !e.is_active
                 )
             );
 
-            this.event.set(updated);
+            this.event.set({ ...updated, images: e.images ?? [] });
 
             this.store.patchRoute(updated);
 

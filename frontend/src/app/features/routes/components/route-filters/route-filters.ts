@@ -81,8 +81,6 @@ import {
                         <option value="all">Todos</option>
                         <option value="draft">Borrador</option>
                         <option value="published">Publicado</option>
-                        <option value="cancelled">Cancelado</option>
-                        <option value="completed">Completado</option>
                     </select>
                 </div>
 
@@ -141,7 +139,7 @@ export class RouteFilters {
         };
 
         if (v.category) {
-            f.category = v.category as EventCategory;
+            f.category = v.category;
         }
 
         this.filtersChange.emit(f);

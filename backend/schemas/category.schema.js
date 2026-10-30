@@ -4,7 +4,8 @@ const categoryBodySchema = z.object({
   name: z.string().trim().min(2).max(80),
   slug: z.string().trim().min(2).max(80).optional(),
   description: z.string().trim().max(500).optional(),
-  isActive: z.boolean().optional()
+  status: z.enum(["active", "inactive"]).optional(),
+  is_active: z.boolean().optional()
 });
 
 const updateCategoryBodySchema = categoryBodySchema.partial();

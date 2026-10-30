@@ -30,18 +30,10 @@ class CategoryRepository {
     );
   }
 
-  async setActive(id, isActive) {
-    return Category.findOneAndUpdate(
-      { _id: id, deleted_at: null },
-      { isActive },
-      { new: true, runValidators: true }
-    );
-  }
-
   async softDelete(id) {
     return Category.findOneAndUpdate(
       { _id: id, deleted_at: null },
-      { deleted_at: new Date(), isActive: false },
+      { deleted_at: new Date(), is_active: false },
       { new: true, runValidators: true }
     );
   }

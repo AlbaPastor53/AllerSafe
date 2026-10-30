@@ -1,5 +1,8 @@
+const argon2 = require("argon2");
+
 const userRepository = require("../repository/user.repository");
 const AppError = require("./utils/appError");
+const { buildUniqueSlug } = require("./utils/slug");
 
 class UserService {
   async getAll(options = {}) {
@@ -25,37 +28,64 @@ class UserService {
     if (existing) {
       throw new AppError("Ya existe un usuario con ese email.", 409, "EMAIL_EXISTS");
     }
-    return userRepository.create(data);
+
+    const slug = await buildUniqueSlug(userRepository, data.slug || data.name || data.email);
+    if (!slug) {
+      throw new AppError("No se puede generar un slug válido.", 400, "INVALID_SLUG");
+    }
+
+    const { password, ...rest } = data;
+    const password_hash = await argon2.hash(password);
+
+    return userRepository.create({
+      ...rest,
+      slug,
+      password_hash,
+      role: rest.role ?? "Client",
+      status: rest.status ?? "active",
+      is_active: rest.is_active ?? true
+    });
   }
 
   async update(id, data) {
-    await this.getById(id);
+    const current = await this.getById(id);
+    const { password, ...rest } = data;
+    const updateData = { ...rest };
+
     if (data.email) {
       const existing = await userRepository.findByEmail(data.email, { includeDeleted: true });
       if (existing && String(existing._id) !== String(id)) {
         throw new AppError("Ya existe otro usuario con ese email.", 409, "EMAIL_EXISTS");
       }
     }
-    return userRepository.updateById(id, data);
-  }
 
-  async activate(id) {
-    await this.getById(id);
-    return userRepository.setActive(id, true);
-  }
+    if (data.name || data.slug) {
+      updateData.slug = await buildUniqueSlug(
+        userRepository,
+        data.slug || data.name,
+        current._id
+      );
+    }
 
-  async deactivate(id) {
-    await this.getById(id);
-    return userRepository.setActive(id, false);
+    if (password) {
+      updateData.password_hash = await argon2.hash(password);
+    }
+
+    return userRepository.updateById(id, updateData);
   }
 
   async softDelete(id) {
-    await this.getById(id);
-    const deleted = await userRepository.softDelete(id);
-    if (!deleted) {
-      throw new AppError("No se pudo eliminar usuario.", 500, "DELETE_FAILED");
+    const user = await userRepository.findById(id, { includeDeleted: true });
+
+    if (!user) {
+      throw new AppError("Usuario no encontrado.", 404, "USER_NOT_FOUND");
     }
-    return deleted;
+
+    if (user.deleted_at) return false;
+
+    await userRepository.setHostId(id, null);
+    await userRepository.softDelete(id);
+    return true;
   }
 }
 
