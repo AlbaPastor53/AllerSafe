@@ -13,6 +13,7 @@ import Swal from 'sweetalert2';
 
 import { CoursesStore } from '../../../../core/stores/courses.store';
 import { CoursesService } from '../../../../core/services/courses.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { Courses } from '../../../../core/models/courses.model';
 
 import { RouteRow } from '../../components/route-row/route-row';
@@ -55,12 +56,14 @@ import {
                     </p>
                 </div>
 
-                <a
-                    routerLink="/routes/create"
-                    class="button-primary whitespace-nowrap"
-                >
-                    + Nuevo evento
-                </a>
+                @if(isAdmin()) {
+                    <a
+                        routerLink="/routes/create"
+                        class="button-primary whitespace-nowrap"
+                    >
+                        + Nuevo evento
+                    </a>
+                }
 
             </div>
 
@@ -78,12 +81,14 @@ import {
                     title="No hay eventos"
                     message="Todavía no hay eventos para mostrar."
                 >
-                    <a
-                        routerLink="/routes/create"
-                        class="button-primary"
-                    >
-                        Crear evento
-                    </a>
+                    @if(isAdmin()) {
+                        <a
+                            routerLink="/routes/create"
+                            class="button-primary"
+                        >
+                            Crear evento
+                        </a>
+                    }
                 </app-empty-state>
 
             } @else {
@@ -93,6 +98,7 @@ import {
                         <app-route-row
                             [route]="event"
                             [pending]="isPending(event._id)"
+                            [canManage]="isAdmin()"
                             (edit)="onEdit($event)"
                             (remove)="onDelete($event)"
                             (toggleStatus)="onToggleStatus($event)"
@@ -113,6 +119,8 @@ export class RouteList implements OnInit {
 
     private readonly service = inject(CoursesService);
 
+    private readonly auth = inject(AuthService);
+
     private readonly router = inject(Router);
 
     private readonly pending = signal<ReadonlySet<string>>(new Set());
@@ -120,6 +128,8 @@ export class RouteList implements OnInit {
     protected readonly filteredEvents = computed(() =>
         this.store.routes()
     );
+
+    protected readonly isAdmin = this.auth.isAdmin;
 
 
     ngOnInit(): void {

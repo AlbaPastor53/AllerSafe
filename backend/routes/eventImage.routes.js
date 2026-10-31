@@ -7,7 +7,8 @@ const {
   idParamSchema,
   slugParamSchema,
   eventIdParamSchema,
-  querySchema
+  querySchema,
+  statusSchema
 } = require("../schemas/eventImage.schema");
 
 const router = express.Router();
@@ -20,6 +21,20 @@ router.get(
   controller.getByEvent
 );
 router.get("/:id", validate(idParamSchema, "params"), controller.getById);
+
+router.patch(
+  "/:id/restore",
+  validate(idParamSchema, "params"),
+  controller.restore
+);
+
+router.patch(
+  "/:id/status",
+  validate(idParamSchema, "params"),
+  validate(statusSchema),
+  controller.changeStatus
+);
+
 router.post("/", validate(eventImageBodySchema), controller.create);
 router.patch(
   "/:id",

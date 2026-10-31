@@ -32,10 +32,8 @@ const eventImageSchema = new mongoose.Schema(
     slug: {
       type: String,
       required: true,
-      unique: true,
       lowercase: true,
-      trim: true,
-      index: true
+      trim: true
     },
     status: {
       type: String,
@@ -66,6 +64,8 @@ const eventImageSchema = new mongoose.Schema(
     versionKey: false
   }
 );
+
+eventImageSchema.index({ slug: 1 }, { unique: true });
 
 eventImageSchema.index({ event: 1, position: 1 });
 

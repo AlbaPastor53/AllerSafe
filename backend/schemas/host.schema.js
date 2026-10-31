@@ -27,10 +27,17 @@ const querySchema = z.object({
     .transform((value) => value === "true")
 });
 
+const statusSchema = z.object({
+  status: z.enum(["active", "inactive", "suspended"], {
+    error: "status no es válido para anfitrión"
+  })
+});
+
 module.exports = {
   hostBodySchema,
   updateHostBodySchema,
   idParamSchema,
   slugParamSchema,
-  querySchema
+  querySchema,
+  statusSchema
 };

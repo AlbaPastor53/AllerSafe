@@ -6,7 +6,8 @@ const {
   updateLocationBodySchema,
   idParamSchema,
   slugParamSchema,
-  querySchema
+  querySchema,
+  statusSchema
 } = require("../schemas/location.schema");
 
 const router = express.Router();
@@ -14,6 +15,20 @@ const router = express.Router();
 router.get("/", validate(querySchema, "query"), controller.getAll);
 router.get("/slug/:slug", validate(slugParamSchema, "params"), controller.getBySlug);
 router.get("/:id", validate(idParamSchema, "params"), controller.getById);
+
+router.patch(
+  "/:id/restore",
+  validate(idParamSchema, "params"),
+  controller.restore
+);
+
+router.patch(
+  "/:id/status",
+  validate(idParamSchema, "params"),
+  validate(statusSchema),
+  controller.changeStatus
+);
+
 router.post("/", validate(locationBodySchema), controller.create);
 router.patch(
   "/:id",

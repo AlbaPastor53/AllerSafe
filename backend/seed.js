@@ -1,15 +1,16 @@
 require("dotenv").config();
 
-const argon2 = require("argon2");
-
 const connectDB = require("./config/db");
 const User = require("./models/user.model");
+const Profile = require("./models/profile.model");
+const RevokedToken = require("./models/revokedToken.model");
 const Host = require("./models/host.model");
 const Category = require("./models/category.model");
 const Location = require("./models/location.model");
 const Event = require("./models/event.model");
 const EventImage = require("./models/eventImage.model");
 const Departure = require("./models/departure.model");
+const { hashPassword } = require("./utils/password");
 
 const DEFAULT_PASSWORD = "AllerSafe123!";
 
@@ -18,25 +19,47 @@ const seedUsers = [
     name: "Admin AllerSafe",
     email: "admin@allersafe.com",
     role: "Admin",
-    slug: "admin-allersafe"
+    slug: "admin-allersafe",
+    profile: {
+      first_name: "Admin",
+      last_name: "AllerSafe",
+      bio: "Administrador de la plataforma AllerSafe."
+    }
   },
   {
     name: "Chef AllerSafe",
     email: "chef@allersafe.com",
     role: "Client",
-    slug: "chef-allersafe"
+    slug: "chef-allersafe",
+    profile: {
+      first_name: "Chef",
+      last_name: "AllerSafe",
+      bio: "Chef especializado en cocina segura para personas con alergias alimentarias."
+    }
   },
   {
     name: "Marta Nutrición",
     email: "marta@allersafe.com",
     role: "Client",
-    slug: "marta-nutricion"
+    slug: "marta-nutricion",
+    profile: {
+      first_name: "Marta",
+      last_name: "Nutrición",
+      bio: "Dietista-nutricionista experta en etiquetado y alimentación saludable."
+    }
   },
   {
     name: "Cliente Demo",
     email: "cliente@allersafe.com",
     role: "Client",
-    slug: "cliente-demo"
+    slug: "cliente-demo",
+    profile: {
+      first_name: "Cliente",
+      last_name: "Demo",
+      bio: "Usuario de prueba para reservas.",
+      allergies: ["frutos secos"],
+      dietary_restrictions: ["sin lactosa"]
+    }
   }
 ];
 
@@ -294,23 +317,42 @@ const seedEvents = [
 ];
 
 async function upsertUser(data, passwordHash) {
-  return User.findOneAndUpdate(
-    { email: data.email },
+  const { profile, ...userData } = data;
+
+  const user = await User.findOneAndUpdate(
+    { email: userData.email },
     {
       $set: {
-        name: data.name,
-        email: data.email,
-        role: data.role,
-        slug: data.slug,
+        name: userData.name,
+        email: userData.email,
+        role: userData.role,
+        slug: userData.slug,
         status: "active",
         is_active: true,
         deleted_at: null,
-        password_hash: passwordHash
+        password_hash: passwordHash,
+        token_version: 0
       },
       $unset: { isActive: "" }
     },
     { upsert: true, new: true, setDefaultsOnInsert: true }
   );
+
+  if (profile) {
+    await Profile.findOneAndUpdate(
+      { user_id: user._id },
+      {
+        $set: {
+          user_id: user._id,
+          ...profile,
+          deleted_at: null
+        }
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+  }
+
+  return user;
 }
 
 async function upsertCategory(data) {
@@ -348,14 +390,16 @@ async function upsertLocation(data) {
 async function seed() {
   try {
     await connectDB();
+    await Promise.all([User.init(), Profile.init(), RevokedToken.init()]);
 
     await EventImage.deleteMany({});
     await Departure.deleteMany({});
     await Event.deleteMany({});
     await Host.deleteMany({});
+    await RevokedToken.deleteMany({});
     await User.updateMany({}, { $set: { host_id: null } });
 
-    const passwordHash = await argon2.hash(DEFAULT_PASSWORD);
+    const passwordHash = await hashPassword(DEFAULT_PASSWORD);
 
     const users = await Promise.all(
       seedUsers.map((user) => upsertUser(user, passwordHash))

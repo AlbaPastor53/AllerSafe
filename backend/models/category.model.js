@@ -7,16 +7,13 @@ const categorySchema = new mongoose.Schema(
       required: true,
       trim: true,
       minlength: 2,
-      maxlength: 80,
-      unique: true
+      maxlength: 80
     },
     slug: {
       type: String,
       required: true,
-      unique: true,
       lowercase: true,
-      trim: true,
-      index: true
+      trim: true
     },
     description: {
       type: String,
@@ -52,6 +49,13 @@ const categorySchema = new mongoose.Schema(
     versionKey: false
   }
 );
+
+categorySchema.index(
+  { name: 1 },
+  { unique: true, partialFilterExpression: { deleted_at: null } }
+);
+
+categorySchema.index({ slug: 1 }, { unique: true });
 
 categorySchema.pre("save", function (next) {
   this.updated_at = new Date();

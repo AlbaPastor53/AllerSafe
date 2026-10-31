@@ -12,10 +12,8 @@ const userSchema = new mongoose.Schema(
     email: {
       type: String,
       required: true,
-      unique: true,
       lowercase: true,
-      trim: true,
-      index: true
+      trim: true
     },
     password_hash: {
       type: String,
@@ -28,6 +26,12 @@ const userSchema = new mongoose.Schema(
       default: "Client",
       index: true
     },
+    // Permite invalidar todos los tokens de un usuario sin recorrer la blacklist.
+    token_version: {
+      type: Number,
+      default: 0,
+      min: 0
+    },
     host_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Host",
@@ -37,10 +41,8 @@ const userSchema = new mongoose.Schema(
     slug: {
       type: String,
       required: true,
-      unique: true,
       lowercase: true,
-      trim: true,
-      index: true
+      trim: true
     },
     status: {
       type: String,
@@ -72,6 +74,13 @@ const userSchema = new mongoose.Schema(
   }
 );
 
+userSchema.index(
+  { email: 1 },
+  { unique: true, partialFilterExpression: { deleted_at: null } }
+);
+
+userSchema.index({ slug: 1 }, { unique: true });
+
 userSchema.pre("save", function (next) {
   this.updated_at = new Date();
   next();
@@ -85,6 +94,7 @@ userSchema.pre(["findOneAndUpdate", "updateOne", "updateMany"], function (next) 
 userSchema.set("toJSON", {
   transform: (_doc, ret) => {
     delete ret.password_hash;
+    delete ret.token_version;
     return ret;
   }
 });

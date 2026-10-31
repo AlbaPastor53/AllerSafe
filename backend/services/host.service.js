@@ -1,5 +1,6 @@
 const hostRepository = require("../repository/host.repository");
 const userRepository = require("../repository/user.repository");
+const eventRepository = require("../repository/event.repository");
 const AppError = require("./utils/appError");
 const { buildUniqueSlug } = require("./utils/slug");
 
@@ -15,10 +16,17 @@ class HostService {
     return hosts;
   }
 
-  async getById(id) {
+  async getById(id, { includeDeleted = false } = {}) {
     try {
-      const host = await hostRepository.findById(id);
+      const host = await hostRepository.findById(id, { includeDeleted });
       if (!host) throw new AppError("Anfitrión no encontrado.", 404, "HOST_NOT_FOUND");
+      if (host.deleted_at) {
+        throw new AppError(
+          "No se puede modificar un anfitrión eliminado.",
+          409,
+          "RECORD_DELETED"
+        );
+      }
       await host.populate(HOST_POPULATE);
       return host;
     } catch (error) {
@@ -45,7 +53,7 @@ class HostService {
       throw new AppError("El usuario indicado no existe.", 404, "USER_NOT_FOUND");
     }
 
-    const existing = await hostRepository.findByUserId(data.user_id, { includeDeleted: true });
+    const existing = await hostRepository.findByUserId(data.user_id);
     if (existing) {
       throw new AppError("Ese usuario ya tiene un anfitrión asociado.", 409, "HOST_EXISTS");
     }
@@ -73,7 +81,7 @@ class HostService {
   }
 
   async update(id, data) {
-    const current = await this.getById(id);
+    const current = await this.getById(id, { includeDeleted: true });
     const updateData = { ...data };
     const currentUserId = current.user_id
       ? String(current.user_id._id ?? current.user_id)
@@ -85,7 +93,7 @@ class HostService {
         throw new AppError("El usuario indicado no existe.", 404, "USER_NOT_FOUND");
       }
 
-      const existing = await hostRepository.findByUserId(data.user_id, { includeDeleted: true });
+      const existing = await hostRepository.findByUserId(data.user_id);
       if (existing && String(existing._id) !== String(id)) {
         throw new AppError("Ese usuario ya tiene un anfitrión asociado.", 409, "HOST_EXISTS");
       }
@@ -115,9 +123,68 @@ class HostService {
 
     if (host.deleted_at) return false;
 
+    const eventCount = await eventRepository.countByHostId(id);
+    if (eventCount > 0) {
+      throw new AppError(
+        "No se puede eliminar un anfitrión asociado a eventos.",
+        409,
+        "HOST_IN_USE"
+      );
+    }
+
     await hostRepository.softDelete(id);
     await userRepository.setHostId(host.user_id, null);
     return true;
+  }
+
+  async restore(id) {
+    const host = await hostRepository.findById(id, { includeDeleted: true });
+
+    if (!host) {
+      throw new AppError("Anfitrión no encontrado.", 404, "HOST_NOT_FOUND");
+    }
+
+    if (!host.deleted_at) {
+      throw new AppError("El anfitrión no está eliminado.", 409, "ALREADY_ACTIVE");
+    }
+
+    const [userConflict, slugConflict] = await Promise.all([
+      hostRepository.findByUserId(host.user_id),
+      hostRepository.findBySlug(host.slug)
+    ]);
+
+    if (userConflict || slugConflict) {
+      throw new AppError(
+        "Ya existe un anfitrión activo para ese usuario o con ese slug.",
+        409,
+        "RESTORE_CONFLICT"
+      );
+    }
+
+    const restored = await hostRepository.restoreById(id);
+    await userRepository.setHostId(restored.user_id, restored._id);
+    await restored.populate(HOST_POPULATE);
+    return restored;
+  }
+
+  async changeStatus(id, status) {
+    const host = await hostRepository.findById(id, { includeDeleted: true });
+
+    if (!host) {
+      throw new AppError("Anfitrión no encontrado.", 404, "HOST_NOT_FOUND");
+    }
+
+    if (host.deleted_at) {
+      throw new AppError(
+        "No se puede cambiar el estado de un anfitrión eliminado.",
+        409,
+        "RECORD_DELETED"
+      );
+    }
+
+    const updated = await hostRepository.updateStatusById(id, status);
+    await updated.populate(HOST_POPULATE);
+    return updated;
   }
 }
 

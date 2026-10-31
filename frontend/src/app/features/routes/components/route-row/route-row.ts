@@ -53,9 +53,11 @@ import { formatDate, formatPrice } from '../../../../shared/utils/format.util';
             </div>
 
             <div class="flex flex-wrap gap-2">
-                <button class="button-secondary" type="button" [disabled]="pending()" (click)="edit.emit(route())">Editar</button>
-                <button class="button-secondary" type="button" [disabled]="pending()" (click)="toggleStatus.emit(route())">{{ route().is_active ? 'Desactivar' : 'Activar' }}</button>
-                <button class="button-danger" type="button" [disabled]="pending()" (click)="remove.emit(route())">Eliminar</button>
+                @if(canManage()) {
+                    <button class="button-secondary" type="button" [disabled]="pending()" (click)="edit.emit(route())">Editar</button>
+                    <button class="button-secondary" type="button" [disabled]="pending()" (click)="toggleStatus.emit(route())">{{ route().is_active ? 'Desactivar' : 'Activar' }}</button>
+                    <button class="button-danger" type="button" [disabled]="pending()" (click)="remove.emit(route())">Eliminar</button>
+                }
             </div>
         </article>
     `
@@ -64,6 +66,7 @@ import { formatDate, formatPrice } from '../../../../shared/utils/format.util';
 export class RouteRow {
     route = input.required<Courses>();
     pending = input(false);
+    canManage = input(false);
 
     edit = output<Courses>();
     remove = output<Courses>();

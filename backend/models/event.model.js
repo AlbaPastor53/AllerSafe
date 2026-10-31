@@ -12,8 +12,6 @@ const eventSchema = new mongoose.Schema(
     slug: {
       type: String,
       required: true,
-      unique: true,
-      index: true,
       lowercase: true,
       trim: true
     },
@@ -105,6 +103,8 @@ const eventSchema = new mongoose.Schema(
     versionKey: false
   }
 );
+
+eventSchema.index({ slug: 1 }, { unique: true });
 
 eventSchema.pre("save", function (next) {
   this.updated_at = new Date();

@@ -103,6 +103,73 @@ Establece:
 - `isActive = false`
 - `status = cancelled`
 
+## Autenticación y perfil
+
+### Login
+
+**POST** `/auth/login`
+
+Body:
+
+```json
+{
+  "email": "admin@allersafe.com",
+  "password": "AllerSafe123!"
+}
+```
+
+Respuesta:
+
+```json
+{
+  "success": true,
+  "data": {
+    "token": "<JWT>",
+    "user": {
+      "_id": "...",
+      "name": "Admin AllerSafe",
+      "email": "admin@allersafe.com",
+      "role": "Admin"
+    }
+  }
+}
+```
+
+El resto de peticiones protegidas deben incluir:
+
+```text
+Authorization: Bearer <JWT>
+```
+
+### Logout
+
+**POST** `/auth/logout`
+
+Requiere `Authorization: Bearer <JWT>`. Devuelve `204` y registra
+`sha256(JWT)` en la blacklist. El token no puede reutilizarse.
+
+### Perfil
+
+**GET** `/profile`
+
+Requiere autenticación. Devuelve el perfil del usuario autenticado.
+
+**PATCH** `/profile`
+
+Requiere autenticación. Solo acepta campos del perfil:
+
+```json
+{
+  "first_name": "Cliente",
+  "last_name": "Demo",
+  "phone": "+34600111222",
+  "allergies": ["frutos secos"],
+  "dietary_restrictions": ["sin lactosa"]
+}
+```
+
+No permite modificar `user_id`, `role`, `email` ni contraseña.
+
 ## Flujo recomendado de prueba
 
 1. Ejecutar `npm install`.

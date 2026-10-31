@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-navbar',
@@ -32,12 +33,31 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
           >
             Eventos
           </a>
-          <a routerLink="/routes/create" class="button-primary">+ Nuevo evento</a>
+
+          @if (isAdmin()) {
+            <a routerLink="/routes/create" class="button-primary">+ Nuevo evento</a>
+          }
+
+          <div class="ml-2 flex items-center gap-3 border-l border-[#394239] pl-3">
+            <div class="text-right">
+              <p class="max-w-44 truncate text-sm font-medium text-[#F5F0E6]">
+                {{ user()?.name }}
+              </p>
+              <p class="text-xs text-[#A8B0A5]">{{ user()?.role }}</p>
+            </div>
+            <button
+              type="button"
+              class="button-secondary"
+              (click)="logout()"
+            >
+              Salir
+            </button>
+          </div>
         </div>
 
         <button
           type="button"
-          class="grid h-10 w-10 place-items-center rounded-lg border border-gray-200 text-gray-700 transition-colors hover:bg-gray-100 sm:hidden"
+          class="grid h-10 w-10 place-items-center rounded-lg border border-[#414940] text-[#F5F0E6] transition-colors hover:bg-[#273128] sm:hidden"
           (click)="menuOpen.set(!menuOpen())"
           [attr.aria-expanded]="menuOpen()"
           aria-controls="mobile-menu"
@@ -74,29 +94,54 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
       </nav>
 
       @if (menuOpen()) {
-        <div id="mobile-menu" class="space-y-1 border-t border-gray-100 px-4 py-3 sm:hidden">
+        <div id="mobile-menu" class="space-y-1 border-t border-[#394239] px-4 py-3 sm:hidden">
           <a
             routerLink="/routes"
-            routerLinkActive="bg-gray-100 text-brand"
+            routerLinkActive="bg-[#273128] text-brand"
             [routerLinkActiveOptions]="{ exact: true }"
-            class="block rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
+            class="block rounded-lg px-3 py-2 text-sm font-medium text-[#C2C9BF] transition-colors hover:bg-[#273128]"
             (click)="menuOpen.set(false)"
           >
             Eventos
           </a>
-          <a
-            routerLink="/routes/create"
-            routerLinkActive="bg-gray-100 text-brand"
-            class="block rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
-            (click)="menuOpen.set(false)"
-          >
-            + Nuevo evento
-          </a>
+
+          @if (isAdmin()) {
+            <a
+              routerLink="/routes/create"
+              routerLinkActive="bg-[#273128] text-brand"
+              class="block rounded-lg px-3 py-2 text-sm font-medium text-[#C2C9BF] transition-colors hover:bg-[#273128]"
+              (click)="menuOpen.set(false)"
+            >
+              + Nuevo evento
+            </a>
+          }
+
+          <div class="mt-2 flex items-center justify-between gap-3 border-t border-[#394239] pt-3">
+            <div class="min-w-0">
+              <p class="truncate text-sm font-medium text-[#F5F0E6]">
+                {{ user()?.name }}
+              </p>
+              <p class="text-xs text-[#A8B0A5]">{{ user()?.email }}</p>
+            </div>
+            <button type="button" class="button-secondary" (click)="logout()">
+              Salir
+            </button>
+          </div>
         </div>
       }
     </header>
   `
 })
 export class Navbar {
+  private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
+
   protected readonly menuOpen = signal(false);
+  protected readonly user = this.auth.user;
+  protected readonly isAdmin = this.auth.isAdmin;
+
+  protected logout(): void {
+    this.auth.logout();
+    void this.router.navigate(['/login']);
+  }
 }

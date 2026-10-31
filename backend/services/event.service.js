@@ -2,6 +2,8 @@ const eventRepository = require("../repository/event.repository");
 const hostRepository = require("../repository/host.repository");
 const categoryRepository = require("../repository/category.repository");
 const locationRepository = require("../repository/location.repository");
+const eventImageRepository = require("../repository/eventImage.repository");
+const departureRepository = require("../repository/departure.repository");
 const AppError = require("./utils/appError");
 const { buildUniqueSlug } = require("./utils/slug");
 
@@ -26,10 +28,17 @@ class EventService {
     return events;
   }
 
-  async getById(id) {
+  async getById(id, { includeDeleted = false } = {}) {
     try {
-      const event = await eventRepository.findById(id);
+      const event = await eventRepository.findById(id, { includeDeleted });
       if (!event) throw new AppError("Evento no encontrado.", 404, "EVENT_NOT_FOUND");
+      if (event.deleted_at) {
+        throw new AppError(
+          "No se puede modificar un evento eliminado.",
+          409,
+          "RECORD_DELETED"
+        );
+      }
       await event.populate(EVENT_POPULATE);
       return event;
     } catch (error) {
@@ -72,7 +81,7 @@ class EventService {
   }
 
   async update(id, data) {
-    const current = await this.getById(id);
+    const current = await this.getById(id, { includeDeleted: true });
 
     await this.assertRelations(data);
 
@@ -92,7 +101,7 @@ class EventService {
   }
 
   async updateHost(id, hostId) {
-    const current = await this.getById(id);
+    const current = await this.getById(id, { includeDeleted: true });
     await this.assertHost(hostId);
 
     const event = await eventRepository.updateById(current._id, { host: hostId });
@@ -101,7 +110,7 @@ class EventService {
   }
 
   async updateLocation(id, locationId) {
-    const current = await this.getById(id);
+    const current = await this.getById(id, { includeDeleted: true });
     await this.assertLocation(locationId);
 
     const event = await eventRepository.updateById(current._id, { location: locationId });
@@ -110,7 +119,7 @@ class EventService {
   }
 
   async addCategories(id, categoryIds) {
-    const current = await this.getById(id);
+    const current = await this.getById(id, { includeDeleted: true });
     await this.assertCategories(categoryIds);
 
     const merged = new Set(
@@ -128,7 +137,7 @@ class EventService {
   }
 
   async removeCategory(id, categoryId) {
-    const current = await this.getById(id);
+    const current = await this.getById(id, { includeDeleted: true });
 
     const remaining = (current.categories ?? [])
       .map((category) => String(category._id ?? category))
@@ -159,8 +168,66 @@ class EventService {
 
     if (event.deleted_at) return false;
 
+    const [imageCount, departureCount] = await Promise.all([
+      eventImageRepository.countByEventId(id),
+      departureRepository.countByEventId(id)
+    ]);
+
+    if (imageCount > 0 || departureCount > 0) {
+      throw new AppError(
+        "No se puede eliminar un evento que tiene imágenes o salidas asociadas.",
+        409,
+        "EVENT_HAS_RELATIONS"
+      );
+    }
+
     await eventRepository.softDelete(id);
     return true;
+  }
+
+  async restore(id) {
+    const event = await eventRepository.findById(id, { includeDeleted: true });
+
+    if (!event) {
+      throw new AppError("Evento no encontrado.", 404, "EVENT_NOT_FOUND");
+    }
+
+    if (!event.deleted_at) {
+      throw new AppError("El evento no está eliminado.", 409, "ALREADY_ACTIVE");
+    }
+
+    const slugConflict = await eventRepository.findBySlug(event.slug);
+    if (slugConflict) {
+      throw new AppError(
+        "Ya existe un evento activo con ese slug.",
+        409,
+        "RESTORE_CONFLICT"
+      );
+    }
+
+    const restored = await eventRepository.restoreById(id);
+    await restored.populate(EVENT_POPULATE);
+    return restored;
+  }
+
+  async changeStatus(id, status) {
+    const event = await eventRepository.findById(id, { includeDeleted: true });
+
+    if (!event) {
+      throw new AppError("Evento no encontrado.", 404, "EVENT_NOT_FOUND");
+    }
+
+    if (event.deleted_at) {
+      throw new AppError(
+        "No se puede cambiar el estado de un evento eliminado.",
+        409,
+        "RECORD_DELETED"
+      );
+    }
+
+    const updated = await eventRepository.updateStatusById(id, status);
+    await updated.populate(EVENT_POPULATE);
+    return updated;
   }
 
   async assertRelations(data) {

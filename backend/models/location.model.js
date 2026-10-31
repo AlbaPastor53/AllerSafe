@@ -18,10 +18,8 @@ const locationSchema = new mongoose.Schema(
     slug: {
       type: String,
       required: true,
-      unique: true,
       lowercase: true,
-      trim: true,
-      index: true
+      trim: true
     },
     status: {
       type: String,
@@ -52,6 +50,8 @@ const locationSchema = new mongoose.Schema(
     versionKey: false
   }
 );
+
+locationSchema.index({ slug: 1 }, { unique: true });
 
 locationSchema.pre("save", function (next) {
   this.updated_at = new Date();

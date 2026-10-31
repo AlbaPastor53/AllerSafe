@@ -57,6 +57,24 @@ class DepartureController {
       next(error);
     }
   }
+
+  async restore(req, res, next) {
+    try {
+      const departure = await departureService.restore(req.params.id);
+      res.json({ success: true, data: departure });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async changeStatus(req, res, next) {
+    try {
+      const departure = await departureService.changeStatus(req.params.id, req.body.status);
+      res.json({ success: true, data: departure });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = new DepartureController();

@@ -54,6 +54,24 @@ class CategoryController {
       next(error);
     }
   }
+
+  async restore(req, res, next) {
+    try {
+      const category = await categoryService.restore(req.params.id);
+      res.json({ success: true, data: category });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async changeStatus(req, res, next) {
+    try {
+      const category = await categoryService.changeStatus(req.params.id, req.body.status);
+      res.json({ success: true, data: category });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = new CategoryController();

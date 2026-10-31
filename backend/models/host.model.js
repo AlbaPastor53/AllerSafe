@@ -5,9 +5,7 @@ const hostSchema = new mongoose.Schema(
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
-      unique: true,
-      index: true
+      required: true
     },
     biography: {
       type: String,
@@ -18,10 +16,8 @@ const hostSchema = new mongoose.Schema(
     slug: {
       type: String,
       required: true,
-      unique: true,
       lowercase: true,
-      trim: true,
-      index: true
+      trim: true
     },
     status: {
       type: String,
@@ -52,6 +48,13 @@ const hostSchema = new mongoose.Schema(
     versionKey: false
   }
 );
+
+hostSchema.index(
+  { user_id: 1 },
+  { unique: true, partialFilterExpression: { deleted_at: null } }
+);
+
+hostSchema.index({ slug: 1 }, { unique: true });
 
 hostSchema.pre("save", function (next) {
   this.updated_at = new Date();

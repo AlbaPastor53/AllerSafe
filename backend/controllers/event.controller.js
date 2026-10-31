@@ -90,6 +90,24 @@ class EventController {
       next(error);
     }
   }
+
+  async restore(req, res, next) {
+    try {
+      const event = await eventService.restore(req.params.id);
+      res.json({ success: true, data: event });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async changeStatus(req, res, next) {
+    try {
+      const event = await eventService.changeStatus(req.params.id, req.body.status);
+      res.json({ success: true, data: event });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = new EventController();

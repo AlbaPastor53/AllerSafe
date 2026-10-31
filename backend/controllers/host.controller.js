@@ -54,6 +54,24 @@ class HostController {
       next(error);
     }
   }
+
+  async restore(req, res, next) {
+    try {
+      const host = await hostService.restore(req.params.id);
+      res.json({ success: true, data: host });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async changeStatus(req, res, next) {
+    try {
+      const host = await hostService.changeStatus(req.params.id, req.body.status);
+      res.json({ success: true, data: host });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = new HostController();

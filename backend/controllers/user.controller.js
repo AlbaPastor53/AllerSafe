@@ -45,6 +45,24 @@ class UserController {
       next(error);
     }
   }
+
+  async restore(req, res, next) {
+    try {
+      const user = await userService.restore(req.params.id);
+      res.json({ success: true, data: user });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async changeStatus(req, res, next) {
+    try {
+      const user = await userService.changeStatus(req.params.id, req.body.status);
+      res.json({ success: true, data: user });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = new UserController();

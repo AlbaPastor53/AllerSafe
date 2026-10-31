@@ -25,10 +25,17 @@ const querySchema = z.object({
     .transform((value) => value === "true")
 });
 
+const statusSchema = z.object({
+  status: z.enum(["active", "inactive"], {
+    error: "status no es válido para ubicación"
+  })
+});
+
 module.exports = {
   locationBodySchema,
   updateLocationBodySchema,
   idParamSchema,
   slugParamSchema,
-  querySchema
+  querySchema,
+  statusSchema
 };

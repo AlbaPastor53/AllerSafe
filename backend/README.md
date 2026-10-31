@@ -39,6 +39,14 @@ Inserta 5 clases culinarias de prueba.
 
 ## Endpoints principales
 
+- `POST /api/auth/login`
+- `POST /api/auth/logout` (requiere `Authorization: Bearer <JWT>`)
+- `GET /api/profile` (requiere autenticación)
+- `PATCH /api/profile` (requiere autenticación)
+- `GET /api/users` (requiere rol Admin)
+- `POST /api/users` (requiere rol Admin)
+- `PATCH /api/users/:id` (requiere rol Admin)
+- `DELETE /api/users/:id` (soft delete, requiere rol Admin)
 - `GET /api/events`
 - `GET /api/events?includeDeleted=true`
 - `GET /api/events/:id`
@@ -49,5 +57,17 @@ Inserta 5 clases culinarias de prueba.
 - `PATCH /api/events/:id/deactivate`
 - `DELETE /api/events/:id` (soft delete)
 - `GET /api/health`
+
+## Autenticación
+
+El login devuelve un JWT que debe enviarse como:
+
+```text
+Authorization: Bearer <JWT>
+```
+
+El servidor guarda en la blacklist únicamente `sha256(JWT)`, nunca el token
+completo. Los tokens revocados no se pueden reutilizar aunque no hayan
+expirado.
 
 La documentación completa está en `postman.md`.

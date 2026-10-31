@@ -8,10 +8,17 @@ class EventImageService {
     return eventImageRepository.findAll({ eventId, includeDeleted });
   }
 
-  async getById(id) {
+  async getById(id, { includeDeleted = false } = {}) {
     try {
-      const image = await eventImageRepository.findById(id);
+      const image = await eventImageRepository.findById(id, { includeDeleted });
       if (!image) throw new AppError("Imagen no encontrada.", 404, "IMAGE_NOT_FOUND");
+      if (image.deleted_at) {
+        throw new AppError(
+          "No se puede modificar una imagen eliminada.",
+          409,
+          "RECORD_DELETED"
+        );
+      }
       return image;
     } catch (error) {
       if (error instanceof AppError) throw error;
@@ -67,7 +74,7 @@ class EventImageService {
   }
 
   async update(id, data) {
-    const current = await this.getById(id);
+    const current = await this.getById(id, { includeDeleted: true });
     const updateData = { ...data };
 
     if (data.event) {
@@ -103,6 +110,59 @@ class EventImageService {
 
     await eventImageRepository.softDelete(id);
     return true;
+  }
+
+  async restore(id) {
+    const image = await eventImageRepository.findById(id, { includeDeleted: true });
+
+    if (!image) {
+      throw new AppError("Imagen no encontrada.", 404, "IMAGE_NOT_FOUND");
+    }
+
+    if (!image.deleted_at) {
+      throw new AppError("La imagen no está eliminada.", 409, "ALREADY_ACTIVE");
+    }
+
+    const [slugConflict, parentEvent] = await Promise.all([
+      eventImageRepository.findBySlug(image.slug),
+      eventRepository.findById(image.event)
+    ]);
+
+    if (!parentEvent) {
+      throw new AppError(
+        "No se puede restaurar una imagen cuyo evento está eliminado.",
+        409,
+        "PARENT_DELETED"
+      );
+    }
+
+    if (slugConflict) {
+      throw new AppError(
+        "Ya existe una imagen activa con ese slug.",
+        409,
+        "RESTORE_CONFLICT"
+      );
+    }
+
+    return eventImageRepository.restoreById(id);
+  }
+
+  async changeStatus(id, status) {
+    const image = await eventImageRepository.findById(id, { includeDeleted: true });
+
+    if (!image) {
+      throw new AppError("Imagen no encontrada.", 404, "IMAGE_NOT_FOUND");
+    }
+
+    if (image.deleted_at) {
+      throw new AppError(
+        "No se puede cambiar el estado de una imagen eliminada.",
+        409,
+        "RECORD_DELETED"
+      );
+    }
+
+    return eventImageRepository.updateStatusById(id, status);
   }
 }
 

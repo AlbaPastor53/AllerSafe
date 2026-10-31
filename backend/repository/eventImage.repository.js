@@ -22,6 +22,10 @@ class EventImageRepository {
     return EventImage.findOne(filter);
   }
 
+  async countByEventId(eventId) {
+    return EventImage.countDocuments({ event: eventId, deleted_at: null });
+  }
+
   async findByEventId(eventId, { includeDeleted = false } = {}) {
     return this.findAll({ eventId, includeDeleted });
   }
@@ -50,6 +54,22 @@ class EventImageRepository {
     return EventImage.findOneAndUpdate(
       { _id: id, deleted_at: null },
       { deleted_at: new Date(), is_active: false },
+      { new: true, runValidators: true }
+    );
+  }
+
+  async restoreById(id) {
+    return EventImage.findOneAndUpdate(
+      { _id: id, deleted_at: { $ne: null } },
+      { deleted_at: null, is_active: true },
+      { new: true, runValidators: true }
+    );
+  }
+
+  async updateStatusById(id, status) {
+    return EventImage.findOneAndUpdate(
+      { _id: id, deleted_at: null },
+      { status },
       { new: true, runValidators: true }
     );
   }

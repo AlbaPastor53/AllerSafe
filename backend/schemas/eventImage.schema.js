@@ -36,11 +36,18 @@ const querySchema = z.object({
     .transform((value) => value === "true")
 });
 
+const statusSchema = z.object({
+  status: z.enum(["active", "inactive"], {
+    error: "status no es válido para imagen"
+  })
+});
+
 module.exports = {
   eventImageBodySchema,
   updateEventImageBodySchema,
   idParamSchema,
   slugParamSchema,
   eventIdParamSchema,
-  querySchema
+  querySchema,
+  statusSchema
 };

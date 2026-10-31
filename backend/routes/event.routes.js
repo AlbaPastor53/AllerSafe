@@ -10,7 +10,8 @@ const {
   hostBodySchema,
   locationBodySchema,
   categoriesBodySchema,
-  categoryParamSchema
+  categoryParamSchema,
+  statusSchema
 } = require("../schemas/event.schema");
 
 const router = express.Router();
@@ -46,6 +47,20 @@ router.delete(
 );
 
 router.get("/:id", validate(idParamSchema, "params"), controller.getById);
+
+router.patch(
+  "/:id/restore",
+  validate(idParamSchema, "params"),
+  controller.restore
+);
+
+router.patch(
+  "/:id/status",
+  validate(idParamSchema, "params"),
+  validate(statusSchema),
+  controller.changeStatus
+);
+
 router.post("/", validate(eventBodySchema), controller.create);
 router.patch(
   "/:id",

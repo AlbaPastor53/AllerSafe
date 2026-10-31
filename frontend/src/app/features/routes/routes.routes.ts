@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { adminGuard } from '../../core/guards/auth.guard';
 
 export const ROUTES_ROUTES: Routes = [
   {
@@ -8,11 +9,13 @@ export const ROUTES_ROUTES: Routes = [
   },
   {
     path: 'create',
+    canActivate: [adminGuard],
     loadComponent: () =>
       import('./pages/route-create/route-create').then((m) => m.RouteCreate)
   },
   {
     path: ':id/edit',
+    canActivate: [adminGuard],
     loadComponent: () =>
       import('./pages/route-edit/route-edit').then((m) => m.RouteEdit)
   },

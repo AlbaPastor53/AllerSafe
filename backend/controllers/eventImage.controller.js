@@ -66,6 +66,24 @@ class EventImageController {
       next(error);
     }
   }
+
+  async restore(req, res, next) {
+    try {
+      const image = await eventImageService.restore(req.params.id);
+      res.json({ success: true, data: image });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async changeStatus(req, res, next) {
+    try {
+      const image = await eventImageService.changeStatus(req.params.id, req.body.status);
+      res.json({ success: true, data: image });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = new EventImageController();

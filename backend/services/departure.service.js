@@ -15,11 +15,18 @@ class DepartureService {
     return departures;
   }
 
-  async getById(id) {
+  async getById(id, { includeDeleted = false } = {}) {
     try {
-      const departure = await departureRepository.findById(id);
+      const departure = await departureRepository.findById(id, { includeDeleted });
       if (!departure) {
         throw new AppError("Salida no encontrada.", 404, "DEPARTURE_NOT_FOUND");
+      }
+      if (departure.deleted_at) {
+        throw new AppError(
+          "No se puede modificar una salida eliminada.",
+          409,
+          "RECORD_DELETED"
+        );
       }
       await departure.populate(DEPARTURE_POPULATE);
       return departure;
@@ -72,7 +79,7 @@ class DepartureService {
   }
 
   async update(id, data) {
-    const current = await this.getById(id);
+    const current = await this.getById(id, { includeDeleted: true });
     const updateData = { ...data };
 
     if (data.event) {
@@ -114,6 +121,63 @@ class DepartureService {
 
     await departureRepository.softDelete(id);
     return true;
+  }
+
+  async restore(id) {
+    const departure = await departureRepository.findById(id, { includeDeleted: true });
+
+    if (!departure) {
+      throw new AppError("Salida no encontrada.", 404, "DEPARTURE_NOT_FOUND");
+    }
+
+    if (!departure.deleted_at) {
+      throw new AppError("La salida no está eliminada.", 409, "ALREADY_ACTIVE");
+    }
+
+    const [slugConflict, parentEvent] = await Promise.all([
+      departureRepository.findBySlug(departure.slug),
+      eventRepository.findById(departure.event)
+    ]);
+
+    if (!parentEvent) {
+      throw new AppError(
+        "No se puede restaurar una salida cuyo evento está eliminado.",
+        409,
+        "PARENT_DELETED"
+      );
+    }
+
+    if (slugConflict) {
+      throw new AppError(
+        "Ya existe una salida activa con ese slug.",
+        409,
+        "RESTORE_CONFLICT"
+      );
+    }
+
+    const restored = await departureRepository.restoreById(id);
+    await restored.populate(DEPARTURE_POPULATE);
+    return restored;
+  }
+
+  async changeStatus(id, status) {
+    const departure = await departureRepository.findById(id, { includeDeleted: true });
+
+    if (!departure) {
+      throw new AppError("Salida no encontrada.", 404, "DEPARTURE_NOT_FOUND");
+    }
+
+    if (departure.deleted_at) {
+      throw new AppError(
+        "No se puede cambiar el estado de una salida eliminada.",
+        409,
+        "RECORD_DELETED"
+      );
+    }
+
+    const updated = await departureRepository.updateStatusById(id, status);
+    await updated.populate(DEPARTURE_POPULATE);
+    return updated;
   }
 
   validateDates(start, end) {

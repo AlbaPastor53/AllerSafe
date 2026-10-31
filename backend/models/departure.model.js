@@ -34,10 +34,8 @@ const departureSchema = new mongoose.Schema(
     slug: {
       type: String,
       required: true,
-      unique: true,
       lowercase: true,
-      trim: true,
-      index: true
+      trim: true
     },
     status: {
       type: String,
@@ -68,6 +66,8 @@ const departureSchema = new mongoose.Schema(
     versionKey: false
   }
 );
+
+departureSchema.index({ slug: 1 }, { unique: true });
 
 departureSchema.pre("save", function (next) {
   this.updated_at = new Date();

@@ -18,6 +18,11 @@ class CategoryRepository {
     return Category.findOne(filter);
   }
 
+  async findByName(name, { includeDeleted = false } = {}) {
+    const filter = includeDeleted ? { name } : { name, deleted_at: null };
+    return Category.findOne(filter);
+  }
+
   async create(data) {
     return Category.create(data);
   }
@@ -34,6 +39,22 @@ class CategoryRepository {
     return Category.findOneAndUpdate(
       { _id: id, deleted_at: null },
       { deleted_at: new Date(), is_active: false },
+      { new: true, runValidators: true }
+    );
+  }
+
+  async restoreById(id) {
+    return Category.findOneAndUpdate(
+      { _id: id, deleted_at: { $ne: null } },
+      { deleted_at: null, is_active: true },
+      { new: true, runValidators: true }
+    );
+  }
+
+  async updateStatusById(id, status) {
+    return Category.findOneAndUpdate(
+      { _id: id, deleted_at: null },
+      { status },
       { new: true, runValidators: true }
     );
   }

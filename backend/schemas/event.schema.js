@@ -56,6 +56,12 @@ const categoryParamSchema = z.object({
   categoryId: z.string().min(1)
 });
 
+const statusSchema = z.object({
+  status: z.enum(["draft", "published"], {
+    error: "status no es válido para evento"
+  })
+});
+
 module.exports = {
   eventBodySchema,
   updateEventBodySchema,
@@ -65,5 +71,6 @@ module.exports = {
   hostBodySchema,
   locationBodySchema,
   categoriesBodySchema,
-  categoryParamSchema
+  categoryParamSchema,
+  statusSchema
 };

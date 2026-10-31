@@ -33,10 +33,17 @@ const querySchema = z.object({
     .transform((value) => value === "true")
 });
 
+const statusSchema = z.object({
+  status: z.enum(["scheduled", "full", "cancelled", "completed"], {
+    error: "status no es válido para salida"
+  })
+});
+
 module.exports = {
   departureBodySchema,
   updateDepartureBodySchema,
   idParamSchema,
   slugParamSchema,
-  querySchema
+  querySchema,
+  statusSchema
 };

@@ -54,6 +54,24 @@ class LocationController {
       next(error);
     }
   }
+
+  async restore(req, res, next) {
+    try {
+      const location = await locationService.restore(req.params.id);
+      res.json({ success: true, data: location });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async changeStatus(req, res, next) {
+    try {
+      const location = await locationService.changeStatus(req.params.id, req.body.status);
+      res.json({ success: true, data: location });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = new LocationController();

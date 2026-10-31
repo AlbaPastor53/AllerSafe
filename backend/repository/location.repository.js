@@ -37,6 +37,22 @@ class LocationRepository {
       { new: true, runValidators: true }
     );
   }
+
+  async restoreById(id) {
+    return Location.findOneAndUpdate(
+      { _id: id, deleted_at: { $ne: null } },
+      { deleted_at: null, is_active: true },
+      { new: true, runValidators: true }
+    );
+  }
+
+  async updateStatusById(id, status) {
+    return Location.findOneAndUpdate(
+      { _id: id, deleted_at: null },
+      { status },
+      { new: true, runValidators: true }
+    );
+  }
 }
 
 module.exports = new LocationRepository();

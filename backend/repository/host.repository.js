@@ -18,6 +18,10 @@ class HostRepository {
     return Host.findOne(filter);
   }
 
+  async countByUserId(userId) {
+    return Host.countDocuments({ user_id: userId, deleted_at: null });
+  }
+
   async findBySlug(slug, { includeDeleted = false } = {}) {
     const filter = includeDeleted
       ? { slug: slug.toLowerCase() }
@@ -41,6 +45,22 @@ class HostRepository {
     return Host.findOneAndUpdate(
       { _id: id, deleted_at: null },
       { deleted_at: new Date(), is_active: false },
+      { new: true, runValidators: true }
+    );
+  }
+
+  async restoreById(id) {
+    return Host.findOneAndUpdate(
+      { _id: id, deleted_at: { $ne: null } },
+      { deleted_at: null, is_active: true },
+      { new: true, runValidators: true }
+    );
+  }
+
+  async updateStatusById(id, status) {
+    return Host.findOneAndUpdate(
+      { _id: id, deleted_at: null },
+      { status },
       { new: true, runValidators: true }
     );
   }

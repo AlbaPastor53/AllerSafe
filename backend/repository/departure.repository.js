@@ -22,6 +22,10 @@ class DepartureRepository {
     return Departure.findOne(filter);
   }
 
+  async countByEventId(eventId) {
+    return Departure.countDocuments({ event: eventId, deleted_at: null });
+  }
+
   async create(data) {
     return Departure.create(data);
   }
@@ -38,6 +42,22 @@ class DepartureRepository {
     return Departure.findOneAndUpdate(
       { _id: id, deleted_at: null },
       { deleted_at: new Date(), is_active: false },
+      { new: true, runValidators: true }
+    );
+  }
+
+  async restoreById(id) {
+    return Departure.findOneAndUpdate(
+      { _id: id, deleted_at: { $ne: null } },
+      { deleted_at: null, is_active: true },
+      { new: true, runValidators: true }
+    );
+  }
+
+  async updateStatusById(id, status) {
+    return Departure.findOneAndUpdate(
+      { _id: id, deleted_at: null },
+      { status },
       { new: true, runValidators: true }
     );
   }

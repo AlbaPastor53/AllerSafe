@@ -5,13 +5,28 @@ const {
   userBodySchema,
   updateUserBodySchema,
   idParamSchema,
-  querySchema
+  querySchema,
+  statusSchema
 } = require("../schemas/user.schema");
 
 const router = express.Router();
 
 router.get("/", validate(querySchema, "query"), controller.getAll);
 router.get("/:id", validate(idParamSchema, "params"), controller.getById);
+
+router.patch(
+  "/:id/restore",
+  validate(idParamSchema, "params"),
+  controller.restore
+);
+
+router.patch(
+  "/:id/status",
+  validate(idParamSchema, "params"),
+  validate(statusSchema),
+  controller.changeStatus
+);
+
 router.post("/", validate(userBodySchema), controller.create);
 router.patch(
   "/:id",

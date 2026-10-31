@@ -4,8 +4,16 @@ import Swal from 'sweetalert2';
 import { ApiErrorBody } from '../models/api.model';
 
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
+  const isLoginRequest = req.url.includes('/auth/login');
+
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
+      // El login muestra sus errores en línea y los 401 del resto de la app
+      // los gestiona authInterceptor (logout + redirección).
+      if (isLoginRequest || error.status === 401) {
+        return throwError(() => error);
+      }
+
       let message = 'Se ha producido un error inesperado.';
 
       if ((error as { name?: string }).name === 'TimeoutError') {

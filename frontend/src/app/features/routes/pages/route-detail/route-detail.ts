@@ -36,6 +36,8 @@ import {
     showUnexpectedError
 } from '../../../../shared/utils/error.util';
 
+import { AuthService } from '../../../../core/services/auth.service';
+
 import {
     STATUS_LABELS,
     categoryNames
@@ -281,28 +283,30 @@ import {
 
                         <div class="mt-4 flex flex-col gap-3">
 
-                            <a
-                                [routerLink]="['/routes', event()!._id, 'edit']"
-                                class="button-primary text-center"
-                            >
-                                Editar evento
-                            </a>
+                            @if(isAdmin()) {
+                                <a
+                                    [routerLink]="['/routes', event()!._id, 'edit']"
+                                    class="button-primary text-center"
+                                >
+                                    Editar evento
+                                </a>
 
-                            <button
-                                type="button"
-                                class="button-secondary"
-                                (click)="toggleStatus()"
-                            >
-                                {{event()!.is_active ? 'Desactivar evento' : 'Activar evento'}}
-                            </button>
+                                <button
+                                    type="button"
+                                    class="button-secondary"
+                                    (click)="toggleStatus()"
+                                >
+                                    {{event()!.is_active ? 'Desactivar evento' : 'Activar evento'}}
+                                </button>
 
-                            <button
-                                type="button"
-                                class="button-danger"
-                                (click)="remove()"
-                            >
-                                Eliminar evento
-                            </button>
+                                <button
+                                    type="button"
+                                    class="button-danger"
+                                    (click)="remove()"
+                                >
+                                    Eliminar evento
+                                </button>
+                            }
 
                             <a
                                 routerLink="/routes"
@@ -332,6 +336,10 @@ export class RouteDetail implements OnInit {
     private readonly service = inject(CoursesService);
 
     private readonly store = inject(CoursesStore);
+
+    private readonly auth = inject(AuthService);
+
+    protected readonly isAdmin = this.auth.isAdmin;
 
 
     protected readonly event = signal<Courses | null>(null);
