@@ -13,7 +13,7 @@ import { AuthService } from '../../../core/services/auth.service';
         class="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8"
         aria-label="Navegación principal"
       >
-        <a routerLink="/routes" class="flex items-center gap-2 text-lg font-semibold text-[#F5F0E6]">
+        <a routerLink="/events" class="flex items-center gap-2 text-lg font-semibold text-[#F5F0E6]">
           <img
             src="logo.png"
             alt="AllerSafe"
@@ -26,7 +26,7 @@ import { AuthService } from '../../../core/services/auth.service';
 
         <div class="hidden items-center gap-2 sm:flex">
           <a
-            routerLink="/routes"
+            routerLink="/events"
             routerLinkActive="text-brand"
             [routerLinkActiveOptions]="{ exact: true }"
             class="rounded-full px-4 py-2 text-sm font-medium text-[#C2C9BF] transition-colors hover:bg-[#273128] hover:text-[#D6B66E]"
@@ -34,8 +34,32 @@ import { AuthService } from '../../../core/services/auth.service';
             Eventos
           </a>
 
+          <a routerLink="/departures" routerLinkActive="text-brand" class="rounded-full px-2 py-2 text-xs font-medium text-[#C2C9BF] transition-colors hover:bg-[#273128] hover:text-[#D6B66E]">
+            Salidas
+          </a>
+          <a routerLink="/categories" routerLinkActive="text-brand" class="rounded-full px-2 py-2 text-xs font-medium text-[#C2C9BF] transition-colors hover:bg-[#273128] hover:text-[#D6B66E]">
+            Categorías
+          </a>
+          <a routerLink="/locations" routerLinkActive="text-brand" class="rounded-full px-2 py-2 text-xs font-medium text-[#C2C9BF] transition-colors hover:bg-[#273128] hover:text-[#D6B66E]">
+            Ubicaciones
+          </a>
+          <a routerLink="/hosts" routerLinkActive="text-brand" class="rounded-full px-2 py-2 text-xs font-medium text-[#C2C9BF] transition-colors hover:bg-[#273128] hover:text-[#D6B66E]">
+            Anfitriones
+          </a>
+          <a routerLink="/event-images" routerLinkActive="text-brand" class="rounded-full px-2 py-2 text-xs font-medium text-[#C2C9BF] transition-colors hover:bg-[#273128] hover:text-[#D6B66E]">
+            Imágenes
+          </a>
+          <a routerLink="/profile" routerLinkActive="text-brand" class="rounded-full px-2 py-2 text-xs font-medium text-[#C2C9BF] transition-colors hover:bg-[#273128] hover:text-[#D6B66E]">
+            Perfil
+          </a>
           @if (isAdmin()) {
-            <a routerLink="/routes/create" class="button-primary">+ Nuevo evento</a>
+            <a routerLink="/users" routerLinkActive="text-brand" class="rounded-full px-2 py-2 text-xs font-medium text-[#C2C9BF] transition-colors hover:bg-[#273128] hover:text-[#D6B66E]">
+              Usuarios
+            </a>
+          }
+
+          @if (isAdmin()) {
+            <a routerLink="/events/create" class="button-primary">+ Nuevo evento</a>
           }
 
           <div class="ml-2 flex items-center gap-3 border-l border-[#394239] pl-3">
@@ -96,7 +120,7 @@ import { AuthService } from '../../../core/services/auth.service';
       @if (menuOpen()) {
         <div id="mobile-menu" class="space-y-1 border-t border-[#394239] px-4 py-3 sm:hidden">
           <a
-            routerLink="/routes"
+            routerLink="/events"
             routerLinkActive="bg-[#273128] text-brand"
             [routerLinkActiveOptions]="{ exact: true }"
             class="block rounded-lg px-3 py-2 text-sm font-medium text-[#C2C9BF] transition-colors hover:bg-[#273128]"
@@ -105,9 +129,31 @@ import { AuthService } from '../../../core/services/auth.service';
             Eventos
           </a>
 
+          @for (link of resourceLinks; track link.path) {
+            <a
+              [routerLink]="link.path"
+              routerLinkActive="bg-[#273128] text-brand"
+              class="block rounded-lg px-3 py-2 text-sm font-medium text-[#C2C9BF] transition-colors hover:bg-[#273128]"
+              (click)="menuOpen.set(false)"
+            >
+              {{ link.label }}
+            </a>
+          }
+
           @if (isAdmin()) {
             <a
-              routerLink="/routes/create"
+              routerLink="/users"
+              routerLinkActive="bg-[#273128] text-brand"
+              class="block rounded-lg px-3 py-2 text-sm font-medium text-[#C2C9BF] transition-colors hover:bg-[#273128]"
+              (click)="menuOpen.set(false)"
+            >
+              Usuarios
+            </a>
+          }
+
+          @if (isAdmin()) {
+            <a
+              routerLink="/events/create"
               routerLinkActive="bg-[#273128] text-brand"
               class="block rounded-lg px-3 py-2 text-sm font-medium text-[#C2C9BF] transition-colors hover:bg-[#273128]"
               (click)="menuOpen.set(false)"
@@ -139,6 +185,15 @@ export class Navbar {
   protected readonly menuOpen = signal(false);
   protected readonly user = this.auth.user;
   protected readonly isAdmin = this.auth.isAdmin;
+
+  protected readonly resourceLinks = [
+    { path: '/departures', label: 'Salidas' },
+    { path: '/categories', label: 'Categorías' },
+    { path: '/locations', label: 'Ubicaciones' },
+    { path: '/hosts', label: 'Anfitriones' },
+    { path: '/event-images', label: 'Imágenes' },
+    { path: '/profile', label: 'Perfil' }
+  ];
 
   protected logout(): void {
     this.auth.logout();

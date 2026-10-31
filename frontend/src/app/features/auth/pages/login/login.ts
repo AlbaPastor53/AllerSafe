@@ -166,6 +166,6 @@ export class Login {
       return returnUrl;
     }
 
-    return '/routes';
+    return '/events';
   }
 }

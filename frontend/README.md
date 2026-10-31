@@ -51,15 +51,15 @@ src/
     │   ├── models/          interfaces de evento, filtros y ApiResponse
     │   ├── services/        ApiService (HTTP + timeout) y servicio de eventos y ApiService (URL centralizada)
     │   └── stores/          store de eventos (signals; evento seleccionado, loading, error y stale)
-    ├── features/routes/
-    │   ├── components/      fila de evento y filtros, route-form (compartido)
-    │   ├── pages/           route-list, route-detail, route-create, route-edit
-    │   └── routes.routes.ts eventos: '' (lista), create, :id/edit, :id
+    ├── features/events/
+    │   ├── components/      fila de evento y filtros, event-form (compartido)
+    │   ├── pages/           event-list, event-detail, event-create, event-edit
+    │   └── events.routes.ts eventos: '' (lista), create, :id/edit, :id
     ├── layouts/main-layout/ navbar + <router-outlet>
     └── shared/              navbar, loader, skeleton, empty/error states, utils (validators, format, error.util)
 ```
 
-Flujo de datos: página → store → `CoursesService` → `ApiService` → `HttpClient`; los componentes
+Flujo de datos: página → store → `EventsService` → `ApiService` → `HttpClient`; los componentes
 hijos solo reciben inputs/emiten outputs.
 
 ## Variables de entorno

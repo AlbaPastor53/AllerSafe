@@ -1,4 +1,4 @@
-import { UserRole, UserStatus } from './courses.model';
+import { UserRole, UserStatus } from './user.model';
 
 export interface AuthUser {
   _id: string;
