@@ -14,40 +14,49 @@ import { formatDate, formatPrice } from '../../../../shared/utils/format.util';
             [class.opacity-60]="!event().is_active">
 
             <div class="flex min-w-0 flex-1 items-start gap-4">
-                <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#8C7548]/40 bg-[#3B3425] text-[#D6B66E]">
-                    <span class="text-lg font-bold">{{ event().name.slice(0,1).toUpperCase() }}</span>
+                <div class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#8C7548]/40 bg-[#3B3425] text-[#D6B66E]">
+                    @if (coverImage(); as cover) {
+                        <img
+                            [src]="cover.url"
+                            [alt]="cover.alt || event().name"
+                            class="h-full w-full object-cover"
+                            loading="lazy"
+                        />
+                    } @else {
+                        <span class="text-lg font-bold">{{ event().name.slice(0,1).toUpperCase() }}</span>
+                    }
                 </div>
 
                 <div class="min-w-0 flex-1">
                     <a [routerLink]="['/events',event()._id]" class="font-semibold text-[#F5F0E6] transition-colors hover:text-[#D6B66E] hover:underline">{{ event().name }}</a>
-                    <p class="mt-1 line-clamp-2 text-sm text-gray-500">{{ event().description }}</p>
+                    <p class="mt-1 line-clamp-2 text-sm text-[#A8B0A5]">{{ event().description }}</p>
 
                     <div class="mt-2 flex flex-wrap gap-2 text-xs">
-                        <span class="rounded-full bg-gray-100 px-2.5 py-1 text-gray-700">{{ categoryLabel() }}</span>
-                        <span class="rounded-full bg-gray-100 px-2.5 py-1 text-gray-700">{{ statusLabel() }}</span>
-                        <span class="rounded-full px-2.5 py-1" [class.bg-green-100]="event().is_active" [class.text-green-800]="event().is_active" [class.bg-gray-200]="!event().is_active">{{ event().is_active ? 'Activo' : 'Inactivo' }}</span>
+                        <span class="rounded-full bg-[#2B3226] px-2.5 py-1 text-[#D6B66E]">{{ categoryLabel() }}</span>
+                        <span class="rounded-full bg-[#2B3226] px-2.5 py-1 text-[#D6B66E]">{{ statusLabel() }}</span>
+                        <span [class]="activeClass()">{{ event().is_active ? 'Activo' : 'Inactivo' }}</span>
                     </div>
                 </div>
             </div>
 
             <div class="grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:min-w-56">
                 <div>
-                    <p class="text-xs text-gray-500">Fecha</p>
+                    <p class="text-xs text-[#899188]">Fecha</p>
                     <strong>{{ formatDate(event().date) }}</strong>
                 </div>
 
                 <div>
-                    <p class="text-xs text-gray-500">Hora</p>
+                    <p class="text-xs text-[#899188]">Hora</p>
                     <strong>{{ event().time || '-' }}</strong>
                 </div>
 
                 <div>
-                    <p class="text-xs text-gray-500">Precio</p>
+                    <p class="text-xs text-[#899188]">Precio</p>
                     <strong>{{ formatPrice(event().price) }}</strong>
                 </div>
 
                 <div>
-                    <p class="text-xs text-gray-500">Aforo</p>
+                    <p class="text-xs text-[#899188]">Aforo</p>
                     <strong>{{ event().capacity }}</strong>
                 </div>
             </div>
@@ -74,6 +83,16 @@ export class EventRow {
 
     protected readonly formatDate = formatDate;
     protected readonly formatPrice = formatPrice;
+
+    protected readonly coverImage = computed(() => {
+        const images = this.event().images ?? [];
+        return images.find((image) => image.isCover) ?? images[0] ?? null;
+    });
+
+    protected readonly activeClass = computed(() =>
+        this.event().is_active
+            ? 'rounded-full bg-[#233527] px-2.5 py-1 text-[#BFE3C2]'
+            : 'rounded-full bg-[#3A2024] px-2.5 py-1 text-[#F0B7BF]');
 
     protected readonly categoryLabel = computed(() => categoryNames(this.event().categories));
     protected readonly statusLabel = computed(() =>

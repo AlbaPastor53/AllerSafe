@@ -12,6 +12,10 @@ const {
 const router = express.Router();
 
 router.get("/", validate(querySchema, "query"), controller.getAll);
+router.get("/:id/profile",
+  validate(idParamSchema, "params"),
+  controller.getProfile
+);
 router.get("/:id", validate(idParamSchema, "params"), controller.getById);
 
 router.patch(

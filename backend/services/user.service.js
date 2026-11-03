@@ -39,6 +39,16 @@ class UserService {
     }
   }
 
+  async getProfile(id) {
+    const user = await userRepository.findById(id, { includeDeleted: true });
+
+    if (!user) {
+      throw new AppError("Usuario no encontrado.", 404, "USER_NOT_FOUND");
+    }
+
+    return profileService.getByUserId(id);
+  }
+
   async create(data) {
     const existing = await userRepository.findByEmail(data.email, {
       includeDeleted: true

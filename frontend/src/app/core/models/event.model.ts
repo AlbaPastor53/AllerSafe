@@ -30,8 +30,15 @@ export interface EventSummary {
   _id: string;
   name: string;
   slug: string;
+  description?: string;
   status: EventStatus;
   is_active: boolean;
+  categories?: Category[];
+  location?: Location | string;
+  date?: string;
+  time?: string;
+  price?: number;
+  capacity?: number;
 }
 
 export interface EventPayload {

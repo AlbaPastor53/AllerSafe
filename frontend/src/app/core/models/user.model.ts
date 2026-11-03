@@ -32,3 +32,11 @@ export interface UserPayload {
 }
 
 export type UpdateUserPayload = Partial<UserPayload>;
+
+export interface UserFormPayload {
+  name: string;
+  email: string;
+  password?: string;
+  role?: UserRole;
+  status?: UserStatus;
+}

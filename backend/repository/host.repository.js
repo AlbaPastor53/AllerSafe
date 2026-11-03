@@ -60,7 +60,7 @@ class HostRepository {
   async updateStatusById(id, status) {
     return Host.findOneAndUpdate(
       { _id: id, deleted_at: null },
-      { status },
+      { status, is_active: status === "active" },
       { new: true, runValidators: true }
     );
   }

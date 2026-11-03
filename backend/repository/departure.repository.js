@@ -57,7 +57,7 @@ class DepartureRepository {
   async updateStatusById(id, status) {
     return Departure.findOneAndUpdate(
       { _id: id, deleted_at: null },
-      { status },
+      { status, is_active: status !== "cancelled" },
       { new: true, runValidators: true }
     );
   }

@@ -23,6 +23,11 @@ const seedUsers = [
     profile: {
       first_name: "Admin",
       last_name: "AllerSafe",
+      phone: "+34 600 000 001",
+      birth_date: new Date("1985-03-15"),
+      address: "Carrer de la Cuina, 12",
+      city: "Barcelona",
+      postal_code: "08001",
       bio: "Administrador de la plataforma AllerSafe."
     }
   },
@@ -34,6 +39,11 @@ const seedUsers = [
     profile: {
       first_name: "Chef",
       last_name: "AllerSafe",
+      phone: "+34 600 000 002",
+      birth_date: new Date("1988-07-22"),
+      address: "Avinguda del Portal, 45",
+      city: "Girona",
+      postal_code: "17001",
       bio: "Chef especializado en cocina segura para personas con alergias alimentarias."
     }
   },
@@ -45,6 +55,11 @@ const seedUsers = [
     profile: {
       first_name: "Marta",
       last_name: "Nutrición",
+      phone: "+34 600 000 003",
+      birth_date: new Date("1990-11-05"),
+      address: "Carrer de la Cuina, 12",
+      city: "Barcelona",
+      postal_code: "08001",
       bio: "Dietista-nutricionista experta en etiquetado y alimentación saludable."
     }
   },
@@ -56,6 +71,11 @@ const seedUsers = [
     profile: {
       first_name: "Cliente",
       last_name: "Demo",
+      phone: "+34 600 000 004",
+      birth_date: new Date("1995-05-30"),
+      address: "Carrer de la Cuina, 12",
+      city: "Barcelona",
+      postal_code: "08001",
       bio: "Usuario de prueba para reservas.",
       allergies: ["frutos secos"],
       dietary_restrictions: ["sin lactosa"]

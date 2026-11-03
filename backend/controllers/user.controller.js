@@ -19,6 +19,15 @@ class UserController {
     }
   }
 
+  async getProfile(req, res, next) {
+    try {
+      const profile = await userService.getProfile(req.params.id);
+      res.json({ success: true, data: profile });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async create(req, res, next) {
     try {
       const user = await userService.create(req.body);

@@ -5,11 +5,24 @@ class ProfileService {
   async getByUserId(userId) {
     const profile = await profileRepository.findByUserId(userId);
 
-    if (!profile) {
-      throw new AppError("Perfil no encontrado.", 404, "PROFILE_NOT_FOUND");
+    if (profile) {
+      return profile;
     }
 
-    return profile;
+    // El perfil se crea de forma perezosa la primera vez que se consulta,
+    // para que cualquier usuario autenticado pueda completarlo desde la app.
+    try {
+      return await this.createForUser(userId, {});
+    } catch (error) {
+      // Si dos peticiones concurrentes intentan crearlo, reutilizamos el
+      // perfil que ya haya quedado guardado.
+      if (error?.code === 11000) {
+        const existing = await profileRepository.findByUserId(userId);
+        if (existing) return existing;
+      }
+
+      throw error;
+    }
   }
 
   async createForUser(userId, data = {}, { session = null } = {}) {

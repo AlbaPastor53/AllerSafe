@@ -14,9 +14,10 @@ export const routes: Routes = [
     component: MainLayout,
     canActivate: [authGuard],
     children: [
-      { path: '', redirectTo: 'events', pathMatch: 'full' },
+      { path: '', redirectTo: 'departures', pathMatch: 'full' },
       {
         path: 'events',
+        canActivate: [adminGuard],
         loadChildren: () =>
           import('./features/events/events.routes').then((m) => m.EVENTS_ROUTES)
       },
@@ -27,23 +28,21 @@ export const routes: Routes = [
       },
       {
         path: 'categories',
+        canActivate: [adminGuard],
         loadChildren: () =>
           import('./features/categories/categories.routes').then((m) => m.CATEGORIES_ROUTES)
       },
       {
         path: 'locations',
+        canActivate: [adminGuard],
         loadChildren: () =>
           import('./features/locations/locations.routes').then((m) => m.LOCATIONS_ROUTES)
       },
       {
         path: 'hosts',
+        canActivate: [adminGuard],
         loadChildren: () =>
           import('./features/hosts/hosts.routes').then((m) => m.HOSTS_ROUTES)
-      },
-      {
-        path: 'event-images',
-        loadChildren: () =>
-          import('./features/event-images/event-images.routes').then((m) => m.EVENT_IMAGES_ROUTES)
       },
       {
         path: 'profile',
@@ -58,5 +57,5 @@ export const routes: Routes = [
       }
     ]
   },
-  { path: '**', redirectTo: 'events' }
+  { path: '**', redirectTo: 'departures' }
 ];

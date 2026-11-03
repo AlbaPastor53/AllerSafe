@@ -250,8 +250,12 @@ import { formatDateTimeLocal } from '../../../../shared/utils/format.util';
                             <option value="">Selecciona un anfitrión</option>
 
                             @for (host of hosts(); track host._id) {
-                                <option [value]="host._id">
+                                <option
+                                    [value]="host._id"
+                                    [disabled]="!isHostAvailable(host)"
+                                >
                                     {{ hostLabel(host) }}
+                                    {{ isHostAvailable(host) ? '' : ' (inactivo)' }}
                                 </option>
                             }
                         </select>
@@ -276,8 +280,12 @@ import { formatDateTimeLocal } from '../../../../shared/utils/format.util';
                             <option value="">Selecciona una ubicación</option>
 
                             @for (location of locations(); track location._id) {
-                                <option [value]="location._id">
+                                <option
+                                    [value]="location._id"
+                                    [disabled]="!isLocationAvailable(location)"
+                                >
                                     {{ location.name }} — {{ location.address }}
+                                    {{ isLocationAvailable(location) ? '' : ' (inactiva)' }}
                                 </option>
                             }
                         </select>
@@ -302,8 +310,12 @@ import { formatDateTimeLocal } from '../../../../shared/utils/format.util';
                             size="5"
                         >
                             @for (category of categories(); track category._id) {
-                                <option [value]="category._id">
+                                <option
+                                    [value]="category._id"
+                                    [disabled]="!isCategoryAvailable(category)"
+                                >
                                     {{ category.name }}
+                                    {{ isCategoryAvailable(category) ? '' : ' (inactiva)' }}
                                 </option>
                             }
                         </select>
@@ -483,6 +495,24 @@ export class EventForm {
                 });
             }
         });
+    }
+
+
+    protected isHostAvailable(host: Host): boolean {
+        return host.is_active || refId(this.event()?.host) === host._id;
+    }
+
+
+    protected isLocationAvailable(location: Location): boolean {
+        return location.is_active || refId(this.event()?.location) === location._id;
+    }
+
+
+    protected isCategoryAvailable(category: Category): boolean {
+        return (
+            category.is_active ||
+            (this.event()?.categories ?? []).some((item) => item._id === category._id)
+        );
     }
 
 

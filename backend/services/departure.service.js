@@ -3,10 +3,16 @@ const eventRepository = require("../repository/event.repository");
 const AppError = require("./utils/appError");
 const { buildUniqueSlug } = require("./utils/slug");
 
-const DEPARTURE_POPULATE = {
-  path: "event",
-  select: "name slug status is_active"
-};
+const DEPARTURE_POPULATE = [
+  {
+    path: "event",
+    select: "name slug description status is_active date time price capacity categories location",
+    populate: [
+      { path: "categories", select: "name slug status is_active" },
+      { path: "location", select: "name address slug status is_active" }
+    ]
+  }
+];
 
 class DepartureService {
   async getAll({ eventId = null, includeDeleted = false } = {}) {

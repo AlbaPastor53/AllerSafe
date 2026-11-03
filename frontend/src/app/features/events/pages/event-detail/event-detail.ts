@@ -143,7 +143,8 @@ import { AuthService } from '../../../../core/services/auth.service';
                                     class="rounded-full px-3 py-1 text-sm"
                                     [class.bg-green-100]="event()!.is_active"
                                     [class.text-green-800]="event()!.is_active"
-                                    [class.bg-gray-100]="!event()!.is_active"
+                                    [class.bg-red-100]="!event()!.is_active"
+                                    [class.text-red-800]="!event()!.is_active"
                                 >
                                     {{event()!.is_active ? 'Activo' : 'Inactivo'}}
                                 </span>

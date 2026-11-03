@@ -3,11 +3,22 @@ import { HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { ApiService } from './api.service';
 import { ApiResponse } from '../models/api.model';
-import { Departure, DepartureFilters } from '../models/departure.model';
+import {
+  Departure,
+  DepartureFilters,
+  DeparturePayload,
+  DepartureStatus
+} from '../models/departure.model';
 
 function extractList<T>(response: ApiResponse<T[]> | null | undefined): T[] {
   const data = response?.data;
   if (!Array.isArray(data)) throw new Error('INVALID_RESPONSE');
+  return data;
+}
+
+function extractData<T>(response: ApiResponse<T> | null | undefined): T {
+  const data = response?.data;
+  if (data === undefined || data === null) throw new Error('INVALID_RESPONSE');
   return data;
 }
 
@@ -23,5 +34,35 @@ export class DeparturesService {
     return this.api
       .get<ApiResponse<Departure[]>>('departures', params)
       .pipe(map((response) => extractList(response)));
+  }
+
+  getById(id: string): Observable<Departure> {
+    return this.api
+      .get<ApiResponse<Departure>>(`departures/${encodeURIComponent(id)}`)
+      .pipe(map((response) => extractData(response)));
+  }
+
+  create(payload: DeparturePayload): Observable<Departure> {
+    return this.api
+      .post<ApiResponse<Departure>>('departures', payload)
+      .pipe(map((response) => extractData(response)));
+  }
+
+  update(id: string, payload: Partial<DeparturePayload>): Observable<Departure> {
+    return this.api
+      .patch<ApiResponse<Departure>>(`departures/${encodeURIComponent(id)}`, payload)
+      .pipe(map((response) => extractData(response)));
+  }
+
+  setStatus(id: string, status: DepartureStatus): Observable<Departure> {
+    return this.api
+      .patch<ApiResponse<Departure>>(`departures/${encodeURIComponent(id)}/status`, {
+        status
+      })
+      .pipe(map((response) => extractData(response)));
+  }
+
+  remove(id: string): Observable<void> {
+    return this.api.delete<void>(`departures/${encodeURIComponent(id)}`);
   }
 }

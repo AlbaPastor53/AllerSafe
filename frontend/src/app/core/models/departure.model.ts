@@ -34,3 +34,18 @@ export interface DepartureFilters {
   event?: string;
   includeDeleted?: boolean;
 }
+
+export const DEPARTURE_STATUS_LABELS: Record<DepartureStatus, string> = {
+  scheduled: 'Programada',
+  full: 'Completa',
+  cancelled: 'Cancelada',
+  completed: 'Finalizada'
+};
+
+export function departureEventName(departure: Departure): string {
+  return typeof departure.event === 'string' ? departure.event : departure.event.name;
+}
+
+export function departureAvailableSpots(departure: Departure): number {
+  return Math.max(0, departure.capacity - (departure.booked_participants ?? 0));
+}
