@@ -48,15 +48,15 @@ import { DepartureForm } from '../../components/departure-form/departure-form';
     <section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 class="text-2xl font-semibold text-[#F5F0E6]">Salidas</h1>
+          <h1 class="text-2xl font-semibold text-[#F5F0E6]">Clases</h1>
           <p class="mt-1 text-sm text-[#A8B0A5]">
-            {{ visibleDepartures().length }} salidas disponibles
+            {{ visibleDepartures().length }} clases disponibles
           </p>
         </div>
 
         @if (isAdmin()) {
           <button type="button" class="button-primary" (click)="openCreate()">
-            + Nueva salida
+            + Nueva clase
           </button>
         }
       </div>
@@ -66,7 +66,7 @@ import { DepartureForm } from '../../components/departure-form/departure-form';
       } @else if (error()) {
         <app-error-state [message]="error()!" (retry)="load()" />
       } @else if (visibleDepartures().length === 0) {
-        <app-empty-state title="No hay salidas" message="Todavía no hay salidas programadas." />
+        <app-empty-state title="No hay clases" message="Todavía no hay clases programadas." />
       } @else {
         <div class="space-y-4">
           @for (departure of visibleDepartures(); track departure._id) {
@@ -162,7 +162,7 @@ import { DepartureForm } from '../../components/departure-form/departure-form';
 
       <app-modal
         [open]="showForm()"
-        [title]="editing() ? 'Editar salida' : 'Nueva salida'"
+        [title]="editing() ? 'Editar clase' : 'Nueva clase'"
         (closed)="closeForm()"
       >
         @if (showForm()) {

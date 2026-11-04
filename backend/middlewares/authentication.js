@@ -1,19 +1,17 @@
 const AppError = require("../services/utils/appError");
 const userRepository = require("../repository/user.repository");
 const revokedTokenRepository = require("../repository/revokedToken.repository");
-const { verifyAccessToken, hashToken } = require("../utils/jwt");
+const {
+  ACCESS_TOKEN_COOKIE,
+  verifyAccessToken,
+  hashToken
+} = require("../utils/jwt");
 
 const objectIdRegex = /^[0-9a-fA-F]{24}$/;
 
 function extractToken(req) {
-  const header = req.headers.authorization;
-
-  if (!header || typeof header !== "string") return null;
-
-  const [scheme, token] = header.split(" ");
-  if (!token || scheme.toLowerCase() !== "bearer") return null;
-
-  return token.trim();
+  const token = req.cookies?.[ACCESS_TOKEN_COOKIE];
+  return typeof token === "string" && token.trim() ? token.trim() : null;
 }
 
 async function authentication(req, res, next) {

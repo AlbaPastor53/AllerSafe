@@ -7,6 +7,7 @@ const { loginBodySchema } = require("../schemas/auth.schema");
 const router = express.Router();
 
 router.post("/login", validate(loginBodySchema), controller.login);
+router.get("/me", authentication, controller.me);
 router.post("/logout", authentication, controller.logout);
 
 module.exports = router;

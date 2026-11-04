@@ -11,19 +11,15 @@ import { AuthService } from '../services/auth.service';
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
   const router = inject(Router);
-  const isLoginRequest = req.url.includes('/auth/login');
+  const isAuthRequest = ['/auth/login', '/auth/me', '/auth/logout'].some(
+    (path) => req.url.includes(path)
+  );
 
-  const token = auth.token();
-  const request =
-    token && !isLoginRequest
-      ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
-      : req;
-
-  return next(request).pipe(
+  return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
-      if (error.status === 401 && !isLoginRequest) {
+      if (error.status === 401 && !isAuthRequest) {
         const wasAuthenticated = auth.isAuthenticated();
-        auth.logout();
+        auth.clearSession();
 
         if (wasAuthenticated) {
           void router

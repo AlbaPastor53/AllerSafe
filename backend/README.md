@@ -40,7 +40,8 @@ Inserta 5 clases culinarias de prueba.
 ## Endpoints principales
 
 - `POST /api/auth/login`
-- `POST /api/auth/logout` (requiere `Authorization: Bearer <JWT>`)
+- `GET /api/auth/me` (requiere cookie de sesión)
+- `POST /api/auth/logout` (requiere cookie de sesión)
 - `GET /api/profile` (requiere autenticación)
 - `PATCH /api/profile` (requiere autenticación)
 - `GET /api/users` (requiere rol Admin)
@@ -60,11 +61,13 @@ Inserta 5 clases culinarias de prueba.
 
 ## Autenticación
 
-El login devuelve un JWT que debe enviarse como:
+El login establece el JWT en una cookie `HttpOnly`; el navegador la envía
+automáticamente en las peticiones. El token no se devuelve en el cuerpo ni
+debe guardarse en `localStorage`.
 
-```text
-Authorization: Bearer <JWT>
-```
+`GET /api/auth/me` devuelve el usuario y el rol de la sesión actual. El servidor
+valida los permisos en cada petición; el rol devuelto al frontend solo se usa
+para mostrar la interfaz.
 
 El servidor guarda en la blacklist únicamente `sha256(JWT)`, nunca el token
 completo. Los tokens revocados no se pueden reutilizar aunque no hayan

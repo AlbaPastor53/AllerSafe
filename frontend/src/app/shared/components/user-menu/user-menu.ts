@@ -113,8 +113,10 @@ export class UserMenu {
   }
 
   protected logout(): void {
-    this.auth.logout();
-    void this.router.navigate(['/login']);
+    this.auth.logout().subscribe({
+      next: () => void this.router.navigate(['/login']),
+      error: () => void this.router.navigate(['/login'])
+    });
   }
 
   protected onAvatarError(): void {

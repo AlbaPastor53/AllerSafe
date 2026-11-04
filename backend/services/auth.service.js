@@ -47,7 +47,7 @@ class AuthService {
       throw invalidCredentials();
     }
 
-    const { token } = signAccessToken({
+    const { token, expiresAt } = signAccessToken({
       userId: user._id,
       role: user.role,
       tokenVersion: user.token_version
@@ -55,7 +55,7 @@ class AuthService {
 
     const { password_hash, token_version, ...safeUser } = user.toObject();
 
-    return { token, user: safeUser };
+    return { token, expiresAt, user: safeUser };
   }
 
   async logout({ tokenHash, userId, exp }) {

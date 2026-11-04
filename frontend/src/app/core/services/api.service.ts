@@ -15,31 +15,47 @@ export class ApiService {
 
   get<T>(endpoint: string, params?: HttpParams): Observable<T> {
     return this.http
-      .get<T>(`${this.baseUrl}/${endpoint}`, { headers: this.headers(), params })
+      .get<T>(`${this.baseUrl}/${endpoint}`, {
+        headers: this.headers(),
+        params,
+        withCredentials: true
+      })
       .pipe(timeout(this.requestTimeout));
   }
 
   post<T>(endpoint: string, body: unknown): Observable<T> {
     return this.http
-      .post<T>(`${this.baseUrl}/${endpoint}`, body, { headers: this.headers() })
+      .post<T>(`${this.baseUrl}/${endpoint}`, body, {
+        headers: this.headers(),
+        withCredentials: true
+      })
       .pipe(timeout(this.requestTimeout));
   }
 
   put<T>(endpoint: string, body: unknown): Observable<T> {
     return this.http
-      .put<T>(`${this.baseUrl}/${endpoint}`, body, { headers: this.headers() })
+      .put<T>(`${this.baseUrl}/${endpoint}`, body, {
+        headers: this.headers(),
+        withCredentials: true
+      })
       .pipe(timeout(this.requestTimeout));
   }
 
   patch<T>(endpoint: string, body: unknown = {}): Observable<T> {
     return this.http
-      .patch<T>(`${this.baseUrl}/${endpoint}`, body, { headers: this.headers() })
+      .patch<T>(`${this.baseUrl}/${endpoint}`, body, {
+        headers: this.headers(),
+        withCredentials: true
+      })
       .pipe(timeout(this.requestTimeout));
   }
 
   delete<T>(endpoint: string): Observable<T> {
     return this.http
-      .delete<T>(`${this.baseUrl}/${endpoint}`, { headers: this.headers() })
+      .delete<T>(`${this.baseUrl}/${endpoint}`, {
+        headers: this.headers(),
+        withCredentials: true
+      })
       .pipe(timeout(this.requestTimeout));
   }
 }

@@ -17,11 +17,17 @@ export interface LoginCredentials {
 }
 
 export interface LoginData {
-  token: string;
   user: AuthUser;
 }
 
 export interface LoginResponse {
   success?: boolean;
   data: LoginData;
+}
+
+export interface AuthMeResponse {
+  success?: boolean;
+  data: {
+    user: AuthUser;
+  };
 }

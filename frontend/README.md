@@ -20,7 +20,11 @@ npm start
 ```
 
 Arranca `ng serve` en `http://localhost:4200/` y recarga al guardar cambios. Las llamadas a la API
-salen desde el navegador hacia `http://localhost:3000` (CORS habilitado en la API para el puerto 4200).
+salen desde el navegador hacia `http://localhost:3000` con credenciales de cookie; el backend debe
+permitir este origen mediante `CORS_ORIGIN`.
+
+La sesión usa una cookie `HttpOnly`: el JWT no se guarda en `localStorage` ni es accesible desde
+JavaScript. Al recargar la aplicación, el usuario y el rol se recuperan desde `GET /api/auth/me`.
 
 ## Build de producción
 

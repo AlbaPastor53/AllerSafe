@@ -5,6 +5,16 @@ const AppError = require("../services/utils/appError");
 
 const MIN_SECRET_LENGTH = 32;
 const DEFAULT_EXPIRES_IN = "1h";
+const ACCESS_TOKEN_COOKIE = "allersafe_token";
+
+function getAccessTokenCookieOptions() {
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/api"
+  };
+}
 
 function getSecret() {
   const secret = process.env.JWT_SECRET;
@@ -70,6 +80,8 @@ function validateJwtConfig() {
 }
 
 module.exports = {
+  ACCESS_TOKEN_COOKIE,
+  getAccessTokenCookieOptions,
   signAccessToken,
   verifyAccessToken,
   hashToken,

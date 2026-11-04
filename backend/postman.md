@@ -124,7 +124,6 @@ Respuesta:
 {
   "success": true,
   "data": {
-    "token": "<JWT>",
     "user": {
       "_id": "...",
       "name": "Admin AllerSafe",
@@ -135,17 +134,20 @@ Respuesta:
 }
 ```
 
-El resto de peticiones protegidas deben incluir:
+La respuesta establece una cookie `HttpOnly`. En Postman, conserva la cookie
+para las siguientes peticiones; no copies el JWT a una cabecera.
 
-```text
-Authorization: Bearer <JWT>
-```
+### Sesión actual
+
+**GET** `/auth/me`
+
+Requiere la cookie establecida durante el login y devuelve el usuario actual.
 
 ### Logout
 
 **POST** `/auth/logout`
 
-Requiere `Authorization: Bearer <JWT>`. Devuelve `204` y registra
+Requiere la cookie de sesión. Devuelve `204`, borra la cookie y registra
 `sha256(JWT)` en la blacklist. El token no puede reutilizarse.
 
 ### Perfil

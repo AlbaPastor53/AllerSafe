@@ -67,7 +67,7 @@ import { AuthService } from '../../../core/services/auth.service';
           class="block rounded-lg px-3 py-2 text-sm font-medium text-[#C2C9BF] transition-colors hover:bg-[#273128] hover:text-[#D6B66E]"
           (click)="close.emit()"
         >
-          Salidas
+          Clases
         </a>
 
         @if (isAdmin()) {
