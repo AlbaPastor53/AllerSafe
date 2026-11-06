@@ -6,14 +6,13 @@ import {
   signal
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
 import { Departure, departureEventName } from '../../../../core/models/departure.model';
 import { Event, refId } from '../../../../core/models/event.model';
 import { Host, HostPayload } from '../../../../core/models/host.model';
 import { AuthService } from '../../../../core/services/auth.service';
-import { DeparturesService } from '../../../../core/services/departures.service';
-import { EventsService } from '../../../../core/services/events.service';
-import { HostsService } from '../../../../core/services/hosts.service';
+import { DeparturesStore } from '../../../../core/stores/departures.store';
+import { EventsStore } from '../../../../core/stores/events.store';
+import { HostsStore } from '../../../../core/stores/hosts.store';
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import { ErrorState } from '../../../../shared/components/error-state/error-state';
 import { Modal } from '../../../../shared/components/modal/modal';
@@ -152,15 +151,15 @@ interface HostDeparture {
   `
 })
 export class HostList implements OnInit {
-  private readonly service = inject(HostsService);
-  private readonly eventsService = inject(EventsService);
-  private readonly departuresService = inject(DeparturesService);
+  private readonly hostsStore = inject(HostsStore);
+  private readonly eventsStore = inject(EventsStore);
+  private readonly departuresStore = inject(DeparturesStore);
   private readonly auth = inject(AuthService);
 
   protected readonly isAdmin = this.auth.isAdmin;
-  protected readonly hosts = signal<Host[]>([]);
-  protected readonly events = signal<Event[]>([]);
-  protected readonly departures = signal<Departure[]>([]);
+  protected readonly hosts = this.hostsStore.hosts;
+  protected readonly events = this.eventsStore.events;
+  protected readonly departures = this.departuresStore.departures;
   protected readonly loading = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly pendingId = signal<string | null>(null);
@@ -226,13 +225,12 @@ export class HostList implements OnInit {
 
     try {
       if (current) {
-        await firstValueFrom(this.service.update(current._id, payload));
+        await this.hostsStore.update(current._id, payload);
       } else {
-        await firstValueFrom(this.service.create(payload));
+        await this.hostsStore.create(payload);
       }
 
       this.closeForm();
-      await this.load();
     } catch {
       // El interceptor global muestra el error de la API.
     }
@@ -244,13 +242,7 @@ export class HostList implements OnInit {
     this.pendingId.set(host._id);
 
     try {
-      const updated = await firstValueFrom(
-        this.service.setActive(host._id, !host.is_active)
-      );
-
-      this.hosts.update((list) =>
-        list.map((item) => (item._id === updated._id ? updated : item))
-      );
+      await this.hostsStore.setActive(host._id, !host.is_active);
     } catch {
       // El interceptor global muestra el error de la API.
     } finally {
@@ -263,15 +255,11 @@ export class HostList implements OnInit {
     this.error.set(null);
 
     try {
-      const [hosts, events, departures] = await Promise.all([
-        firstValueFrom(this.service.list()),
-        firstValueFrom(this.eventsService.list()),
-        firstValueFrom(this.departuresService.list())
+      await Promise.all([
+        this.hostsStore.load(),
+        this.eventsStore.load(),
+        this.departuresStore.load()
       ]);
-
-      this.hosts.set(hosts);
-      this.events.set(events);
-      this.departures.set(departures);
     } catch {
       this.error.set('No se han podido cargar los anfitriones.');
     } finally {

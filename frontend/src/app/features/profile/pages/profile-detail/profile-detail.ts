@@ -15,6 +15,11 @@ import { ErrorState } from '../../../../shared/components/error-state/error-stat
 import { SkeletonLoader } from '../../../../shared/components/skeleton-loader/skeleton-loader';
 import { buildRobohashUrl } from '../../../../shared/utils/avatar.util';
 
+const ALLOWED_AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const MAX_AVATAR_SOURCE_BYTES = 5 * 1024 * 1024;
+const AVATAR_MAX_SIZE = 512;
+const AVATAR_QUALITY = 0.85;
+
 @Component({
   selector: 'app-profile-detail',
   standalone: true,
@@ -31,7 +36,8 @@ import { buildRobohashUrl } from '../../../../shared/utils/avatar.util';
               [src]="avatarSrc()"
               alt="Avatar"
               class="h-full w-full object-cover"
-              (error)="onAvatarError()"
+              referrerpolicy="no-referrer"
+              (error)="onAvatarError($event)"
             />
           } @else {
             {{ initials() }}
@@ -170,18 +176,46 @@ import { buildRobohashUrl } from '../../../../shared/utils/avatar.util';
             </div>
 
             <div>
-              <label class="form-label" for="avatar_url">URL del avatar</label>
+              <label class="form-label" for="avatar_url">Avatar</label>
               <input
                 id="avatar_url"
                 type="url"
                 class="form-input"
                 formControlName="avatar_url"
                 maxlength="500"
-                placeholder="https://..."
+                placeholder="URL externa (https://...)"
                 (input)="onAvatarInput($event)"
               />
               @if (errorFor('avatar_url')) {
                 <p class="mt-1 text-sm text-[#F0B7BF]">{{ errorFor('avatar_url') }}</p>
+              }
+
+              <div class="mt-2 flex flex-wrap items-center gap-2">
+                <label class="button-secondary cursor-pointer" for="avatar_file">
+                  {{ avatarUploading() ? 'Procesando...' : 'Subir imagen' }}
+                </label>
+                <input
+                  id="avatar_file"
+                  type="file"
+                  class="sr-only"
+                  accept="image/jpeg,image/png,image/webp"
+                  [disabled]="avatarUploading()"
+                  (change)="onAvatarFile($event)"
+                />
+                <button
+                  type="button"
+                  class="button-secondary"
+                  [disabled]="avatarUploading()"
+                  (click)="removeAvatar()"
+                >
+                  Quitar foto
+                </button>
+              </div>
+              <p class="mt-1 text-xs text-[#899188]">
+                JPG, PNG o WebP (máx. 5 MB). También puedes pegar una URL.
+              </p>
+              @if (avatarError()) {
+                <p class="mt-1 text-sm text-[#F0B7BF]">{{ avatarError() }}</p>
               }
             </div>
           </div>
@@ -252,6 +286,10 @@ export class ProfileDetail implements OnInit {
 
   private readonly customAvatarPreview = signal<string | null>(null);
   private readonly failedSrc = signal<string | null>(null);
+
+  protected readonly avatarUploading = signal(false);
+  protected readonly avatarError = signal<string | null>(null);
+  private lastExternalAvatar = '';
 
   protected readonly robohashUrl = computed(() =>
     buildRobohashUrl(
@@ -343,10 +381,116 @@ export class ProfileDetail implements OnInit {
   protected onAvatarInput(event: Event): void {
     const value = (event.target as HTMLInputElement).value.trim();
     this.customAvatarPreview.set(value || null);
+    this.failedSrc.set(null);
+    this.avatarError.set(null);
   }
 
-  protected onAvatarError(): void {
-    this.failedSrc.set(this.avatarSrc());
+  protected onAvatarError(event: Event): void {
+    // getAttribute devuelve el src tal cual se asignó, no la URL resuelta.
+    const failed = (event.target as HTMLImageElement).getAttribute('src') ?? '';
+
+    // Solo se invalida la imagen que está intentando mostrarse; un error de
+    // una petición anterior no debe ocultar la URL actual.
+    if (failed === this.avatarSrc()) {
+      this.failedSrc.set(failed);
+    }
+  }
+
+  protected async onAvatarFile(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+
+    if (!file || this.avatarUploading()) return;
+
+    this.avatarError.set(null);
+
+    if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
+      this.avatarError.set('El avatar debe ser una imagen JPG, PNG o WebP.');
+      return;
+    }
+
+    if (file.size > MAX_AVATAR_SOURCE_BYTES) {
+      this.avatarError.set('La imagen no puede superar los 5 MB.');
+      return;
+    }
+
+    this.avatarUploading.set(true);
+
+    try {
+      const dataUrl = await this.resizeAvatar(file);
+      const profile = await firstValueFrom(
+        this.service.update({ avatar_url: dataUrl })
+      );
+      this.patchForm(profile);
+      this.saved.set(true);
+    } catch {
+      this.avatarError.set('No se ha podido subir el avatar. Inténtalo de nuevo.');
+    } finally {
+      this.avatarUploading.set(false);
+    }
+  }
+
+  protected async removeAvatar(): Promise<void> {
+    if (this.avatarUploading()) return;
+
+    this.avatarError.set(null);
+    this.avatarUploading.set(true);
+
+    try {
+      const profile = await firstValueFrom(
+        this.service.update({ avatar_url: '' })
+      );
+      this.patchForm(profile);
+      this.saved.set(true);
+    } catch {
+      this.avatarError.set('No se ha podido quitar el avatar.');
+    } finally {
+      this.avatarUploading.set(false);
+    }
+  }
+
+  private resizeAvatar(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const objectUrl = URL.createObjectURL(file);
+      const image = new Image();
+
+      image.onload = () => {
+        try {
+          const scale = Math.min(
+            1,
+            AVATAR_MAX_SIZE / Math.max(image.width, image.height)
+          );
+          const width = Math.max(1, Math.round(image.width * scale));
+          const height = Math.max(1, Math.round(image.height * scale));
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+
+          const context = canvas.getContext('2d');
+          if (!context) throw new Error('CANVAS_NOT_AVAILABLE');
+
+          // Fondo blanco para que las imágenes con transparencia no salgan negras.
+          context.fillStyle = '#ffffff';
+          context.fillRect(0, 0, width, height);
+          context.drawImage(image, 0, 0, width, height);
+
+          resolve(canvas.toDataURL('image/jpeg', AVATAR_QUALITY));
+        } catch (error) {
+          reject(error);
+        } finally {
+          URL.revokeObjectURL(objectUrl);
+        }
+      };
+
+      image.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error('IMAGE_LOAD_ERROR'));
+      };
+
+      image.src = objectUrl;
+    });
   }
 
   protected errorFor(name: string): string | null {
@@ -371,6 +515,10 @@ export class ProfileDetail implements OnInit {
   }
 
   private patchForm(profile: Profile): void {
+    const storedAvatar = profile.avatar_url?.trim() ?? '';
+    // El input solo admite URLs externas; la imagen subida es una data URL.
+    const externalAvatar = storedAvatar.startsWith('data:') ? '' : storedAvatar;
+
     this.form.patchValue({
       first_name: profile.first_name ?? '',
       last_name: profile.last_name ?? '',
@@ -381,19 +529,22 @@ export class ProfileDetail implements OnInit {
       address: profile.address ?? '',
       city: profile.city ?? '',
       postal_code: profile.postal_code ?? '',
-      avatar_url: profile.avatar_url ?? '',
+      avatar_url: externalAvatar,
       bio: profile.bio ?? '',
       allergies: (profile.allergies ?? []).join(', '),
       dietary_restrictions: (profile.dietary_restrictions ?? []).join(', ')
     });
 
-    this.customAvatarPreview.set(profile.avatar_url?.trim() || null);
+    this.lastExternalAvatar = externalAvatar;
+    this.customAvatarPreview.set(storedAvatar || null);
+    this.failedSrc.set(null);
   }
 
   private buildPayload(): ProfilePayload {
     const value = this.form.getRawValue();
+    const externalAvatar = value.avatar_url.trim();
 
-    return {
+    const payload: ProfilePayload = {
       first_name: value.first_name.trim() || undefined,
       last_name: value.last_name.trim() || undefined,
       phone: value.phone.trim() || undefined,
@@ -401,11 +552,18 @@ export class ProfileDetail implements OnInit {
       address: value.address.trim(),
       city: value.city.trim(),
       postal_code: value.postal_code.trim() || undefined,
-      avatar_url: value.avatar_url.trim() || undefined,
       bio: value.bio.trim(),
       allergies: this.toList(value.allergies),
       dietary_restrictions: this.toList(value.dietary_restrictions)
     };
+
+    // Solo se envía si el usuario ha cambiado el campo; así una foto subida
+    // (data URL) no se borra al guardar otros datos del perfil.
+    if (externalAvatar !== this.lastExternalAvatar) {
+      payload.avatar_url = externalAvatar;
+    }
+
+    return payload;
   }
 
   private toList(value: string): string[] {

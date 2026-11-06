@@ -7,7 +7,6 @@ import {
   signal
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { firstValueFrom } from 'rxjs';
 import Swal from 'sweetalert2';
 import {
   DEPARTURE_STATUS_LABELS,
@@ -19,7 +18,7 @@ import {
 } from '../../../../core/models/departure.model';
 import { EventSummary, categoryNames } from '../../../../core/models/event.model';
 import { AuthService } from '../../../../core/services/auth.service';
-import { DeparturesService } from '../../../../core/services/departures.service';
+import { DeparturesStore } from '../../../../core/stores/departures.store';
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import { ErrorState } from '../../../../shared/components/error-state/error-state';
 import { Modal } from '../../../../shared/components/modal/modal';
@@ -220,13 +219,13 @@ import { DepartureForm } from '../../components/departure-form/departure-form';
   `
 })
 export class DepartureList implements OnInit {
-  private readonly service = inject(DeparturesService);
+  protected readonly store = inject(DeparturesStore);
   private readonly auth = inject(AuthService);
 
   protected readonly isAdmin = this.auth.isAdmin;
-  protected readonly departures = signal<Departure[]>([]);
-  protected readonly loading = signal(false);
-  protected readonly error = signal<string | null>(null);
+  protected readonly departures = this.store.departures;
+  protected readonly loading = this.store.loading;
+  protected readonly error = this.store.error;
   protected readonly pendingId = signal<string | null>(null);
   protected readonly showForm = signal(false);
   protected readonly editing = signal<Departure | null>(null);
@@ -326,13 +325,12 @@ export class DepartureList implements OnInit {
 
     try {
       if (current) {
-        await firstValueFrom(this.service.update(current._id, payload));
+        await this.store.update(current._id, payload);
       } else {
-        await firstValueFrom(this.service.create(payload));
+        await this.store.create(payload);
       }
 
       this.closeForm();
-      await this.load();
     } catch {
       // El interceptor global muestra el error de la API.
     }
@@ -366,16 +364,10 @@ export class DepartureList implements OnInit {
     this.pendingId.set(departure._id);
 
     try {
-      const updated = await firstValueFrom(
-        this.service.update(departure._id, {
-          start_datetime: start.toISOString(),
-          end_datetime: end.toISOString()
-        })
-      );
-
-      this.departures.update((list) =>
-        list.map((item) => (item._id === updated._id ? updated : item))
-      );
+      await this.store.update(departure._id, {
+        start_datetime: start.toISOString(),
+        end_datetime: end.toISOString()
+      });
       this.closeReschedule();
     } catch {
       // El interceptor global muestra el error de la API.
@@ -405,15 +397,10 @@ export class DepartureList implements OnInit {
   }
 
   protected async load(): Promise<void> {
-    this.loading.set(true);
-    this.error.set(null);
-
     try {
-      this.departures.set(await firstValueFrom(this.service.list()));
+      await this.store.load();
     } catch {
-      this.error.set('No se han podido cargar las salidas.');
-    } finally {
-      this.loading.set(false);
+      // The store exposes the load error to the view.
     }
   }
 
@@ -426,13 +413,7 @@ export class DepartureList implements OnInit {
     this.pendingId.set(departure._id);
 
     try {
-      const updated = await firstValueFrom(
-        this.service.setStatus(departure._id, status)
-      );
-
-      this.departures.update((list) =>
-        list.map((item) => (item._id === updated._id ? updated : item))
-      );
+      await this.store.setStatus(departure._id, status);
     } catch {
       // El interceptor global muestra el error de la API.
     } finally {

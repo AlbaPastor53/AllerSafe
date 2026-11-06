@@ -5,10 +5,9 @@ import {
   inject,
   signal
 } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
 import { Category, CategoryPayload } from '../../../../core/models/category.model';
 import { AuthService } from '../../../../core/services/auth.service';
-import { CategoriesService } from '../../../../core/services/categories.service';
+import { CategoriesStore } from '../../../../core/stores/categories.store';
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import { ErrorState } from '../../../../shared/components/error-state/error-state';
 import { Modal } from '../../../../shared/components/modal/modal';
@@ -109,13 +108,13 @@ import { CategoryForm } from '../../components/category-form/category-form';
   `
 })
 export class CategoryList implements OnInit {
-  private readonly service = inject(CategoriesService);
+  protected readonly store = inject(CategoriesStore);
   private readonly auth = inject(AuthService);
 
   protected readonly isAdmin = this.auth.isAdmin;
-  protected readonly categories = signal<Category[]>([]);
-  protected readonly loading = signal(false);
-  protected readonly error = signal<string | null>(null);
+  protected readonly categories = this.store.categories;
+  protected readonly loading = this.store.loading;
+  protected readonly error = this.store.error;
   protected readonly pendingId = signal<string | null>(null);
   protected readonly showForm = signal(false);
   protected readonly editing = signal<Category | null>(null);
@@ -150,13 +149,12 @@ export class CategoryList implements OnInit {
 
     try {
       if (current) {
-        await firstValueFrom(this.service.update(current._id, payload));
+        await this.store.update(current._id, payload);
       } else {
-        await firstValueFrom(this.service.create(payload));
+        await this.store.create(payload);
       }
 
       this.closeForm();
-      await this.load();
     } catch {
       // El interceptor global muestra el error de la API.
     }
@@ -168,13 +166,7 @@ export class CategoryList implements OnInit {
     this.pendingId.set(category._id);
 
     try {
-      const updated = await firstValueFrom(
-        this.service.setActive(category._id, !category.is_active)
-      );
-
-      this.categories.update((list) =>
-        list.map((item) => (item._id === updated._id ? updated : item))
-      );
+      await this.store.setActive(category._id, !category.is_active);
     } catch {
       // El interceptor global muestra el error de la API.
     } finally {
@@ -183,15 +175,10 @@ export class CategoryList implements OnInit {
   }
 
   protected async load(): Promise<void> {
-    this.loading.set(true);
-    this.error.set(null);
-
     try {
-      this.categories.set(await firstValueFrom(this.service.list()));
+      await this.store.load();
     } catch {
-      this.error.set('No se han podido cargar las categorías.');
-    } finally {
-      this.loading.set(false);
+      // The store exposes the load error to the view.
     }
   }
 }

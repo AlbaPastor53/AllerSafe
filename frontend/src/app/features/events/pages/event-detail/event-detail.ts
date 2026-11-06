@@ -13,11 +13,9 @@ import {
     RouterLink
 } from '@angular/router';
 
-import { firstValueFrom } from 'rxjs';
 import Swal from 'sweetalert2';
 
 import { Event, STATUS_LABELS, categoryNames } from '../../../../core/models/event.model';
-import { EventsService } from '../../../../core/services/events.service';
 import { EventsStore } from '../../../../core/stores/events.store';
 
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
@@ -329,8 +327,6 @@ export class EventDetail implements OnInit {
 
     private readonly router = inject(Router);
 
-    private readonly service = inject(EventsService);
-
     private readonly store = inject(EventsStore);
 
     private readonly auth = inject(AuthService);
@@ -426,13 +422,9 @@ export class EventDetail implements OnInit {
 
     private async fetch(): Promise<void> {
         try {
-            const e = await firstValueFrom(
-                this.service.getById(this.id)
-            );
+            const e = await this.store.getById(this.id);
 
             this.event.set(e);
-
-            this.store.setSelectedEvent(e);
 
         } catch (error) {
             if (isHttpError(error) && error.status === 404) {
@@ -455,16 +447,9 @@ export class EventDetail implements OnInit {
         if (!e) return;
 
         try {
-            const updated = await firstValueFrom(
-                this.service.setActive(
-                    e._id,
-                    !e.is_active
-                )
-            );
+            const updated = await this.store.setActive(e._id, !e.is_active);
 
             this.event.set({ ...updated, images: e.images ?? [] });
-
-            this.store.patchEvent(updated);
 
         } catch (error) {
             if (!isHttpError(error)) {
@@ -493,11 +478,7 @@ export class EventDetail implements OnInit {
         if (!result.isConfirmed) return;
 
         try {
-            await firstValueFrom(
-                this.service.remove(e._id)
-            );
-
-            this.store.markStale();
+            await this.store.remove(e._id);
 
             this.router.navigate(['/events']);
 

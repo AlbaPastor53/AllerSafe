@@ -22,7 +22,8 @@ const app = express();
 app.use(helmet());
 app.use(corsMiddleware);
 app.use(cookieParser());
-app.use(express.json());
+// El avatar se guarda como data URL base64; el límite por defecto (100 KB) no basta.
+app.use(express.json({ limit: "4mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 

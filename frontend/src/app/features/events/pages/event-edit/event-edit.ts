@@ -2,12 +2,10 @@ import {ChangeDetectionStrategy,Component,OnInit,inject,signal} from '@angular/c
 
 import {ActivatedRoute,Router,RouterLink} from '@angular/router';
 
-import { firstValueFrom } from 'rxjs';
 import Swal from 'sweetalert2';
 
 import {Event,EventPayload} from '../../../../core/models/event.model';
 
-import { EventsService } from '../../../../core/services/events.service';
 import { EventsStore } from '../../../../core/stores/events.store';
 
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
@@ -112,8 +110,6 @@ export class EventEdit implements OnInit {
 
     private readonly activatedRoute = inject(ActivatedRoute);
 
-    private readonly service = inject(EventsService);
-
     private readonly store = inject(EventsStore);
 
     private readonly router = inject(Router);
@@ -173,9 +169,7 @@ export class EventEdit implements OnInit {
     private async fetchEvent(): Promise<void> {
         try {
             this.event.set(
-                await firstValueFrom(
-                    this.service.getById(this.currentId)
-                )
+                await this.store.getById(this.currentId)
             );
 
         } catch (error) {
@@ -199,13 +193,7 @@ export class EventEdit implements OnInit {
         this.submitting.set(true);
 
         try {
-            const updated = await firstValueFrom(
-                this.service.update(this.currentId, payload)
-            );
-
-            this.store.markStale();
-
-            this.store.setSelectedEvent(updated);
+            const updated = await this.store.update(this.currentId, payload);
 
             this.router.navigate([
                 '/events',

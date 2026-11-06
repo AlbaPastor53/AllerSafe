@@ -10,7 +10,6 @@ import {
   signal
 } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { firstValueFrom } from 'rxjs';
 import {
   DEPARTURE_STATUS_LABELS,
   Departure,
@@ -18,7 +17,7 @@ import {
   DepartureStatus
 } from '../../../../core/models/departure.model';
 import { Event } from '../../../../core/models/event.model';
-import { EventsService } from '../../../../core/services/events.service';
+import { EventsStore } from '../../../../core/stores/events.store';
 import { formatDateTimeLocal } from '../../../../shared/utils/format.util';
 
 @Component({
@@ -170,13 +169,13 @@ import { formatDateTimeLocal } from '../../../../shared/utils/format.util';
 })
 export class DepartureForm implements OnInit {
   private readonly fb = inject(FormBuilder);
-  private readonly eventsService = inject(EventsService);
+  private readonly eventsStore = inject(EventsStore);
 
   readonly departure = input<Departure | null>(null);
   readonly formSubmit = output<DeparturePayload>();
   readonly cancelled = output<void>();
 
-  protected readonly events = signal<Event[]>([]);
+  protected readonly events = this.eventsStore.events;
   protected readonly loadError = signal<string | null>(null);
   protected readonly formError = signal<string | null>(null);
 
@@ -289,7 +288,7 @@ export class DepartureForm implements OnInit {
 
   private async loadEvents(): Promise<void> {
     try {
-      this.events.set(await firstValueFrom(this.eventsService.list()));
+      await this.eventsStore.load();
     } catch {
       this.loadError.set('No se han podido cargar los eventos disponibles.');
     }

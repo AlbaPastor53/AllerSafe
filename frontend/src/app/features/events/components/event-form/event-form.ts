@@ -8,14 +8,13 @@ import {
     signal
 } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { firstValueFrom } from 'rxjs';
 import { Category } from '../../../../core/models/category.model';
 import { Event, EventPayload, EventStatus, refId } from '../../../../core/models/event.model';
 import { Host } from '../../../../core/models/host.model';
 import { Location } from '../../../../core/models/location.model';
-import { CategoriesService } from '../../../../core/services/categories.service';
-import { HostsService } from '../../../../core/services/hosts.service';
-import { LocationsService } from '../../../../core/services/locations.service';
+import { CategoriesStore } from '../../../../core/stores/categories.store';
+import { HostsStore } from '../../../../core/stores/hosts.store';
+import { LocationsStore } from '../../../../core/stores/locations.store';
 import { formatDateTimeLocal } from '../../../../shared/utils/format.util';
 
 @Component({
@@ -355,11 +354,11 @@ export class EventForm {
 
     private readonly fb = inject(FormBuilder);
 
-    private readonly categoriesService = inject(CategoriesService);
+    private readonly categoriesStore = inject(CategoriesStore);
 
-    private readonly hostsService = inject(HostsService);
+    private readonly hostsStore = inject(HostsStore);
 
-    private readonly locationsService = inject(LocationsService);
+    private readonly locationsStore = inject(LocationsStore);
 
 
     event = input<Event | null>(null);
@@ -369,11 +368,11 @@ export class EventForm {
     cancelled = output<void>();
 
 
-    protected readonly hosts = signal<Host[]>([]);
+    protected readonly hosts = this.hostsStore.hosts;
 
-    protected readonly categories = signal<Category[]>([]);
+    protected readonly categories = this.categoriesStore.categories;
 
-    protected readonly locations = signal<Location[]>([]);
+    protected readonly locations = this.locationsStore.locations;
 
     protected readonly catalogError = signal<string | null>(null);
 
@@ -591,15 +590,11 @@ export class EventForm {
 
     private async loadCatalogs(): Promise<void> {
         try {
-            const [hosts, categories, locations] = await Promise.all([
-                firstValueFrom(this.hostsService.list()),
-                firstValueFrom(this.categoriesService.list()),
-                firstValueFrom(this.locationsService.list())
+            await Promise.all([
+                this.hostsStore.load(),
+                this.categoriesStore.load(),
+                this.locationsStore.load()
             ]);
-
-            this.hosts.set(hosts);
-            this.categories.set(categories);
-            this.locations.set(locations);
 
         } catch {
             this.catalogError.set(

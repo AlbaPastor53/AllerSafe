@@ -8,11 +8,9 @@ import {
 } from '@angular/core';
 
 import { Router, RouterLink } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
 import Swal from 'sweetalert2';
 
 import { EventsStore } from '../../../../core/stores/events.store';
-import { EventsService } from '../../../../core/services/events.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { Event } from '../../../../core/models/event.model';
 
@@ -117,8 +115,6 @@ export class EventList implements OnInit {
 
     protected readonly store = inject(EventsStore);
 
-    private readonly service = inject(EventsService);
-
     private readonly auth = inject(AuthService);
 
     private readonly router = inject(Router);
@@ -140,21 +136,11 @@ export class EventList implements OnInit {
 
 
     protected async load(): Promise<void> {
-        this.store.setLoading(true);
-        this.store.setError(null);
-
         try {
-            this.store.setEvents(
-                await firstValueFrom(this.service.list())
-            );
+            await this.store.load(true);
 
         } catch {
-            this.store.setError(
-                'No se han podido cargar los eventos. Comprueba que el backend esté iniciado y que la API esté disponible.'
-            );
-
-        } finally {
-            this.store.setLoading(false);
+            // The store exposes the load error to the view.
         }
     }
 
@@ -180,14 +166,7 @@ export class EventList implements OnInit {
     protected async onToggleStatus(event: Event): Promise<void> {
         await this.withPending(event._id, async () => {
             try {
-                const updated = await firstValueFrom(
-                    this.service.setActive(
-                        event._id,
-                        !event.is_active
-                    )
-                );
-
-                this.store.patchEvent(updated);
+                await this.store.setActive(event._id, !event.is_active);
 
             } catch (error) {
                 if (!isHttpError(error)) {
@@ -234,13 +213,7 @@ export class EventList implements OnInit {
         if (!result.isConfirmed) return;
 
         try {
-            await firstValueFrom(
-                this.service.remove(event._id)
-            );
-
-            this.store.setEvents(
-                this.store.events().filter(e => e._id !== event._id)
-            );
+            await this.store.remove(event._id);
 
             Swal.fire({
                 icon: 'success',

@@ -1,7 +1,5 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
-import { EventImage } from '../../../../core/models/event-image.model';
-import { EventImagesService } from '../../../../core/services/event-images.service';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
+import { EventImagesStore } from '../../../../core/stores/event-images.store';
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import { ErrorState } from '../../../../shared/components/error-state/error-state';
 import { SkeletonLoader } from '../../../../shared/components/skeleton-loader/skeleton-loader';
@@ -41,26 +39,21 @@ import { SkeletonLoader } from '../../../../shared/components/skeleton-loader/sk
   `
 })
 export class EventImageList implements OnInit {
-  private readonly service = inject(EventImagesService);
+  protected readonly store = inject(EventImagesStore);
 
-  protected readonly images = signal<EventImage[]>([]);
-  protected readonly loading = signal(false);
-  protected readonly error = signal<string | null>(null);
+  protected readonly images = this.store.images;
+  protected readonly loading = this.store.loading;
+  protected readonly error = this.store.error;
 
   ngOnInit(): void {
     this.load();
   }
 
   protected async load(): Promise<void> {
-    this.loading.set(true);
-    this.error.set(null);
-
     try {
-      this.images.set(await firstValueFrom(this.service.list()));
+      await this.store.load();
     } catch {
-      this.error.set('No se han podido cargar las imágenes.');
-    } finally {
-      this.loading.set(false);
+      // The store exposes the load error to the view.
     }
   }
 }

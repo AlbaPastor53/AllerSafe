@@ -6,14 +6,13 @@ import {
   signal
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
 import {
   User,
   UserFormPayload,
   UserPayload
 } from '../../../../core/models/user.model';
 import { AuthService } from '../../../../core/services/auth.service';
-import { UsersService } from '../../../../core/services/users.service';
+import { UsersStore } from '../../../../core/stores/users.store';
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import { ErrorState } from '../../../../shared/components/error-state/error-state';
 import { Modal } from '../../../../shared/components/modal/modal';
@@ -109,13 +108,13 @@ import { UserForm } from '../../components/user-form/user-form';
   `
 })
 export class UserList implements OnInit {
-  private readonly service = inject(UsersService);
+  protected readonly store = inject(UsersStore);
   private readonly auth = inject(AuthService);
 
   protected readonly isAdmin = this.auth.isAdmin;
-  protected readonly users = signal<User[]>([]);
-  protected readonly loading = signal(false);
-  protected readonly error = signal<string | null>(null);
+  protected readonly users = this.store.users;
+  protected readonly loading = this.store.loading;
+  protected readonly error = this.store.error;
   protected readonly pendingId = signal<string | null>(null);
   protected readonly showForm = signal(false);
   protected readonly editing = signal<User | null>(null);
@@ -159,18 +158,17 @@ export class UserList implements OnInit {
 
     try {
       if (current) {
-        await firstValueFrom(this.service.update(current._id, payload));
+        await this.store.update(current._id, payload);
       } else {
         const createPayload: UserPayload = {
           ...payload,
           password: payload.password ?? ''
         };
 
-        await firstValueFrom(this.service.create(createPayload));
+        await this.store.create(createPayload);
       }
 
       this.closeForm();
-      await this.load();
     } catch {
       // El interceptor global muestra el error de la API.
     }
@@ -182,15 +180,9 @@ export class UserList implements OnInit {
     this.pendingId.set(user._id);
 
     try {
-      const updated = await firstValueFrom(
-        this.service.setStatus(
-          user._id,
-          user.status === 'active' ? 'inactive' : 'active'
-        )
-      );
-
-      this.users.update((list) =>
-        list.map((item) => (item._id === updated._id ? updated : item))
+      await this.store.setStatus(
+        user._id,
+        user.status === 'active' ? 'inactive' : 'active'
       );
     } catch {
       // El interceptor global muestra el error de la API.
@@ -200,15 +192,10 @@ export class UserList implements OnInit {
   }
 
   protected async load(): Promise<void> {
-    this.loading.set(true);
-    this.error.set(null);
-
     try {
-      this.users.set(await firstValueFrom(this.service.list()));
+      await this.store.load();
     } catch {
-      this.error.set('No se han podido cargar los usuarios.');
-    } finally {
-      this.loading.set(false);
+      // The store exposes the load error to the view.
     }
   }
 }

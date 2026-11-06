@@ -5,10 +5,9 @@ import {
   inject,
   signal
 } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
 import { Location, LocationPayload } from '../../../../core/models/location.model';
 import { AuthService } from '../../../../core/services/auth.service';
-import { LocationsService } from '../../../../core/services/locations.service';
+import { LocationsStore } from '../../../../core/stores/locations.store';
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import { ErrorState } from '../../../../shared/components/error-state/error-state';
 import { Modal } from '../../../../shared/components/modal/modal';
@@ -107,13 +106,13 @@ import { LocationForm } from '../../components/location-form/location-form';
   `
 })
 export class LocationList implements OnInit {
-  private readonly service = inject(LocationsService);
+  protected readonly store = inject(LocationsStore);
   private readonly auth = inject(AuthService);
 
   protected readonly isAdmin = this.auth.isAdmin;
-  protected readonly locations = signal<Location[]>([]);
-  protected readonly loading = signal(false);
-  protected readonly error = signal<string | null>(null);
+  protected readonly locations = this.store.locations;
+  protected readonly loading = this.store.loading;
+  protected readonly error = this.store.error;
   protected readonly pendingId = signal<string | null>(null);
   protected readonly showForm = signal(false);
   protected readonly editing = signal<Location | null>(null);
@@ -148,13 +147,12 @@ export class LocationList implements OnInit {
 
     try {
       if (current) {
-        await firstValueFrom(this.service.update(current._id, payload));
+        await this.store.update(current._id, payload);
       } else {
-        await firstValueFrom(this.service.create(payload));
+        await this.store.create(payload);
       }
 
       this.closeForm();
-      await this.load();
     } catch {
       // El interceptor global muestra el error de la API.
     }
@@ -166,13 +164,7 @@ export class LocationList implements OnInit {
     this.pendingId.set(location._id);
 
     try {
-      const updated = await firstValueFrom(
-        this.service.setActive(location._id, !location.is_active)
-      );
-
-      this.locations.update((list) =>
-        list.map((item) => (item._id === updated._id ? updated : item))
-      );
+      await this.store.setActive(location._id, !location.is_active);
     } catch {
       // El interceptor global muestra el error de la API.
     } finally {
@@ -181,15 +173,10 @@ export class LocationList implements OnInit {
   }
 
   protected async load(): Promise<void> {
-    this.loading.set(true);
-    this.error.set(null);
-
     try {
-      this.locations.set(await firstValueFrom(this.service.list()));
+      await this.store.load();
     } catch {
-      this.error.set('No se han podido cargar las ubicaciones.');
-    } finally {
-      this.loading.set(false);
+      // The store exposes the load error to the view.
     }
   }
 }

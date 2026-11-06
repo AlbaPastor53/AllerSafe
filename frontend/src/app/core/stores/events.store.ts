@@ -1,8 +1,12 @@
-import { Injectable, computed, effect, signal } from '@angular/core';
-import { Event } from '../models/event.model';
+import { Injectable, computed, effect, inject, signal } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
+import { Event, EventPayload } from '../models/event.model';
+import { EventsService } from '../services/events.service';
 
 @Injectable({ providedIn: 'root' })
 export class EventsStore {
+  private readonly service = inject(EventsService);
+
   private readonly _loading = signal(false);
   private readonly _error = signal<string | null>(null);
   private readonly _events = signal<Event[]>([]);
@@ -38,6 +42,56 @@ export class EventsStore {
     this._loading.set(value);
   }
 
+  async load(force = false): Promise<void> {
+    if (this._loaded() && !this._stale() && !force) return;
+
+    this._loading.set(true);
+    this._error.set(null);
+    try {
+      this.setEvents(await firstValueFrom(this.service.list()));
+    } catch (error) {
+      this._error.set('No se han podido cargar los eventos.');
+      throw error;
+    } finally {
+      this._loading.set(false);
+    }
+  }
+
+  async getById(id: string): Promise<Event> {
+    const event = await firstValueFrom(this.service.getById(id));
+    this.setSelectedEvent(event);
+    this.patchEvent(event);
+    return event;
+  }
+
+  async create(payload: EventPayload): Promise<Event> {
+    const event = await firstValueFrom(this.service.create(payload));
+    this._loaded.set(false);
+    this.markStale();
+    this._error.set(null);
+    return event;
+  }
+
+  async update(id: string, payload: Partial<EventPayload>): Promise<Event> {
+    const event = await firstValueFrom(this.service.update(id, payload));
+    this.patchEvent(event);
+    return event;
+  }
+
+  async setActive(id: string, active: boolean): Promise<Event> {
+    const event = await firstValueFrom(this.service.setActive(id, active));
+    this.patchEvent(event);
+    return event;
+  }
+
+  async remove(id: string): Promise<void> {
+    await firstValueFrom(this.service.remove(id));
+    this._events.update((items) => items.filter((item) => item._id !== id));
+    if (this._selectedEvent()?._id === id) this._selectedEvent.set(null);
+    this.markStale();
+    this._error.set(null);
+  }
+
   setError(value: string | null): void {
     this._error.set(value);
   }
@@ -46,6 +100,7 @@ export class EventsStore {
     this._events.set(list);
     this._loaded.set(true);
     this._stale.set(false);
+    this._error.set(null);
   }
 
   setSelectedEvent(event: Event | null): void {
@@ -59,6 +114,7 @@ export class EventsStore {
     if (this._selectedEvent()?._id === updated._id) {
       this._selectedEvent.set(updated);
     }
+    this._error.set(null);
   }
 
   markStale(): void {

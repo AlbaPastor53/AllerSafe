@@ -10,11 +10,9 @@ import {
     RouterLink
 } from '@angular/router';
 
-import { firstValueFrom } from 'rxjs';
 import Swal from 'sweetalert2';
 
 import { EventPayload } from '../../../../core/models/event.model';
-import { EventsService } from '../../../../core/services/events.service';
 import { EventsStore } from '../../../../core/stores/events.store';
 
 import {
@@ -80,8 +78,6 @@ import { EventForm } from '../../components/event-form/event-form';
 
 export class EventCreate {
 
-    private readonly service = inject(EventsService);
-
     private readonly store = inject(EventsStore);
 
     private readonly router = inject(Router);
@@ -97,11 +93,7 @@ export class EventCreate {
         this.submitting.set(true);
 
         try {
-            const created = await firstValueFrom(
-                this.service.create(payload)
-            );
-
-            this.store.markStale();
+            const created = await this.store.create(payload);
 
             this.router.navigate([
                 '/events',

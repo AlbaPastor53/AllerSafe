@@ -10,10 +10,9 @@ import {
   signal
 } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { firstValueFrom } from 'rxjs';
 import { Host, HostPayload, HostStatus } from '../../../../core/models/host.model';
 import { User } from '../../../../core/models/user.model';
-import { UsersService } from '../../../../core/services/users.service';
+import { UsersStore } from '../../../../core/stores/users.store';
 
 @Component({
   selector: 'app-host-form',
@@ -95,13 +94,13 @@ import { UsersService } from '../../../../core/services/users.service';
 })
 export class HostForm implements OnInit {
   private readonly fb = inject(FormBuilder);
-  private readonly usersService = inject(UsersService);
+  private readonly usersStore = inject(UsersStore);
 
   readonly host = input<Host | null>(null);
   readonly formSubmit = output<HostPayload>();
   readonly cancelled = output<void>();
 
-  protected readonly users = signal<User[]>([]);
+  protected readonly users = this.usersStore.users;
   protected readonly loadError = signal<string | null>(null);
 
   protected readonly currentUserId = computed(() => {
@@ -171,7 +170,7 @@ export class HostForm implements OnInit {
 
   private async loadUsers(): Promise<void> {
     try {
-      this.users.set(await firstValueFrom(this.usersService.list()));
+      await this.usersStore.load(true);
     } catch {
       this.loadError.set('No se han podido cargar los usuarios disponibles.');
     }

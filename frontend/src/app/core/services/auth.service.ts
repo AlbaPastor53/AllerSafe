@@ -10,6 +10,13 @@ import {
   throwError
 } from 'rxjs';
 import { ApiService } from './api.service';
+import { CategoriesStore } from '../stores/categories.store';
+import { DeparturesStore } from '../stores/departures.store';
+import { EventImagesStore } from '../stores/event-images.store';
+import { EventsStore } from '../stores/events.store';
+import { HostsStore } from '../stores/hosts.store';
+import { LocationsStore } from '../stores/locations.store';
+import { UsersStore } from '../stores/users.store';
 import {
   AuthMeResponse,
   AuthUser,
@@ -21,6 +28,13 @@ import {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly api = inject(ApiService);
+  private readonly categoriesStore = inject(CategoriesStore);
+  private readonly departuresStore = inject(DeparturesStore);
+  private readonly eventImagesStore = inject(EventImagesStore);
+  private readonly eventsStore = inject(EventsStore);
+  private readonly hostsStore = inject(HostsStore);
+  private readonly locationsStore = inject(LocationsStore);
+  private readonly usersStore = inject(UsersStore);
 
   private readonly _user = signal<AuthUser | null>(null);
   private initialized = false;
@@ -107,6 +121,13 @@ export class AuthService {
   clearSession(): void {
     this._user.set(null);
     this.initialized = true;
+    this.categoriesStore.reset();
+    this.departuresStore.reset();
+    this.eventImagesStore.reset();
+    this.eventsStore.reset();
+    this.hostsStore.reset();
+    this.locationsStore.reset();
+    this.usersStore.reset();
   }
 
   private setSession(user: AuthUser): void {

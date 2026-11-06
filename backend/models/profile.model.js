@@ -50,7 +50,8 @@ const profileSchema = new mongoose.Schema(
     avatar_url: {
       type: String,
       trim: true,
-      maxlength: 500,
+      // Admite tanto una URL externa como una imagen en base64 (data URL).
+      maxlength: 3000000,
       default: ""
     },
     bio: {

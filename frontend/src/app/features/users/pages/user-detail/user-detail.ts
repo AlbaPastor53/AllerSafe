@@ -11,6 +11,7 @@ import { firstValueFrom } from 'rxjs';
 import { Profile } from '../../../../core/models/profile.model';
 import { User, UserFormPayload } from '../../../../core/models/user.model';
 import { UsersService } from '../../../../core/services/users.service';
+import { UsersStore } from '../../../../core/stores/users.store';
 import { ErrorState } from '../../../../shared/components/error-state/error-state';
 import { SkeletonLoader } from '../../../../shared/components/skeleton-loader/skeleton-loader';
 import { buildRobohashUrl } from '../../../../shared/utils/avatar.util';
@@ -153,8 +154,9 @@ import { UserForm } from '../../components/user-form/user-form';
 export class UserDetail implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly usersService = inject(UsersService);
+  private readonly usersStore = inject(UsersStore);
 
-  protected readonly user = signal<User | null>(null);
+  protected readonly user = this.usersStore.selectedUser;
   protected readonly profile = signal<Profile | null>(null);
   protected readonly loading = signal(false);
   protected readonly error = signal<string | null>(null);
@@ -240,11 +242,7 @@ export class UserDetail implements OnInit {
     this.saveError.set(null);
 
     try {
-      const updated = await firstValueFrom(
-        this.usersService.update(current._id, payload)
-      );
-
-      this.user.set(updated);
+      await this.usersStore.update(current._id, payload);
       this.saved.set(true);
     } catch {
       this.saveError.set('No se ha podido actualizar el usuario.');
@@ -265,10 +263,10 @@ export class UserDetail implements OnInit {
     this.error.set(null);
     this.saved.set(false);
     this.saveError.set(null);
+    this.usersStore.clearSelection();
 
     try {
-      const user = await firstValueFrom(this.usersService.getById(id));
-      this.user.set(user);
+      await this.usersStore.getById(id);
     } catch {
       this.error.set('No se ha podido cargar el usuario.');
       this.loading.set(false);
