@@ -6,7 +6,10 @@ import Swal from 'sweetalert2';
 
 import {Event,EventPayload} from '../../../../core/models/event.model';
 
+import { CategoriesStore } from '../../../../core/stores/categories.store';
 import { EventsStore } from '../../../../core/stores/events.store';
+import { HostsStore } from '../../../../core/stores/hosts.store';
+import { LocationsStore } from '../../../../core/stores/locations.store';
 
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import { ErrorState } from '../../../../shared/components/error-state/error-state';
@@ -96,6 +99,10 @@ import { EventForm } from '../../components/event-form/event-form';
 
                 <app-event-form
                     [event]="event()"
+                    [hosts]="hosts()"
+                    [categories]="categories()"
+                    [locations]="locations()"
+                    [catalogError]="catalogError()"
                     (formSubmit)="onUpdate($event)"
                     (cancelled)="onCancel()"
                 />
@@ -112,10 +119,24 @@ export class EventEdit implements OnInit {
 
     private readonly store = inject(EventsStore);
 
+    private readonly hostsStore = inject(HostsStore);
+
+    private readonly categoriesStore = inject(CategoriesStore);
+
+    private readonly locationsStore = inject(LocationsStore);
+
     private readonly router = inject(Router);
 
 
     protected readonly event = signal<Event | null>(null);
+
+    protected readonly catalogError = signal<string | null>(null);
+
+    protected readonly hosts = this.hostsStore.hosts;
+
+    protected readonly categories = this.categoriesStore.categories;
+
+    protected readonly locations = this.locationsStore.locations;
 
     protected readonly loading = signal(false);
 
@@ -130,6 +151,8 @@ export class EventEdit implements OnInit {
 
 
     ngOnInit(): void {
+        void this.loadCatalogs();
+
         this.activatedRoute.paramMap.subscribe(params => {
 
             const id = params.get('id') ?? '';
@@ -224,6 +247,23 @@ export class EventEdit implements OnInit {
             '/events',
             this.currentId
         ]);
+    }
+
+
+    private async loadCatalogs(): Promise<void> {
+        try {
+            await Promise.all([
+                this.hostsStore.load(),
+                this.categoriesStore.load(),
+                this.locationsStore.load()
+            ]);
+
+        } catch {
+            this.catalogError.set(
+                'No se han podido cargar anfitriones, categorías y ubicaciones. ' +
+                'Comprueba que el backend esté iniciado.'
+            );
+        }
     }
 
 }

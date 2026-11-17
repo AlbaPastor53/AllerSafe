@@ -21,3 +21,10 @@ export interface HostPayload {
   status?: HostStatus;
   is_active?: boolean;
 }
+
+export function hostDisplayName(host: Host | null | undefined): string {
+  const user = host?.user_id;
+  if (!user) return 'Anfitrión';
+
+  return typeof user === 'string' ? 'Anfitrión' : user.name?.trim() || 'Anfitrión';
+}

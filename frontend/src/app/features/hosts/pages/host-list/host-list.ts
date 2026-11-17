@@ -13,6 +13,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { DeparturesStore } from '../../../../core/stores/departures.store';
 import { EventsStore } from '../../../../core/stores/events.store';
 import { HostsStore } from '../../../../core/stores/hosts.store';
+import { UsersStore } from '../../../../core/stores/users.store';
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import { ErrorState } from '../../../../shared/components/error-state/error-state';
 import { Modal } from '../../../../shared/components/modal/modal';
@@ -142,6 +143,8 @@ interface HostDeparture {
         @if (showForm()) {
           <app-host-form
             [host]="editing()"
+            [users]="users()"
+            [loadError]="usersError()"
             (formSubmit)="save($event)"
             (cancelled)="closeForm()"
           />
@@ -154,14 +157,17 @@ export class HostList implements OnInit {
   private readonly hostsStore = inject(HostsStore);
   private readonly eventsStore = inject(EventsStore);
   private readonly departuresStore = inject(DeparturesStore);
+  private readonly usersStore = inject(UsersStore);
   private readonly auth = inject(AuthService);
 
   protected readonly isAdmin = this.auth.isAdmin;
   protected readonly hosts = this.hostsStore.hosts;
   protected readonly events = this.eventsStore.events;
   protected readonly departures = this.departuresStore.departures;
+  protected readonly users = this.usersStore.users;
   protected readonly loading = signal(false);
   protected readonly error = signal<string | null>(null);
+  protected readonly usersError = signal<string | null>(null);
   protected readonly pendingId = signal<string | null>(null);
   protected readonly showForm = signal(false);
   protected readonly editing = signal<Host | null>(null);
@@ -253,12 +259,18 @@ export class HostList implements OnInit {
   protected async load(): Promise<void> {
     this.loading.set(true);
     this.error.set(null);
+    this.usersError.set(null);
+
+    const usersRequest = this.usersStore.load(true).catch(() => {
+      this.usersError.set('No se han podido cargar los usuarios disponibles.');
+    });
 
     try {
       await Promise.all([
         this.hostsStore.load(),
         this.eventsStore.load(),
-        this.departuresStore.load()
+        this.departuresStore.load(),
+        usersRequest
       ]);
     } catch {
       this.error.set('No se han podido cargar los anfitriones.');

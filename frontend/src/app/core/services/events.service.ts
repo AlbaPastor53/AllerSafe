@@ -2,7 +2,13 @@ import { Injectable, inject } from '@angular/core';
 import { HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { ApiService } from './api.service';
-import { EventFilters, Event, EventPayload } from '../models/event.model';
+import { PageMeta, Paginated } from '../models/api.model';
+import {
+  EventFilters,
+  Event,
+  EventPayload,
+  EventSearchFilters
+} from '../models/event.model';
 
 interface ApiResponse<T> {
   success?: boolean;
@@ -29,6 +35,37 @@ export class EventsService {
     return this.api
       .get<ApiResponse<Event[]>>('events', params)
       .pipe(map((r) => extractData(r, Array.isArray)));
+  }
+
+  search(filters: EventSearchFilters = {}): Observable<Paginated<Event>> {
+    let params = new HttpParams();
+
+    const appendAll = (key: string, values?: readonly string[]): void => {
+      for (const value of values ?? []) {
+        if (value) params = params.append(key, value);
+      }
+    };
+
+    if (filters.search?.trim()) params = params.set('search', filters.search.trim());
+    appendAll('category', filters.category);
+    appendAll('host', filters.host);
+    appendAll('location', filters.location);
+    if (filters.status) params = params.set('status', filters.status);
+    if (filters.isActive !== undefined) {
+      params = params.set('is_active', String(filters.isActive));
+    }
+    if (filters.page) params = params.set('page', String(filters.page));
+    if (filters.limit) params = params.set('limit', String(filters.limit));
+    if (filters.sort) params = params.set('sort', filters.sort);
+
+    return this.api
+      .get<ApiResponse<Event[]> & { meta?: PageMeta }>('events', params)
+      .pipe(
+        map((response) => ({
+          items: extractData(response, Array.isArray),
+          meta: response.meta
+        }))
+      );
   }
 
   getById(id: string): Observable<Event> {

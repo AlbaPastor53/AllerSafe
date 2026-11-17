@@ -3,8 +3,19 @@ const eventService = require("../services/event.service");
 class EventController {
   async getAll(req, res, next) {
     try {
-      const events = await eventService.getAll(req.query);
-      res.json({ success: true, data: events });
+      const result = await eventService.getAll(req.query);
+      const response = { success: true, data: result.events };
+
+      if (result.limit > 0) {
+        response.meta = {
+          page: result.page,
+          limit: result.limit,
+          total: result.total,
+          totalPages: Math.ceil(result.total / result.limit)
+        };
+      }
+
+      res.json(response);
     } catch (error) {
       next(error);
     }

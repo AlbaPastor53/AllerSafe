@@ -1,0 +1,370 @@
+import { Location as RouterLocation, NgClass } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import {
+  Departure,
+  DEPARTURE_STATUS_LABELS,
+  DepartureStatus,
+  departureAvailableSpots
+} from '../../../../core/models/departure.model';
+import {
+  STATUS_LABELS,
+  categoryNames
+} from '../../../../core/models/event.model';
+import { Host, hostDisplayName } from '../../../../core/models/host.model';
+import { Location } from '../../../../core/models/location.model';
+import { ShopDetailStore } from '../../../../core/stores/shop-detail.store';
+import { Carousel } from '../../../../shared/components/carousel/carousel';
+import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
+import { ErrorState } from '../../../../shared/components/error-state/error-state';
+import { SkeletonLoader } from '../../../../shared/components/skeleton-loader/skeleton-loader';
+import {
+  formatDate,
+  formatPrice,
+  formatTime
+} from '../../../../shared/utils/format.util';
+
+@Component({
+  selector: 'app-shop-detail',
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [
+    NgClass,
+    RouterLink,
+    Carousel,
+    EmptyState,
+    ErrorState,
+    SkeletonLoader
+  ],
+  template: `
+    <section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      @if (store.loading()) {
+        <app-skeleton-loader tone="dark" [count]="3" />
+      } @else if (store.error()) {
+        <app-error-state
+          tone="dark"
+          [message]="store.error() ?? ''"
+          (retry)="reload()"
+        />
+      } @else if (store.notFound() || !event()) {
+        <app-empty-state
+          tone="dark"
+          title="Experiencia no encontrada"
+          message="No existe ninguna experiencia publicada con ese identificador."
+        >
+          <a routerLink="/shop" class="button-primary">Volver a la tienda</a>
+        </app-empty-state>
+      } @else {
+        <nav class="mb-6 flex items-center gap-2 text-sm text-[#A9B1A6]">
+          <button
+            type="button"
+            (click)="goBack()"
+            class="transition-colors hover:text-[#D6B66E]"
+          >
+            ← Resultados
+          </button>
+          <span>/</span>
+          <span class="truncate text-[#F5F0E6]">{{ event()!.name }}</span>
+        </nav>
+
+        <div
+          class="mb-6 flex flex-wrap items-start justify-between gap-4"
+        >
+          <div>
+            <p class="text-sm font-semibold uppercase tracking-wider text-brand">
+              Experiencia
+            </p>
+
+            <h1 class="mt-2 text-3xl font-semibold sm:text-4xl">
+              {{ event()!.name }}
+            </h1>
+
+            <div
+              class="mt-3 flex flex-wrap items-center gap-2 text-sm text-[#A9B1A6]"
+            >
+              <span
+                class="rounded-full border border-[#414940] px-3 py-1"
+              >
+                {{ categoryNames(event()!.categories) }}
+              </span>
+              <span>{{ hostName() }}</span>
+              <span aria-hidden="true">·</span>
+              <span>{{ locationName() }}</span>
+            </div>
+          </div>
+
+          <span
+            class="rounded-full border border-brand/40 bg-brand/10 px-3 py-1 text-sm font-medium text-[#D6B66E]"
+          >
+            {{ STATUS_LABELS[event()!.status] }}
+          </span>
+        </div>
+
+        <div class="grid gap-8 lg:grid-cols-3">
+          <div class="space-y-6 lg:col-span-2">
+            <app-carousel
+              title="Galería"
+              [itemCount]="images().length"
+              emptyTitle="Sin imágenes"
+              emptyMessage="Esta experiencia todavía no tiene imágenes."
+            >
+              @for (image of images(); track image._id) {
+                <div
+                  class="w-full shrink-0 snap-start overflow-hidden rounded-2xl border border-[#394239] bg-[#1B211D]"
+                >
+                  <img
+                    [src]="image.url"
+                    [alt]="image.alt || event()!.name"
+                    loading="lazy"
+                    class="h-72 w-full object-cover sm:h-96"
+                  />
+                </div>
+              }
+            </app-carousel>
+
+            <section
+              class="rounded-2xl border border-[#394239] bg-[#1B211D] p-6"
+            >
+              <h2 class="text-xl font-semibold">Sobre esta experiencia</h2>
+              <p
+                class="mt-3 whitespace-pre-line text-sm leading-relaxed text-[#C2C9BF]"
+              >
+                {{ event()!.description }}
+              </p>
+            </section>
+
+            <div class="grid gap-6 sm:grid-cols-2">
+              <section
+                class="rounded-2xl border border-[#394239] bg-[#1B211D] p-6"
+              >
+                <h2 class="text-base font-semibold">Anfitrión</h2>
+                <p class="mt-2 font-medium text-[#D6B66E]">{{ hostName() }}</p>
+
+                @if (host()?.biography; as biography) {
+                  <p class="mt-2 text-sm leading-relaxed text-[#A9B1A6]">
+                    {{ biography }}
+                  </p>
+                } @else {
+                  <p class="mt-2 text-sm text-[#A9B1A6]">
+                    Sin biografía disponible.
+                  </p>
+                }
+              </section>
+
+              <section
+                class="rounded-2xl border border-[#394239] bg-[#1B211D] p-6"
+              >
+                <h2 class="text-base font-semibold">Ubicación</h2>
+
+                @if (location(); as place) {
+                  <p class="mt-2 font-medium text-[#D6B66E]">{{ place.name }}</p>
+                  <p class="mt-2 text-sm text-[#A9B1A6]">{{ place.address }}</p>
+                } @else {
+                  <p class="mt-2 text-sm text-[#A9B1A6]">
+                    Ubicación por confirmar.
+                  </p>
+                }
+              </section>
+            </div>
+          </div>
+
+          <aside class="space-y-4">
+            <div
+              class="rounded-2xl border border-[#394239] bg-[#1B211D] p-6"
+            >
+              <p class="text-sm text-[#A9B1A6]">Precio</p>
+              <p class="text-3xl font-semibold text-[#D6B66E]">
+                {{ formatPrice(event()!.price) }}
+              </p>
+
+              <dl class="mt-4 space-y-3 text-sm">
+                <div class="flex justify-between gap-4">
+                  <dt class="text-[#A9B1A6]">Fecha</dt>
+                  <dd class="text-right text-[#F5F0E6]">
+                    {{ formatDate(event()!.date) }}
+                  </dd>
+                </div>
+
+                <div class="flex justify-between gap-4">
+                  <dt class="text-[#A9B1A6]">Hora</dt>
+                  <dd class="text-right text-[#F5F0E6]">
+                    {{ event()!.time }}
+                  </dd>
+                </div>
+
+                <div class="flex justify-between gap-4">
+                  <dt class="text-[#A9B1A6]">Clase</dt>
+                  <dd class="text-right text-[#F5F0E6]">
+                    {{ event()!.classNumber }}
+                  </dd>
+                </div>
+
+                <div class="flex justify-between gap-4">
+                  <dt class="text-[#A9B1A6]">Capacidad</dt>
+                  <dd class="text-right text-[#F5F0E6]">
+                    {{ event()!.capacity }} personas
+                  </dd>
+                </div>
+              </dl>
+
+              <button
+                type="button"
+                class="button-primary mt-6 w-full"
+                disabled
+                title="La reserva online estará disponible próximamente"
+              >
+                Reservar (próximamente)
+              </button>
+
+              <p class="mt-2 text-center text-xs text-[#899188]">
+                La reserva online estará disponible pronto.
+              </p>
+            </div>
+          </aside>
+        </div>
+
+        <section
+          class="mt-8 rounded-2xl border border-[#394239] bg-[#1B211D] p-6"
+        >
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <h2 class="text-xl font-semibold">Salidas</h2>
+            <span class="text-sm text-[#A9B1A6]">
+              {{ store.departures().length }} programadas
+            </span>
+          </div>
+
+          @if (!store.hasDepartures()) {
+            <p class="mt-4 text-sm text-[#A9B1A6]">
+              No hay salidas programadas para esta experiencia.
+            </p>
+          } @else {
+            <ul class="mt-2 divide-y divide-[#394239]">
+              @for (departure of store.departures(); track departure._id) {
+                <li
+                  class="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div>
+                    <p class="font-medium text-[#F5F0E6]">
+                      {{ departureDateLabel(departure) }}
+                    </p>
+                    <p class="mt-1 text-sm text-[#A9B1A6]">
+                      {{ formatTime(departure.start_datetime) }} –
+                      {{ formatTime(departure.end_datetime) }} ·
+                      {{ departureAvailableSpots(departure) }} plazas
+                      disponibles
+                    </p>
+                  </div>
+
+                  <div class="flex flex-wrap items-center gap-3">
+                    <span
+                      class="rounded-full px-3 py-1 text-xs font-medium"
+                      [ngClass]="statusClass(departure.status)"
+                    >
+                      {{ DEPARTURE_STATUS_LABELS[departure.status] }}
+                    </span>
+
+                    <span class="font-semibold text-[#D6B66E]">
+                      {{ formatPrice(departure.price) }}
+                    </span>
+
+                    <button
+                      type="button"
+                      class="button-primary"
+                      disabled
+                      title="La reserva online estará disponible próximamente"
+                    >
+                      Reservar (próximamente)
+                    </button>
+                  </div>
+                </li>
+              }
+            </ul>
+          }
+        </section>
+      }
+    </section>
+  `
+})
+export class ShopDetail {
+  private readonly route = inject(ActivatedRoute);
+  private readonly routerLocation = inject(RouterLocation);
+  private readonly slug = signal('');
+
+  protected readonly store = inject(ShopDetailStore);
+  protected readonly event = this.store.event;
+
+  protected readonly images = computed(() => this.event()?.images ?? []);
+
+  protected readonly host = computed<Host | null>(() => {
+    const host = this.event()?.host;
+    return host && typeof host !== 'string' ? host : null;
+  });
+
+  protected readonly location = computed<Location | null>(() => {
+    const location = this.event()?.location;
+    return location && typeof location !== 'string' ? location : null;
+  });
+
+  protected readonly hostName = computed(() => {
+    const host = this.host();
+    return host ? hostDisplayName(host) : 'Anfitrión';
+  });
+
+  protected readonly locationName = computed(
+    () => this.location()?.name ?? 'Ubicación por confirmar'
+  );
+
+  protected readonly STATUS_LABELS = STATUS_LABELS;
+  protected readonly DEPARTURE_STATUS_LABELS = DEPARTURE_STATUS_LABELS;
+  protected readonly categoryNames = categoryNames;
+  protected readonly departureAvailableSpots = departureAvailableSpots;
+  protected readonly formatDate = formatDate;
+  protected readonly formatTime = formatTime;
+  protected readonly formatPrice = formatPrice;
+
+  constructor() {
+    this.route.paramMap
+      .pipe(takeUntilDestroyed())
+      .subscribe((params) => {
+        const slug = params.get('slug') ?? '';
+        this.slug.set(slug);
+        this.store.load(slug);
+      });
+  }
+
+  protected reload(): void {
+    this.store.load(this.slug());
+  }
+
+  /** Vuelve a la página anterior (la lista conserva sus filtros en la URL). */
+  protected goBack(): void {
+    this.routerLocation.back();
+  }
+
+  protected departureDateLabel(departure: Departure): string {
+    const start = this.formatDate(departure.start_datetime);
+    const end = this.formatDate(departure.end_datetime);
+    return start === end ? start : `${start} – ${end}`;
+  }
+
+  protected statusClass(status: DepartureStatus): string {
+    switch (status) {
+      case 'scheduled':
+        return 'bg-[#273128] text-[#D6B66E]';
+      case 'full':
+        return 'bg-[#352329] text-[#F0B7BF]';
+      case 'cancelled':
+        return 'bg-[#352329] text-[#F0B7BF]';
+      case 'completed':
+      default:
+        return 'bg-[#202720] text-[#A9B1A6]';
+    }
+  }
+}

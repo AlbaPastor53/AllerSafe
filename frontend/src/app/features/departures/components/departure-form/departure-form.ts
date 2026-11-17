@@ -1,7 +1,6 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  OnInit,
   computed,
   effect,
   inject,
@@ -17,7 +16,6 @@ import {
   DepartureStatus
 } from '../../../../core/models/departure.model';
 import { Event } from '../../../../core/models/event.model';
-import { EventsStore } from '../../../../core/stores/events.store';
 import { formatDateTimeLocal } from '../../../../shared/utils/format.util';
 
 @Component({
@@ -167,16 +165,15 @@ import { formatDateTimeLocal } from '../../../../shared/utils/format.util';
     </form>
   `
 })
-export class DepartureForm implements OnInit {
+export class DepartureForm {
   private readonly fb = inject(FormBuilder);
-  private readonly eventsStore = inject(EventsStore);
 
   readonly departure = input<Departure | null>(null);
+  readonly events = input<Event[]>([]);
+  readonly loadError = input<string | null>(null);
   readonly formSubmit = output<DeparturePayload>();
   readonly cancelled = output<void>();
 
-  protected readonly events = this.eventsStore.events;
-  protected readonly loadError = signal<string | null>(null);
   protected readonly formError = signal<string | null>(null);
 
   protected readonly statuses = (
@@ -222,10 +219,6 @@ export class DepartureForm implements OnInit {
         is_active: departure.is_active
       });
     });
-  }
-
-  ngOnInit(): void {
-    void this.loadEvents();
   }
 
   protected isEventAvailable(event: Event): boolean {
@@ -284,13 +277,5 @@ export class DepartureForm implements OnInit {
     }
 
     this.formSubmit.emit(payload);
-  }
-
-  private async loadEvents(): Promise<void> {
-    try {
-      await this.eventsStore.load();
-    } catch {
-      this.loadError.set('No se han podido cargar los eventos disponibles.');
-    }
   }
 }

@@ -6,6 +6,19 @@ class EventRepository {
     return Event.find(filter).sort({ date: 1 });
   }
 
+  async search({ filter = {}, sort = { date: 1, _id: 1 }, skip = 0, limit = 0 } = {}) {
+    const query = Event.find(filter).sort(sort);
+
+    if (skip > 0) query.skip(skip);
+    if (limit > 0) query.limit(limit);
+
+    return query;
+  }
+
+  async count(filter = {}) {
+    return Event.countDocuments(filter);
+  }
+
   async countByHostId(hostId) {
     return Event.countDocuments({ host: hostId, deleted_at: null });
   }

@@ -4,17 +4,13 @@ import {
     effect,
     inject,
     input,
-    output,
-    signal
+    output
 } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Category } from '../../../../core/models/category.model';
 import { Event, EventPayload, EventStatus, refId } from '../../../../core/models/event.model';
 import { Host } from '../../../../core/models/host.model';
 import { Location } from '../../../../core/models/location.model';
-import { CategoriesStore } from '../../../../core/stores/categories.store';
-import { HostsStore } from '../../../../core/stores/hosts.store';
-import { LocationsStore } from '../../../../core/stores/locations.store';
 import { formatDateTimeLocal } from '../../../../shared/utils/format.util';
 
 @Component({
@@ -354,27 +350,20 @@ export class EventForm {
 
     private readonly fb = inject(FormBuilder);
 
-    private readonly categoriesStore = inject(CategoriesStore);
-
-    private readonly hostsStore = inject(HostsStore);
-
-    private readonly locationsStore = inject(LocationsStore);
-
 
     event = input<Event | null>(null);
+
+    hosts = input<Host[]>([]);
+
+    categories = input<Category[]>([]);
+
+    locations = input<Location[]>([]);
+
+    catalogError = input<string | null>(null);
 
     formSubmit = output<EventPayload>();
 
     cancelled = output<void>();
-
-
-    protected readonly hosts = this.hostsStore.hosts;
-
-    protected readonly categories = this.categoriesStore.categories;
-
-    protected readonly locations = this.locationsStore.locations;
-
-    protected readonly catalogError = signal<string | null>(null);
 
 
     protected readonly statuses: Array<{
@@ -472,8 +461,6 @@ export class EventForm {
 
 
     constructor() {
-        void this.loadCatalogs();
-
         effect(() => {
             const e = this.event();
 
@@ -585,23 +572,6 @@ export class EventForm {
         }
 
         this.formSubmit.emit(payload);
-    }
-
-
-    private async loadCatalogs(): Promise<void> {
-        try {
-            await Promise.all([
-                this.hostsStore.load(),
-                this.categoriesStore.load(),
-                this.locationsStore.load()
-            ]);
-
-        } catch {
-            this.catalogError.set(
-                'No se han podido cargar anfitriones, categorías y ubicaciones. ' +
-                'Comprueba que el backend esté iniciado.'
-            );
-        }
     }
 
 }

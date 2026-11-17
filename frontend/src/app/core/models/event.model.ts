@@ -64,6 +64,26 @@ export interface EventFilters {
   includeDeleted?: boolean;
 }
 
+export type EventSort =
+  | 'date_asc'
+  | 'date_desc'
+  | 'price_asc'
+  | 'price_desc'
+  | 'name_asc'
+  | 'name_desc';
+
+export interface EventSearchFilters {
+  search?: string;
+  category?: string[];
+  host?: string[];
+  location?: string[];
+  status?: EventStatus;
+  isActive?: boolean;
+  page?: number;
+  limit?: number;
+  sort?: EventSort;
+}
+
 export const STATUS_LABELS: Record<EventStatus, string> = {
   draft: 'Borrador',
   published: 'Publicado'
@@ -77,4 +97,27 @@ export function refId(value: { _id: string } | string | null | undefined): strin
 export function categoryNames(categories: Category[] | undefined): string {
   if (!categories || categories.length === 0) return 'Sin categoría';
   return categories.map((category) => category.name).join(', ');
+}
+
+export function eventCoverImage(event: Event): EventImage | null {
+  const images = event.images ?? [];
+  return images.find((image) => image.isCover) ?? images[0] ?? null;
+}
+
+export function eventHostName(event: Event): string {
+  const host = event.host;
+  if (!host) return 'Sin anfitrión';
+  if (typeof host === 'string') return host;
+
+  const user = host.user_id;
+  if (!user) return 'Sin anfitrión';
+  if (typeof user === 'string') return user;
+
+  return user.name?.trim() || 'Sin anfitrión';
+}
+
+export function eventLocationName(event: Event): string {
+  const location = event.location;
+  if (!location) return 'Ubicación por confirmar';
+  return typeof location === 'string' ? location : location.name;
 }

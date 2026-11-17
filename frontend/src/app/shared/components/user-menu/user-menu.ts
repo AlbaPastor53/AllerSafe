@@ -2,15 +2,12 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  inject,
+  input,
+  output,
   signal
 } from '@angular/core';
-import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
-import { Router, RouterLink } from '@angular/router';
-import { catchError, of, switchMap } from 'rxjs';
-import { AuthService } from '../../../core/services/auth.service';
-import { ProfileService } from '../../../core/services/profile.service';
-import { buildRobohashUrl } from '../../utils/avatar.util';
+import { RouterLink } from '@angular/router';
+import { AuthUser } from '../../../core/models/auth.model';
 
 @Component({
   selector: 'app-user-menu',
@@ -44,7 +41,7 @@ import { buildRobohashUrl } from '../../utils/avatar.util';
           </span>
         </a>
 
-        <button type="button" class="button-secondary" (click)="logout()">
+        <button type="button" class="button-secondary" (click)="logout.emit()">
           Salir
         </button>
       </div>
@@ -54,39 +51,28 @@ import { buildRobohashUrl } from '../../utils/avatar.util';
   `
 })
 export class UserMenu {
-  private readonly auth = inject(AuthService);
-  private readonly profileService = inject(ProfileService);
-  private readonly router = inject(Router);
+  readonly user = input<AuthUser | null>(null);
+  readonly isAuthenticated = input(false);
+  readonly avatarUrl = input<string | null>(null);
+  readonly profileName = input<string | null>(null);
+  readonly logout = output<void>();
 
-  protected readonly user = this.auth.user;
-  protected readonly isAuthenticated = this.auth.isAuthenticated;
-
-  private readonly customAvatarUrl = computed(
-    () => this.profileService.profile()?.avatar_url?.trim() || null
-  );
-
-  protected readonly robohashUrl = computed(() =>
-    buildRobohashUrl(
-      this.user()?.name || this.user()?.email || this.user()?._id || 'allersafe'
-    )
+  private readonly displayName = computed(
+    () => this.profileName()?.trim() || this.user()?.name?.trim() || ''
   );
 
   private readonly failedSrc = signal<string | null>(null);
 
   protected readonly avatarSrc = computed(() => {
-    const custom = this.customAvatarUrl();
+    const custom = this.avatarUrl();
     if (custom && this.failedSrc() !== custom) return custom;
-    return this.robohashUrl();
+    return '';
   });
 
-  protected readonly showAvatarImage = computed(() => {
-    const custom = this.customAvatarUrl();
-    if (custom && this.failedSrc() !== custom) return true;
-    return this.failedSrc() !== this.robohashUrl();
-  });
+  protected readonly showAvatarImage = computed(() => this.avatarSrc() !== '');
 
   protected readonly initials = computed(() => {
-    const name = this.user()?.name?.trim() ?? '';
+    const name = this.displayName();
     if (!name) return '?';
 
     const parts = name.split(/\s+/);
@@ -95,29 +81,6 @@ export class UserMenu {
 
     return (first + second).toUpperCase() || '?';
   });
-
-  constructor() {
-    toObservable(this.user)
-      .pipe(
-        switchMap((user) => {
-          if (!user) {
-            this.profileService.clear();
-            return of(null);
-          }
-
-          return this.profileService.get().pipe(catchError(() => of(null)));
-        }),
-        takeUntilDestroyed()
-      )
-      .subscribe();
-  }
-
-  protected logout(): void {
-    this.auth.logout().subscribe({
-      next: () => void this.router.navigate(['/login']),
-      error: () => void this.router.navigate(['/login'])
-    });
-  }
 
   protected onAvatarError(): void {
     this.failedSrc.set(this.avatarSrc());

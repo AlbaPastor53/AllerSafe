@@ -1,5 +1,16 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal
+} from '@angular/core';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
+import { Router, RouterOutlet } from '@angular/router';
+import { catchError, of, switchMap } from 'rxjs';
+import { AuthService } from '../../core/services/auth.service';
+import { ProfileService } from '../../core/services/profile.service';
+import { buildProfileName } from '../../shared/utils/avatar.util';
 import { Loader } from '../../shared/components/loader/loader';
 import { Sidebar } from '../../shared/components/sidebar/sidebar';
 import { UserMenu } from '../../shared/components/user-menu/user-menu';
@@ -11,7 +22,11 @@ import { UserMenu } from '../../shared/components/user-menu/user-menu';
   imports: [RouterOutlet, Sidebar, UserMenu, Loader],
   template: `
     <div class="min-h-screen bg-[#151A17] text-[#F5F0E6]">
-      <app-sidebar [open]="menuOpen()" (close)="menuOpen.set(false)" />
+      <app-sidebar
+        [open]="menuOpen()"
+        [isAuthenticated]="isAuthenticated()"
+        (close)="menuOpen.set(false)"
+      />
 
       <div class="flex min-h-screen flex-col lg:pl-64">
         <header class="sticky top-0 z-30 border-b border-[#394239] bg-[#151A17]/95 backdrop-blur">
@@ -37,7 +52,13 @@ import { UserMenu } from '../../shared/components/user-menu/user-menu';
             </button>
 
             <div class="ml-auto">
-              <app-user-menu />
+              <app-user-menu
+                [user]="user()"
+                [isAuthenticated]="isAuthenticated()"
+                [avatarUrl]="avatarUrl()"
+                [profileName]="profileName()"
+                (logout)="logout()"
+              />
             </div>
           </div>
         </header>
@@ -52,5 +73,44 @@ import { UserMenu } from '../../shared/components/user-menu/user-menu';
   `
 })
 export class MainLayout {
+  private readonly auth = inject(AuthService);
+  private readonly profileService = inject(ProfileService);
+  private readonly router = inject(Router);
+
   protected readonly menuOpen = signal(false);
+  protected readonly user = this.auth.user;
+  protected readonly isAuthenticated = this.auth.isAuthenticated;
+
+  protected readonly avatarUrl = computed(
+    () => this.profileService.profile()?.avatar_url?.trim() || null
+  );
+
+  protected readonly profileName = computed(() =>
+    buildProfileName(this.profileService.profile())
+  );
+
+  constructor() {
+    toObservable(this.user)
+      .pipe(
+        switchMap((user) => {
+          if (!user) {
+            this.profileService.clear();
+            return of(null);
+          }
+
+          return this.profileService.get().pipe(catchError(() => of(null)));
+        }),
+        takeUntilDestroyed()
+      )
+      .subscribe();
+
+    void this.auth.initialize().catch(() => undefined);
+  }
+
+  protected logout(): void {
+    this.auth.logout().subscribe({
+      next: () => void this.router.navigate(['/login']),
+      error: () => void this.router.navigate(['/login'])
+    });
+  }
 }

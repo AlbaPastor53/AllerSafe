@@ -13,6 +13,7 @@ const locationRoutes = require("./routes/location.routes");
 const eventImageRoutes = require("./routes/eventImage.routes");
 const hostRoutes = require("./routes/host.routes");
 const departureRoutes = require("./routes/departure.routes");
+const shopRoutes = require("./routes/shop.routes");
 const errorHandler = require("./middlewares/errorHandler");
 const { authentication } = require("./middlewares/authentication");
 const { admin } = require("./middlewares/admin");
@@ -56,6 +57,7 @@ app.use("/api/locations", adminOnlyMutations, locationRoutes);
 app.use("/api/event-images", adminOnlyMutations, eventImageRoutes);
 app.use("/api/hosts", adminOnlyMutations, hostRoutes);
 app.use("/api/departures", adminOnlyMutations, departureRoutes);
+app.use("/api/shop", shopRoutes);
 
 app.use((req, res) => {
   res.status(404).json({

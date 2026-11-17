@@ -32,11 +32,42 @@ const slugParamSchema = z.object({
   slug: z.string().trim().min(1)
 });
 
-const querySchema = z.object({
-  includeDeleted: z
-    .string()
+const toArray = (value) => {
+  if (value === undefined || value === null || value === "") return undefined;
+  if (Array.isArray(value)) return value;
+
+  return String(value)
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+};
+
+const objectIdArray = z.preprocess(
+  toArray,
+  z
+    .array(objectId)
+    .max(20, "No se pueden aplicar más de 20 valores")
     .optional()
-    .transform((value) => value === "true")
+);
+
+const optionalBoolean = z
+  .string()
+  .optional()
+  .transform((value) => (value === undefined ? undefined : value === "true"));
+
+const querySchema = z.object({
+  includeDeleted: optionalBoolean,
+  search: z.string().trim().max(120).optional(),
+  category: objectIdArray,
+  host: objectIdArray,
+  location: objectIdArray,
+  status: z.enum(["draft", "published"]).optional(),
+  is_active: optionalBoolean,
+  page: z.coerce.number().int().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(48).optional(),
+  sort: z
+    .enum(["date_asc", "date_desc", "price_asc", "price_desc", "name_asc", "name_desc"])
+    .optional()
 });
 
 const hostBodySchema = z.object({

@@ -25,7 +25,7 @@ import { AuthService } from '../../../core/services/auth.service';
     >
       <div class="flex h-16 shrink-0 items-center gap-2 border-b border-[#394239] px-4">
         <a
-          routerLink="/departures"
+          routerLink="/shop"
           class="flex items-center gap-2 text-lg font-semibold text-[#F5F0E6]"
           (click)="close.emit()"
         >
@@ -61,14 +61,25 @@ import { AuthService } from '../../../core/services/auth.service';
 
       <nav class="flex-1 space-y-1 overflow-y-auto px-3 py-4">
         <a
-          routerLink="/departures"
+          routerLink="/shop"
           routerLinkActive="bg-[#273128] text-brand"
-          [routerLinkActiveOptions]="{ exact: true }"
           class="block rounded-lg px-3 py-2 text-sm font-medium text-[#C2C9BF] transition-colors hover:bg-[#273128] hover:text-[#D6B66E]"
           (click)="close.emit()"
         >
-          Clases
+          Tienda
         </a>
+
+        @if (isAuthenticated()) {
+          <a
+            routerLink="/departures"
+            routerLinkActive="bg-[#273128] text-brand"
+            [routerLinkActiveOptions]="{ exact: true }"
+            class="block rounded-lg px-3 py-2 text-sm font-medium text-[#C2C9BF] transition-colors hover:bg-[#273128] hover:text-[#D6B66E]"
+            (click)="close.emit()"
+          >
+            Clases
+          </a>
+        }
 
         @if (isAdmin()) {
           <div class="pt-3">
@@ -89,14 +100,16 @@ import { AuthService } from '../../../core/services/auth.service';
           </div>
         }
 
-        <a
-          routerLink="/profile"
-          routerLinkActive="bg-[#273128] text-brand"
-          class="block rounded-lg px-3 py-2 text-sm font-medium text-[#C2C9BF] transition-colors hover:bg-[#273128] hover:text-[#D6B66E]"
-          (click)="close.emit()"
-        >
-          Perfil
-        </a>
+        @if (isAuthenticated()) {
+          <a
+            routerLink="/profile"
+            routerLinkActive="bg-[#273128] text-brand"
+            class="block rounded-lg px-3 py-2 text-sm font-medium text-[#C2C9BF] transition-colors hover:bg-[#273128] hover:text-[#D6B66E]"
+            (click)="close.emit()"
+          >
+            Perfil
+          </a>
+        }
       </nav>
 
       @if (isAdmin()) {
@@ -118,6 +131,7 @@ export class Sidebar {
   private readonly auth = inject(AuthService);
 
   readonly open = input(false);
+  readonly isAuthenticated = input(false);
   readonly close = output<void>();
 
   protected readonly isAdmin = this.auth.isAdmin;

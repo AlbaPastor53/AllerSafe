@@ -14,7 +14,7 @@ import { UsersService } from '../../../../core/services/users.service';
 import { UsersStore } from '../../../../core/stores/users.store';
 import { ErrorState } from '../../../../shared/components/error-state/error-state';
 import { SkeletonLoader } from '../../../../shared/components/skeleton-loader/skeleton-loader';
-import { buildRobohashUrl } from '../../../../shared/utils/avatar.util';
+import { buildProfileName } from '../../../../shared/utils/avatar.util';
 import { formatDate } from '../../../../shared/utils/format.util';
 import { UserForm } from '../../components/user-form/user-form';
 
@@ -168,26 +168,20 @@ export class UserDetail implements OnInit {
 
   protected readonly formatDate = formatDate;
 
-  protected readonly robohashUrl = computed(() =>
-    buildRobohashUrl(
-      this.user()?.name || this.user()?.email || this.user()?._id || 'allersafe'
-    )
+  private readonly profileName = computed(() =>
+    buildProfileName(this.profile())
   );
 
   protected readonly avatarSrc = computed(() => {
     const custom = this.profile()?.avatar_url?.trim();
     if (custom && this.failedSrc() !== custom) return custom;
-    return this.robohashUrl();
+    return '';
   });
 
-  protected readonly showAvatarImage = computed(() => {
-    const custom = this.profile()?.avatar_url?.trim();
-    if (custom && this.failedSrc() !== custom) return true;
-    return this.failedSrc() !== this.robohashUrl();
-  });
+  protected readonly showAvatarImage = computed(() => this.avatarSrc() !== '');
 
   protected readonly initials = computed(() => {
-    const name = this.user()?.name?.trim() ?? '';
+    const name = this.profileName() || this.user()?.name?.trim() || '';
     if (!name) return '?';
 
     const parts = name.split(/\s+/);

@@ -1,8 +1,16 @@
 /**
- * Genera una URL determinista de Robohash con el set de gatos (set=set4).
- * El mismo nombre produce siempre el mismo avatar.
+ * Devuelve el nombre completo del perfil (nombre + apellidos) o null si no
+ * tiene ninguno de los dos. Se usa para generar las iniciales del avatar.
  */
-export function buildRobohashUrl(seed: string): string {
-  const value = seed.trim().toLowerCase() || 'allersafe';
-  return `https://robohash.org/${encodeURIComponent(value)}?set=set4&size=160x160`;
+export function buildProfileName(
+  profile: { first_name?: string; last_name?: string } | null | undefined
+): string | null {
+  if (!profile) return null;
+
+  const name = [profile.first_name, profile.last_name]
+    .map((part) => part?.trim() ?? '')
+    .filter((part) => part.length > 0)
+    .join(' ');
+
+  return name || null;
 }

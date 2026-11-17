@@ -21,11 +21,66 @@ const EVENT_POPULATE = [
   }
 ];
 
+const SORT_MAP = {
+  date_asc: { date: 1, _id: 1 },
+  date_desc: { date: -1, _id: 1 },
+  price_asc: { price: 1, _id: 1 },
+  price_desc: { price: -1, _id: 1 },
+  name_asc: { name: 1, _id: 1 },
+  name_desc: { name: -1, _id: 1 }
+};
+
+function escapeRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 class EventService {
-  async getAll(options = {}) {
-    const events = await eventRepository.findAll(options);
+  async getAll({
+    includeDeleted = false,
+    search = null,
+    category = [],
+    host = [],
+    location = [],
+    status = null,
+    is_active: isActive = undefined,
+    page = 1,
+    limit = 0,
+    sort = "date_asc"
+  } = {}) {
+    const filter = {};
+
+    if (!includeDeleted) filter.deleted_at = null;
+    if (status) filter.status = status;
+    if (isActive !== undefined) filter.is_active = isActive;
+    if (category.length > 0) filter.categories = { $in: category };
+    if (host.length > 0) filter.host = { $in: host };
+    if (location.length > 0) filter.location = { $in: location };
+    if (search) filter.name = { $regex: escapeRegex(search), $options: "i" };
+
+    const paginated = Number(limit) > 0;
+    const safePage = Math.max(1, Number(page) || 1);
+    const safeLimit = paginated ? Number(limit) : 0;
+    const skip = paginated ? (safePage - 1) * safeLimit : 0;
+    const sortSpec = SORT_MAP[sort] ?? SORT_MAP.date_asc;
+
+    const [events, total] = await Promise.all([
+      eventRepository.search({
+        filter,
+        sort: sortSpec,
+        skip,
+        limit: safeLimit
+      }),
+      paginated ? eventRepository.count(filter) : Promise.resolve(0)
+    ]);
+
     await Promise.all(events.map((event) => event.populate(EVENT_POPULATE)));
-    return events;
+
+    return {
+      events,
+      total: paginated ? total : events.length,
+      page: safePage,
+      limit: safeLimit
+    };
   }
 
   async getById(id, { includeDeleted = false } = {}) {

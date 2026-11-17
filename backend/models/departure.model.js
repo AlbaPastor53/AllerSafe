@@ -68,6 +68,7 @@ const departureSchema = new mongoose.Schema(
 );
 
 departureSchema.index({ slug: 1 }, { unique: true });
+departureSchema.index({ event: 1, start_datetime: 1, deleted_at: 1 });
 
 departureSchema.pre("save", function (next) {
   this.updated_at = new Date();

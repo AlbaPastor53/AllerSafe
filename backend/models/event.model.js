@@ -105,6 +105,11 @@ const eventSchema = new mongoose.Schema(
 );
 
 eventSchema.index({ slug: 1 }, { unique: true });
+eventSchema.index({ deleted_at: 1, status: 1, is_active: 1, date: 1, _id: 1 });
+eventSchema.index({ categories: 1, deleted_at: 1, date: 1 });
+eventSchema.index({ host: 1, deleted_at: 1, date: 1 });
+eventSchema.index({ location: 1, deleted_at: 1, date: 1 });
+eventSchema.index({ name: 1 });
 
 eventSchema.pre("save", function (next) {
   this.updated_at = new Date();

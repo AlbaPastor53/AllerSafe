@@ -1,18 +1,15 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  OnInit,
   computed,
   effect,
   inject,
   input,
-  output,
-  signal
+  output
 } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Host, HostPayload, HostStatus } from '../../../../core/models/host.model';
 import { User } from '../../../../core/models/user.model';
-import { UsersStore } from '../../../../core/stores/users.store';
 
 @Component({
   selector: 'app-host-form',
@@ -92,16 +89,14 @@ import { UsersStore } from '../../../../core/stores/users.store';
     </form>
   `
 })
-export class HostForm implements OnInit {
+export class HostForm {
   private readonly fb = inject(FormBuilder);
-  private readonly usersStore = inject(UsersStore);
 
   readonly host = input<Host | null>(null);
+  readonly users = input<User[]>([]);
+  readonly loadError = input<string | null>(null);
   readonly formSubmit = output<HostPayload>();
   readonly cancelled = output<void>();
-
-  protected readonly users = this.usersStore.users;
-  protected readonly loadError = signal<string | null>(null);
 
   protected readonly currentUserId = computed(() => {
     const host = this.host();
@@ -130,10 +125,6 @@ export class HostForm implements OnInit {
         status: host.status
       });
     });
-  }
-
-  ngOnInit(): void {
-    void this.loadUsers();
   }
 
   protected isUserAvailable(user: User): boolean {
@@ -166,13 +157,5 @@ export class HostForm implements OnInit {
       status,
       is_active: status === 'active'
     });
-  }
-
-  private async loadUsers(): Promise<void> {
-    try {
-      await this.usersStore.load(true);
-    } catch {
-      this.loadError.set('No se han podido cargar los usuarios disponibles.');
-    }
   }
 }

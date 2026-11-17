@@ -57,6 +57,9 @@ Inserta 5 clases culinarias de prueba.
 - `PATCH /api/events/:id/activate`
 - `PATCH /api/events/:id/deactivate`
 - `DELETE /api/events/:id` (soft delete)
+- `GET /api/shop` (vista pública de la tienda)
+- `GET /api/shop/events?limit=4&offset=0`
+- `GET /api/shop/events/slug/:slug`
 - `GET /api/health`
 
 ## Autenticación

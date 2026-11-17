@@ -19,6 +19,7 @@ import {
 import { EventSummary, categoryNames } from '../../../../core/models/event.model';
 import { AuthService } from '../../../../core/services/auth.service';
 import { DeparturesStore } from '../../../../core/stores/departures.store';
+import { EventsStore } from '../../../../core/stores/events.store';
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import { ErrorState } from '../../../../shared/components/error-state/error-state';
 import { Modal } from '../../../../shared/components/modal/modal';
@@ -167,6 +168,8 @@ import { DepartureForm } from '../../components/departure-form/departure-form';
         @if (showForm()) {
           <app-departure-form
             [departure]="editing()"
+            [events]="events()"
+            [loadError]="eventsError()"
             (formSubmit)="save($event)"
             (cancelled)="closeForm()"
           />
@@ -220,12 +223,15 @@ import { DepartureForm } from '../../components/departure-form/departure-form';
 })
 export class DepartureList implements OnInit {
   protected readonly store = inject(DeparturesStore);
+  private readonly eventsStore = inject(EventsStore);
   private readonly auth = inject(AuthService);
 
   protected readonly isAdmin = this.auth.isAdmin;
   protected readonly departures = this.store.departures;
+  protected readonly events = this.eventsStore.events;
   protected readonly loading = this.store.loading;
   protected readonly error = this.store.error;
+  protected readonly eventsError = signal<string | null>(null);
   protected readonly pendingId = signal<string | null>(null);
   protected readonly showForm = signal(false);
   protected readonly editing = signal<Departure | null>(null);
@@ -397,8 +403,17 @@ export class DepartureList implements OnInit {
   }
 
   protected async load(): Promise<void> {
+    this.eventsError.set(null);
+
+    const eventsRequest = this.eventsStore.load().catch(() => {
+      this.eventsError.set('No se han podido cargar los eventos disponibles.');
+    });
+
     try {
-      await this.store.load();
+      await Promise.all([
+        this.store.load(),
+        eventsRequest
+      ]);
     } catch {
       // The store exposes the load error to the view.
     }

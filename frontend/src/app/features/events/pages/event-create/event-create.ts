@@ -1,6 +1,7 @@
 import {
     ChangeDetectionStrategy,
     Component,
+    OnInit,
     inject,
     signal
 } from '@angular/core';
@@ -13,7 +14,10 @@ import {
 import Swal from 'sweetalert2';
 
 import { EventPayload } from '../../../../core/models/event.model';
+import { CategoriesStore } from '../../../../core/stores/categories.store';
 import { EventsStore } from '../../../../core/stores/events.store';
+import { HostsStore } from '../../../../core/stores/hosts.store';
+import { LocationsStore } from '../../../../core/stores/locations.store';
 
 import {
     isHttpError,
@@ -67,6 +71,10 @@ import { EventForm } from '../../components/event-form/event-form';
 
             <app-event-form
                 [event]="null"
+                [hosts]="hosts()"
+                [categories]="categories()"
+                [locations]="locations()"
+                [catalogError]="catalogError()"
                 (formSubmit)="onCreate($event)"
                 (cancelled)="onCancel()"
             />
@@ -76,14 +84,33 @@ import { EventForm } from '../../components/event-form/event-form';
 })
 
 
-export class EventCreate {
+export class EventCreate implements OnInit {
 
     private readonly store = inject(EventsStore);
+
+    private readonly hostsStore = inject(HostsStore);
+
+    private readonly categoriesStore = inject(CategoriesStore);
+
+    private readonly locationsStore = inject(LocationsStore);
 
     private readonly router = inject(Router);
 
 
     protected readonly submitting = signal(false);
+
+    protected readonly catalogError = signal<string | null>(null);
+
+    protected readonly hosts = this.hostsStore.hosts;
+
+    protected readonly categories = this.categoriesStore.categories;
+
+    protected readonly locations = this.locationsStore.locations;
+
+
+    ngOnInit(): void {
+        void this.loadCatalogs();
+    }
 
 
     protected async onCreate(payload: EventPayload): Promise<void> {
@@ -121,6 +148,23 @@ export class EventCreate {
 
     protected onCancel(): void {
         this.router.navigate(['/events']);
+    }
+
+
+    private async loadCatalogs(): Promise<void> {
+        try {
+            await Promise.all([
+                this.hostsStore.load(),
+                this.categoriesStore.load(),
+                this.locationsStore.load()
+            ]);
+
+        } catch {
+            this.catalogError.set(
+                'No se han podido cargar anfitriones, categorías y ubicaciones. ' +
+                'Comprueba que el backend esté iniciado.'
+            );
+        }
     }
 
 }
