@@ -49,7 +49,7 @@ class ShopService {
   async getHome({ eventsLimit = 8, filterLimit = 50 } = {}) {
     const [events, categories, hosts, locations] = await Promise.all([
       shopRepository.searchEvents({
-        filter: { ...PUBLIC_EVENT_FILTER },
+        filter: await this.buildEventFilter({}),
         sort: SORT_MAP.date_asc,
         skip: 0,
         limit: eventsLimit
@@ -97,7 +97,7 @@ class ShopService {
     limit = 4,
     offset = 0
   } = {}) {
-    const filter = this.buildEventFilter({
+    const filter = await this.buildEventFilter({
       search,
       category,
       host,
@@ -161,11 +161,37 @@ class ShopService {
       );
     }
 
+    const unavailable = await this.getUnavailableCatalogSets();
+    const hasUnavailableCatalog =
+      unavailable.hosts.has(String(event.host)) ||
+      unavailable.locations.has(String(event.location)) ||
+      (event.categories ?? []).some((id) =>
+        unavailable.categories.has(String(id))
+      );
+
+    if (hasUnavailableCatalog) {
+      throw new AppError(
+        "Experiencia no encontrada.",
+        404,
+        "EVENT_NOT_FOUND"
+      );
+    }
+
     await event.populate(EVENT_POPULATE);
     return event;
   }
 
-  buildEventFilter({
+  async getUnavailableCatalogSets() {
+    const unavailable = await shopRepository.findUnavailableCatalogIds();
+
+    return {
+      categories: new Set(unavailable.categories.map(String)),
+      locations: new Set(unavailable.locations.map(String)),
+      hosts: new Set(unavailable.hosts.map(String))
+    };
+  }
+
+  async buildEventFilter({
     search,
     category = [],
     host = [],
@@ -173,11 +199,21 @@ class ShopService {
     minPrice,
     maxPrice
   } = {}) {
+    const unavailable = await this.getUnavailableCatalogSets();
     const filter = { ...PUBLIC_EVENT_FILTER };
 
-    if (category?.length > 0) filter.categories = { $in: category };
-    if (host?.length > 0) filter.host = { $in: host };
-    if (location?.length > 0) filter.location = { $in: location };
+    filter.categories = {
+      ...(category?.length > 0 ? { $in: category } : {}),
+      $nin: [...unavailable.categories]
+    };
+    filter.host = {
+      ...(host?.length > 0 ? { $in: host } : {}),
+      $nin: [...unavailable.hosts]
+    };
+    filter.location = {
+      ...(location?.length > 0 ? { $in: location } : {}),
+      $nin: [...unavailable.locations]
+    };
     if (search) filter.name = { $regex: escapeRegex(search), $options: "i" };
 
     if (minPrice !== undefined || maxPrice !== undefined) {

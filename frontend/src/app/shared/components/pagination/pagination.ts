@@ -29,7 +29,7 @@ import {
 
         @for (item of pages(); track $index) {
           @if (item === 0) {
-            <span class="px-2 text-[#899188]">…</span>
+            <span class="px-2 text-[#8E7F6F]">…</span>
           } @else {
             <button
               type="button"
@@ -37,7 +37,7 @@ import {
               [ngClass]="
                 item === page()
                   ? 'border-brand bg-brand text-gray-950'
-                  : 'border-[#414940] bg-[#202720] text-[#F5F0E6] hover:bg-[#2B342C]'
+                  : 'border-[#5A4530] bg-[#24170F] text-[#F5F0E6] hover:bg-[#3A291D]'
               "
               [attr.aria-current]="item === page() ? 'page' : null"
               (click)="go(item)"

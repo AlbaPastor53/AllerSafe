@@ -9,15 +9,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { debounceTime } from 'rxjs';
 import { hostDisplayName } from '../../../../core/models/host.model';
-import {
-  DEFAULT_SHOP_SORT,
-  SHOP_PAGE_SIZE,
-  SHOP_PRICE_MAX,
-  SHOP_PRICE_MIN,
-  SHOP_PRICE_STEP,
-  ShopFilterKey,
-  ShopFilters
-} from '../../../../core/models/shop.model';
+import {SHOP_PAGE_SIZE, SHOP_PRICE_MAX, SHOP_PRICE_MIN, SHOP_PRICE_STEP, ShopFilterKey, ShopFilters} from '../../../../core/models/shop.model';
+import {readUrlState,toShopQueryParams} from '../../utils/shop-url.util';
 import { ShopStore } from '../../../../core/stores/shop.store';
 import { FilterField } from '../../../../shared/components/filters/filters';
 import { List } from '../../../../shared/components/list/list';
@@ -62,7 +55,7 @@ import { ShopPriceRange } from '../../components/price-range-slider/price-range-
 
         <h1 class="text-3xl font-semibold sm:text-4xl">Experiencias</h1>
 
-        <p class="max-w-2xl text-sm leading-relaxed text-[#A9B1A6]">
+        <p class="max-w-2xl text-sm leading-relaxed text-[#A99C8E]">
           Resultados paginados de cuatro en cuatro. Combina la búsqueda, los
           filtros y el rango de precio; el estado se conserva en la URL.
         </p>
@@ -90,7 +83,7 @@ import { ShopPriceRange } from '../../components/price-range-slider/price-range-
       />
 
       <div
-        class="flex flex-wrap items-center justify-between gap-3 text-sm text-[#A9B1A6]"
+        class="flex flex-wrap items-center justify-between gap-3 text-sm text-[#A99C8E]"
       >
         <span>
           @if (store.listLoading()) {
@@ -102,7 +95,7 @@ import { ShopPriceRange } from '../../components/price-range-slider/price-range-
 
         <a
           routerLink="/shop"
-          class="font-medium text-brand transition-colors hover:text-[#D6B66E]"
+          class="font-medium text-brand transition-colors hover:text-[#E0BD78]"
         >
           Volver a la tienda
         </a>
@@ -255,51 +248,11 @@ export class ShopList implements OnInit {
   private updateUrl(changes: Partial<ShopFilters>, page = 1): void {
     const { filters } = readUrlState(this.route.snapshot.queryParamMap);
     const next: ShopFilters = { ...filters, ...changes };
-    const queryParams: Record<string, string | number> = {};
-
-    if (next.search) queryParams['search'] = next.search;
-    if (next.category) queryParams['category'] = next.category;
-    if (next.host) queryParams['host'] = next.host;
-    if (next.location) queryParams['location'] = next.location;
-    if (next.minPrice !== undefined) queryParams['minPrice'] = next.minPrice;
-    if (next.maxPrice !== undefined) queryParams['maxPrice'] = next.maxPrice;
-    if (page > 1) queryParams['page'] = page;
 
     void this.router.navigate([], {
       relativeTo: this.route,
-      queryParams,
+      queryParams: toShopQueryParams(next, page),
       replaceUrl: true
     });
   }
-}
-
-/**
- * Lee los filtros y la página de los parámetros de la URL.
- * Los valores ausentes o no válidos se tratan como "sin filtro".
- */
-function readUrlState(params: ParamMap): {
-  filters: ShopFilters;
-  page: number;
-} {
-  return {
-    filters: {
-      search: params.get('search')?.trim() || undefined,
-      category: params.get('category') || undefined,
-      host: params.get('host') || undefined,
-      location: params.get('location') || undefined,
-      minPrice: readPositiveNumber(params.get('minPrice')) ?? undefined,
-      maxPrice: readPositiveNumber(params.get('maxPrice')) ?? undefined,
-      // La URL no guarda el orden; siempre se pide el orden por defecto.
-      sort: DEFAULT_SHOP_SORT
-    },
-    page: readPositiveNumber(params.get('page')) ?? 1
-  };
-}
-
-/** Convierte un parámetro en número positivo; null si no es válido. */
-function readPositiveNumber(value: string | null): number | null {
-  if (value === null || value.trim() === '') return null;
-
-  const parsed = Number(value);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 }

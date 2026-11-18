@@ -27,7 +27,7 @@ import { UserForm } from '../../components/user-form/user-form';
     <section class="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
       <a
         routerLink="/users"
-        class="mb-6 inline-flex items-center gap-2 text-sm font-medium text-[#A8B0A5] transition-colors hover:text-[#D6B66E]"
+        class="mb-6 inline-flex items-center gap-2 text-sm font-medium text-[#A99C8E] transition-colors hover:text-[#E0BD78]"
       >
         ← Volver a usuarios
       </a>
@@ -54,10 +54,10 @@ import { UserForm } from '../../components/user-form/user-form';
 
           <div class="min-w-0">
             <h1 class="text-2xl font-semibold text-[#F5F0E6]">{{ currentUser.name }}</h1>
-            <p class="mt-1 truncate text-sm text-[#A8B0A5]">{{ currentUser.email }}</p>
+            <p class="mt-1 truncate text-sm text-[#A99C8E]">{{ currentUser.email }}</p>
 
             <div class="mt-2 flex flex-wrap gap-2 text-xs">
-              <span class="rounded-full bg-[#2B3226] px-2.5 py-1 text-[#D6B66E]">
+              <span class="rounded-full bg-[#3B2E1C] px-2.5 py-1 text-[#E0BD78]">
                 {{ currentUser.role === 'Admin' ? 'Administrador' : 'Cliente' }}
               </span>
               <span [class]="statusClass(currentUser)">
@@ -70,7 +70,7 @@ import { UserForm } from '../../components/user-form/user-form';
         @if (saved()) {
           <p
             role="status"
-            class="mb-4 rounded-xl border border-[#3F5C43] bg-[#243026] px-3 py-2 text-sm text-[#BFE3C2]"
+            class="mb-4 rounded-xl border border-[#5A6A3E] bg-[#2E3A22] px-3 py-2 text-sm text-[#D6E0B8]"
           >
             Usuario actualizado correctamente.
           </p>
@@ -79,14 +79,14 @@ import { UserForm } from '../../components/user-form/user-form';
         @if (saveError()) {
           <p
             role="alert"
-            class="mb-4 rounded-xl border border-[#70404A] bg-[#352329] px-3 py-2 text-sm text-[#F0B7BF]"
+            class="mb-4 rounded-xl border border-[#7A4A3C] bg-[#3A211A] px-3 py-2 text-sm text-[#F0BDB2]"
           >
             {{ saveError() }}
           </p>
         }
 
         <div class="grid gap-6 lg:grid-cols-2">
-          <div class="rounded-2xl border border-[#394239] bg-[#202720] p-6">
+          <div class="rounded-2xl border border-[#4A3827] bg-[#24170F] p-6">
             <h2 class="mb-4 text-lg font-semibold text-[#F5F0E6]">Datos de la cuenta</h2>
 
             <app-user-form
@@ -96,53 +96,53 @@ import { UserForm } from '../../components/user-form/user-form';
             />
           </div>
 
-          <div class="rounded-2xl border border-[#394239] bg-[#202720] p-6">
+          <div class="rounded-2xl border border-[#4A3827] bg-[#24170F] p-6">
             <h2 class="mb-4 text-lg font-semibold text-[#F5F0E6]">Perfil</h2>
 
             @if (profile(); as currentProfile) {
               <dl class="space-y-3 text-sm">
                 <div class="flex justify-between gap-4">
-                  <dt class="text-[#899188]">Nombre completo</dt>
+                  <dt class="text-[#8E7F6F]">Nombre completo</dt>
                   <dd class="text-right text-[#F5F0E6]">{{ fullName(currentProfile) }}</dd>
                 </div>
                 <div class="flex justify-between gap-4">
-                  <dt class="text-[#899188]">Teléfono</dt>
+                  <dt class="text-[#8E7F6F]">Teléfono</dt>
                   <dd class="text-right text-[#F5F0E6]">{{ currentProfile.phone || '-' }}</dd>
                 </div>
                 <div class="flex justify-between gap-4">
-                  <dt class="text-[#899188]">Fecha de nacimiento</dt>
+                  <dt class="text-[#8E7F6F]">Fecha de nacimiento</dt>
                   <dd class="text-right text-[#F5F0E6]">{{ formatDate(currentProfile.birth_date ?? undefined) }}</dd>
                 </div>
                 <div class="flex justify-between gap-4">
-                  <dt class="text-[#899188]">Dirección</dt>
+                  <dt class="text-[#8E7F6F]">Dirección</dt>
                   <dd class="text-right text-[#F5F0E6]">{{ currentProfile.address || '-' }}</dd>
                 </div>
                 <div class="flex justify-between gap-4">
-                  <dt class="text-[#899188]">Ciudad</dt>
+                  <dt class="text-[#8E7F6F]">Ciudad</dt>
                   <dd class="text-right text-[#F5F0E6]">{{ currentProfile.city || '-' }}</dd>
                 </div>
                 <div class="flex justify-between gap-4">
-                  <dt class="text-[#899188]">Código postal</dt>
+                  <dt class="text-[#8E7F6F]">Código postal</dt>
                   <dd class="text-right text-[#F5F0E6]">{{ currentProfile.postal_code || '-' }}</dd>
                 </div>
                 <div class="flex justify-between gap-4">
-                  <dt class="text-[#899188]">Alergias</dt>
+                  <dt class="text-[#8E7F6F]">Alergias</dt>
                   <dd class="text-right text-[#F5F0E6]">{{ listLabel(currentProfile.allergies) }}</dd>
                 </div>
                 <div class="flex justify-between gap-4">
-                  <dt class="text-[#899188]">Restricciones</dt>
+                  <dt class="text-[#8E7F6F]">Restricciones</dt>
                   <dd class="text-right text-[#F5F0E6]">{{ listLabel(currentProfile.dietary_restrictions) }}</dd>
                 </div>
               </dl>
 
               @if (currentProfile.bio) {
-                <div class="mt-4 border-t border-[#394239] pt-4">
-                  <p class="text-xs font-semibold uppercase tracking-wide text-[#899188]">Biografía</p>
-                  <p class="mt-2 whitespace-pre-line text-sm text-[#D5D8D0]">{{ currentProfile.bio }}</p>
+                <div class="mt-4 border-t border-[#4A3827] pt-4">
+                  <p class="text-xs font-semibold uppercase tracking-wide text-[#8E7F6F]">Biografía</p>
+                  <p class="mt-2 whitespace-pre-line text-sm text-[#E4D8C8]">{{ currentProfile.bio }}</p>
                 </div>
               }
             } @else {
-              <p class="text-sm text-[#A8B0A5]">Este usuario todavía no ha completado su perfil.</p>
+              <p class="text-sm text-[#A99C8E]">Este usuario todavía no ha completado su perfil.</p>
             }
           </div>
         </div>
@@ -202,12 +202,12 @@ export class UserDetail implements OnInit {
 
   protected statusClass(user: User): string {
     if (user.status === 'blocked') {
-      return 'rounded-full bg-[#3A2024] px-2.5 py-1 text-[#F0B7BF]';
+      return 'rounded-full bg-[#3A211A] px-2.5 py-1 text-[#F0BDB2]';
     }
 
     return user.is_active
-      ? 'rounded-full bg-[#233527] px-2.5 py-1 text-[#BFE3C2]'
-      : 'rounded-full bg-[#3A2024] px-2.5 py-1 text-[#F0B7BF]';
+      ? 'rounded-full bg-[#2E3A22] px-2.5 py-1 text-[#D6E0B8]'
+      : 'rounded-full bg-[#3A211A] px-2.5 py-1 text-[#F0BDB2]';
   }
 
   protected fullName(profile: Profile): string {

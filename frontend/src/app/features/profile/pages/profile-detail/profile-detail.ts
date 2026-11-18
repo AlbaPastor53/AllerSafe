@@ -46,7 +46,7 @@ const AVATAR_QUALITY = 0.85;
 
         <div class="min-w-0">
           <h1 class="text-2xl font-semibold text-[#F5F0E6]">Mi perfil</h1>
-          <p class="mt-1 truncate text-sm text-[#A8B0A5]">
+          <p class="mt-1 truncate text-sm text-[#A99C8E]">
             {{ user()?.name }} · {{ user()?.email }}
           </p>
         </div>
@@ -60,12 +60,12 @@ const AVATAR_QUALITY = 0.85;
         <form
           [formGroup]="form"
           (ngSubmit)="save()"
-          class="space-y-6 rounded-2xl border border-[#394239] bg-[#202720] p-6"
+          class="space-y-6 rounded-2xl border border-[#4A3827] bg-[#24170F] p-6"
         >
           @if (saved()) {
             <p
               role="status"
-              class="rounded-xl border border-[#3F5C43] bg-[#243026] px-3 py-2 text-sm text-[#BFE3C2]"
+              class="rounded-xl border border-[#5A6A3E] bg-[#2E3A22] px-3 py-2 text-sm text-[#D6E0B8]"
             >
               Perfil guardado correctamente.
             </p>
@@ -74,7 +74,7 @@ const AVATAR_QUALITY = 0.85;
           @if (saveError()) {
             <p
               role="alert"
-              class="rounded-xl border border-[#70404A] bg-[#352329] px-3 py-2 text-sm text-[#F0B7BF]"
+              class="rounded-xl border border-[#7A4A3C] bg-[#3A211A] px-3 py-2 text-sm text-[#F0BDB2]"
             >
               {{ saveError() }}
             </p>
@@ -91,7 +91,7 @@ const AVATAR_QUALITY = 0.85;
                 placeholder="Nombre"
               />
               @if (errorFor('first_name')) {
-                <p class="mt-1 text-sm text-[#F0B7BF]">{{ errorFor('first_name') }}</p>
+                <p class="mt-1 text-sm text-[#F0BDB2]">{{ errorFor('first_name') }}</p>
               }
             </div>
 
@@ -105,7 +105,7 @@ const AVATAR_QUALITY = 0.85;
                 placeholder="Apellidos"
               />
               @if (errorFor('last_name')) {
-                <p class="mt-1 text-sm text-[#F0B7BF]">{{ errorFor('last_name') }}</p>
+                <p class="mt-1 text-sm text-[#F0BDB2]">{{ errorFor('last_name') }}</p>
               }
             </div>
 
@@ -119,7 +119,7 @@ const AVATAR_QUALITY = 0.85;
                 placeholder="+34 600 000 000"
               />
               @if (errorFor('phone')) {
-                <p class="mt-1 text-sm text-[#F0B7BF]">{{ errorFor('phone') }}</p>
+                <p class="mt-1 text-sm text-[#F0BDB2]">{{ errorFor('phone') }}</p>
               }
             </div>
 
@@ -144,7 +144,7 @@ const AVATAR_QUALITY = 0.85;
                 placeholder="Calle, número, piso"
               />
               @if (errorFor('address')) {
-                <p class="mt-1 text-sm text-[#F0B7BF]">{{ errorFor('address') }}</p>
+                <p class="mt-1 text-sm text-[#F0BDB2]">{{ errorFor('address') }}</p>
               }
             </div>
 
@@ -158,7 +158,7 @@ const AVATAR_QUALITY = 0.85;
                 placeholder="Ciudad"
               />
               @if (errorFor('city')) {
-                <p class="mt-1 text-sm text-[#F0B7BF]">{{ errorFor('city') }}</p>
+                <p class="mt-1 text-sm text-[#F0BDB2]">{{ errorFor('city') }}</p>
               }
             </div>
 
@@ -171,7 +171,7 @@ const AVATAR_QUALITY = 0.85;
                 placeholder="08001"
               />
               @if (errorFor('postal_code')) {
-                <p class="mt-1 text-sm text-[#F0B7BF]">{{ errorFor('postal_code') }}</p>
+                <p class="mt-1 text-sm text-[#F0BDB2]">{{ errorFor('postal_code') }}</p>
               }
             </div>
 
@@ -187,7 +187,7 @@ const AVATAR_QUALITY = 0.85;
                 (input)="onAvatarInput($event)"
               />
               @if (errorFor('avatar_url')) {
-                <p class="mt-1 text-sm text-[#F0B7BF]">{{ errorFor('avatar_url') }}</p>
+                <p class="mt-1 text-sm text-[#F0BDB2]">{{ errorFor('avatar_url') }}</p>
               }
 
               <div class="mt-2 flex flex-wrap items-center gap-2">
@@ -211,11 +211,11 @@ const AVATAR_QUALITY = 0.85;
                   Quitar foto
                 </button>
               </div>
-              <p class="mt-1 text-xs text-[#899188]">
+              <p class="mt-1 text-xs text-[#8E7F6F]">
                 JPG, PNG o WebP (máx. 5 MB). También puedes pegar una URL.
               </p>
               @if (avatarError()) {
-                <p class="mt-1 text-sm text-[#F0B7BF]">{{ avatarError() }}</p>
+                <p class="mt-1 text-sm text-[#F0BDB2]">{{ avatarError() }}</p>
               }
             </div>
           </div>
@@ -231,7 +231,7 @@ const AVATAR_QUALITY = 0.85;
               placeholder="Cuéntanos algo sobre ti..."
             ></textarea>
             @if (errorFor('bio')) {
-              <p class="mt-1 text-sm text-[#F0B7BF]">{{ errorFor('bio') }}</p>
+              <p class="mt-1 text-sm text-[#F0BDB2]">{{ errorFor('bio') }}</p>
             }
           </div>
 
@@ -244,7 +244,7 @@ const AVATAR_QUALITY = 0.85;
                 formControlName="allergies"
                 placeholder="Frutos secos, lactosa..."
               />
-              <p class="mt-1 text-xs text-[#899188]">Sepáralas con comas.</p>
+              <p class="mt-1 text-xs text-[#8E7F6F]">Sepáralas con comas.</p>
             </div>
 
             <div>
@@ -257,7 +257,7 @@ const AVATAR_QUALITY = 0.85;
                 formControlName="dietary_restrictions"
                 placeholder="Sin gluten, vegano..."
               />
-              <p class="mt-1 text-xs text-[#899188]">Sepáralas con comas.</p>
+              <p class="mt-1 text-xs text-[#8E7F6F]">Sepáralas con comas.</p>
             </div>
           </div>
 

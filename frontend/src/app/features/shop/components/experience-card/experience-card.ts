@@ -26,11 +26,11 @@ import { formatDate, formatPrice } from '../../../../shared/utils/format.util';
         [variant]="variant()"
       >
         <div class="space-y-1">
-          <p class="truncate text-xs text-[#A9B1A6]">{{ hostName() }}</p>
+          <p class="truncate text-xs text-[#A99C8E]">{{ hostName() }}</p>
 
           <div class="flex items-center justify-between gap-3">
-            <span class="text-xs text-[#A9B1A6]">{{ dateLabel() }}</span>
-            <span class="font-semibold text-[#D6B66E]">{{ priceLabel() }}</span>
+            <span class="text-xs text-[#A99C8E]">{{ dateLabel() }}</span>
+            <span class="font-semibold text-[#E0BD78]">{{ priceLabel() }}</span>
           </div>
         </div>
       </app-card>

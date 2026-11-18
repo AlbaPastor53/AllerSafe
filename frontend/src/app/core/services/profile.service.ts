@@ -3,6 +3,7 @@ import { Observable, map, tap } from 'rxjs';
 import { ApiService } from './api.service';
 import { ApiResponse } from '../models/api.model';
 import { Profile, ProfilePayload } from '../models/profile.model';
+import { invalidateShopCatalog } from '../models/shop.model';
 
 function extractData<T>(response: ApiResponse<T> | null | undefined): T {
   const data = response?.data;
@@ -31,7 +32,10 @@ export class ProfileService {
       .patch<ApiResponse<Profile>>('profile', payload)
       .pipe(
         map((response) => extractData(response)),
-        tap((profile) => this._profile.set(profile))
+        tap((profile) => {
+          this._profile.set(profile);
+          invalidateShopCatalog();
+        })
       );
   }
 

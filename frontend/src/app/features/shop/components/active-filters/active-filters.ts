@@ -12,20 +12,20 @@ import {
     @if (filters().length > 0) {
       <div class="flex flex-wrap items-center gap-2">
         <span
-          class="text-xs font-semibold uppercase tracking-wider text-[#899188]"
+          class="text-xs font-semibold uppercase tracking-wider text-[#8E7F6F]"
         >
           Filtros activos
         </span>
 
         @for (filter of filters(); track filter.key) {
           <span
-            class="inline-flex items-center gap-2 rounded-full border border-brand/40 bg-brand/10 px-3 py-1 text-xs font-medium text-[#D6B66E]"
+            class="inline-flex items-center gap-2 rounded-full border border-brand/40 bg-brand/10 px-3 py-1 text-xs font-medium text-[#E0BD78]"
           >
             <span>{{ filter.label }}: {{ filter.value }}</span>
 
             <button
               type="button"
-              class="grid h-5 w-5 place-items-center rounded-full text-[#D6B66E] transition-colors hover:bg-brand/20"
+              class="grid h-5 w-5 place-items-center rounded-full text-[#E0BD78] transition-colors hover:bg-brand/20"
               [attr.aria-label]="'Quitar filtro ' + filter.label"
               (click)="remove.emit(filter.key)"
             >
@@ -36,7 +36,7 @@ import {
 
         <button
           type="button"
-          class="text-xs font-medium text-brand transition-colors hover:text-[#D6B66E]"
+          class="text-xs font-medium text-brand transition-colors hover:text-[#E0BD78]"
           (click)="clear.emit()"
         >
           Limpiar todo

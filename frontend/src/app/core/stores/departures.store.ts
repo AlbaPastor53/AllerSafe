@@ -7,6 +7,7 @@ import {
   DeparturePayload,
   DepartureStatus
 } from '../models/departure.model';
+import { invalidateShopCatalog } from '../models/shop.model';
 
 @Injectable({ providedIn: 'root' })
 export class DeparturesStore {
@@ -45,18 +46,21 @@ export class DeparturesStore {
     this._departures.update((items) => [departure, ...items]);
     this._loaded.set(wasLoaded);
     this._error.set(null);
+    invalidateShopCatalog();
     return departure;
   }
 
   async update(id: string, payload: Partial<DeparturePayload>): Promise<Departure> {
     const departure = await firstValueFrom(this.service.update(id, payload));
     this.patch(departure);
+    invalidateShopCatalog();
     return departure;
   }
 
   async setStatus(id: string, status: DepartureStatus): Promise<Departure> {
     const departure = await firstValueFrom(this.service.setStatus(id, status));
     this.patch(departure);
+    invalidateShopCatalog();
     return departure;
   }
 
@@ -64,6 +68,7 @@ export class DeparturesStore {
     await firstValueFrom(this.service.remove(id));
     this._departures.update((items) => items.filter((item) => item._id !== id));
     this._error.set(null);
+    invalidateShopCatalog();
   }
 
   patch(departure: Departure): void {

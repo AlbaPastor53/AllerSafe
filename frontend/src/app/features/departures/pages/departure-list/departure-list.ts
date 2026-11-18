@@ -49,7 +49,7 @@ import { DepartureForm } from '../../components/departure-form/departure-form';
       <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 class="text-2xl font-semibold text-[#F5F0E6]">Clases</h1>
-          <p class="mt-1 text-sm text-[#A8B0A5]">
+          <p class="mt-1 text-sm text-[#A99C8E]">
             {{ visibleDepartures().length }} clases disponibles
           </p>
         </div>
@@ -70,46 +70,46 @@ import { DepartureForm } from '../../components/departure-form/departure-form';
       } @else {
         <div class="space-y-4">
           @for (departure of visibleDepartures(); track departure._id) {
-            <article class="rounded-2xl border border-[#394239] bg-[#202720] p-5">
+            <article class="rounded-2xl border border-[#4A3827] bg-[#24170F] p-5">
               <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div class="min-w-0">
                   <div class="flex flex-wrap items-center gap-2">
                     <h2 class="font-semibold text-[#F5F0E6]">{{ eventName(departure) }}</h2>
                     <span [class]="statusClass(departure)">{{ statusLabel(departure) }}</span>
-                    <span class="rounded-full bg-[#2B3226] px-2.5 py-1 text-xs text-[#D6B66E]">
+                    <span class="rounded-full bg-[#3B2E1C] px-2.5 py-1 text-xs text-[#E0BD78]">
                       {{ categoryLabel(departure) }}
                     </span>
                   </div>
 
-                  <p class="mt-1 text-sm text-[#A8B0A5]">
+                  <p class="mt-1 text-sm text-[#A99C8E]">
                     {{ locationLabel(departure) }}
                   </p>
                 </div>
 
                 <div class="text-sm sm:text-right">
                   <p class="font-semibold text-[#F5F0E6]">{{ formatPrice(departure.price) }}</p>
-                  <p class="text-xs text-[#A8B0A5]">
+                  <p class="text-xs text-[#A99C8E]">
                     {{ availableSpots(departure) }} plazas disponibles
                   </p>
-                  <p class="text-xs text-[#899188]">
+                  <p class="text-xs text-[#8E7F6F]">
                     {{ departure.booked_participants }} / {{ departure.capacity }} ocupadas
                   </p>
                 </div>
               </div>
 
-              <div class="mt-4 grid gap-3 border-t border-[#394239] pt-4 text-sm sm:grid-cols-3">
+              <div class="mt-4 grid gap-3 border-t border-[#4A3827] pt-4 text-sm sm:grid-cols-3">
                 <div>
-                  <p class="text-xs text-[#899188]">Fecha</p>
+                  <p class="text-xs text-[#8E7F6F]">Fecha</p>
                   <strong class="text-[#F5F0E6]">{{ formatDate(departure.start_datetime) }}</strong>
                 </div>
                 <div>
-                  <p class="text-xs text-[#899188]">Horario</p>
+                  <p class="text-xs text-[#8E7F6F]">Horario</p>
                   <strong class="text-[#F5F0E6]">
                     {{ formatTime(departure.start_datetime) }} - {{ formatTime(departure.end_datetime) }}
                   </strong>
                 </div>
                 <div>
-                  <p class="text-xs text-[#899188]">Evento</p>
+                  <p class="text-xs text-[#8E7F6F]">Evento</p>
                   <strong class="text-[#F5F0E6]">{{ eventName(departure) }}</strong>
                 </div>
               </div>
@@ -183,7 +183,7 @@ import { DepartureForm } from '../../components/departure-form/departure-form';
       >
         @if (showReschedule() && rescheduling(); as departure) {
           <form (ngSubmit)="saveReschedule()" class="space-y-4">
-            <p class="text-sm text-[#A8B0A5]">
+            <p class="text-sm text-[#A99C8E]">
               {{ eventName(departure) }} · {{ formatDate(departure.start_datetime) }}
             </p>
 
@@ -199,7 +199,7 @@ import { DepartureForm } from '../../components/departure-form/departure-form';
               />
             </div>
 
-            <p class="text-xs text-[#899188]">
+            <p class="text-xs text-[#8E7F6F]">
               Se conservará la duración actual de la salida.
             </p>
 
@@ -285,18 +285,18 @@ export class DepartureList implements OnInit {
     const base = 'rounded-full px-2.5 py-1 text-xs';
 
     if (departure.status === 'cancelled') {
-      return `${base} bg-[#3A2024] text-[#F0B7BF]`;
+      return `${base} bg-[#3A211A] text-[#F0BDB2]`;
     }
 
     if (departure.status === 'full') {
-      return `${base} bg-[#3B3425] text-[#D6B66E]`;
+      return `${base} bg-[#3B2E1C] text-[#E0BD78]`;
     }
 
     if (departure.status === 'completed') {
-      return `${base} bg-[#29332A] text-[#A8B0A5]`;
+      return `${base} bg-[#332A20] text-[#A99C8E]`;
     }
 
-    return `${base} bg-[#233527] text-[#BFE3C2]`;
+    return `${base} bg-[#2E3A22] text-[#D6E0B8]`;
   }
 
   protected openCreate(): void {

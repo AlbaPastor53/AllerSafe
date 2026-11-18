@@ -12,17 +12,17 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
         (click)="closed.emit()"
       >
         <div
-          class="my-6 w-full max-w-2xl rounded-2xl border border-[#394239] bg-[#1B211D] shadow-2xl shadow-black/40"
+          class="my-6 w-full max-w-2xl rounded-2xl border border-[#4A3827] bg-[#24170F] shadow-2xl shadow-black/40"
           role="dialog"
           aria-modal="true"
           (click)="$event.stopPropagation()"
         >
-          <div class="flex items-center justify-between gap-3 border-b border-[#394239] px-5 py-3">
+          <div class="flex items-center justify-between gap-3 border-b border-[#4A3827] px-5 py-3">
             <h2 class="text-base font-semibold text-[#F5F0E6]">{{ title() }}</h2>
 
             <button
               type="button"
-              class="grid h-8 w-8 place-items-center rounded-lg border border-[#414940] text-[#F5F0E6] transition-colors hover:bg-[#273128]"
+              class="grid h-8 w-8 place-items-center rounded-lg border border-[#5A4530] text-[#F5F0E6] transition-colors hover:bg-[#3A291D]"
               aria-label="Cerrar"
               (click)="closed.emit()"
             >

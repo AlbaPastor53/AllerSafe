@@ -1,6 +1,7 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { Host, HostPayload } from '../models/host.model';
+import { invalidateShopCatalog } from '../models/shop.model';
 import { HostsService } from '../services/hosts.service';
 
 @Injectable({ providedIn: 'root' })
@@ -40,18 +41,21 @@ export class HostsStore {
     this._hosts.update((items) => [host, ...items]);
     this._loaded.set(wasLoaded);
     this._error.set(null);
+    invalidateShopCatalog();
     return host;
   }
 
   async update(id: string, payload: Partial<HostPayload>): Promise<Host> {
     const host = await firstValueFrom(this.service.update(id, payload));
     this.patch(host);
+    invalidateShopCatalog();
     return host;
   }
 
   async setActive(id: string, active: boolean): Promise<Host> {
     const host = await firstValueFrom(this.service.setActive(id, active));
     this.patch(host);
+    invalidateShopCatalog();
     return host;
   }
 
@@ -59,6 +63,7 @@ export class HostsStore {
     await firstValueFrom(this.service.remove(id));
     this._hosts.update((items) => items.filter((item) => item._id !== id));
     this._error.set(null);
+    invalidateShopCatalog();
   }
 
   patch(host: Host): void {

@@ -62,11 +62,11 @@ import {
           <a routerLink="/shop" class="button-primary">Volver a la tienda</a>
         </app-empty-state>
       } @else {
-        <nav class="mb-6 flex items-center gap-2 text-sm text-[#A9B1A6]">
+        <nav class="mb-6 flex items-center gap-2 text-sm text-[#A99C8E]">
           <button
             type="button"
             (click)="goBack()"
-            class="transition-colors hover:text-[#D6B66E]"
+            class="transition-colors hover:text-[#E0BD78]"
           >
             ← Resultados
           </button>
@@ -87,10 +87,10 @@ import {
             </h1>
 
             <div
-              class="mt-3 flex flex-wrap items-center gap-2 text-sm text-[#A9B1A6]"
+              class="mt-3 flex flex-wrap items-center gap-2 text-sm text-[#A99C8E]"
             >
               <span
-                class="rounded-full border border-[#414940] px-3 py-1"
+                class="rounded-full border border-[#5A4530] px-3 py-1"
               >
                 {{ categoryNames(event()!.categories) }}
               </span>
@@ -101,7 +101,7 @@ import {
           </div>
 
           <span
-            class="rounded-full border border-brand/40 bg-brand/10 px-3 py-1 text-sm font-medium text-[#D6B66E]"
+            class="rounded-full border border-brand/40 bg-brand/10 px-3 py-1 text-sm font-medium text-[#E0BD78]"
           >
             {{ STATUS_LABELS[event()!.status] }}
           </span>
@@ -117,7 +117,7 @@ import {
             >
               @for (image of images(); track image._id) {
                 <div
-                  class="w-full shrink-0 snap-start overflow-hidden rounded-2xl border border-[#394239] bg-[#1B211D]"
+                  class="w-full shrink-0 snap-start overflow-hidden rounded-2xl border border-[#4A3827] bg-[#24170F]"
                 >
                   <img
                     [src]="image.url"
@@ -130,11 +130,11 @@ import {
             </app-carousel>
 
             <section
-              class="rounded-2xl border border-[#394239] bg-[#1B211D] p-6"
+              class="rounded-2xl border border-[#4A3827] bg-[#24170F] p-6"
             >
               <h2 class="text-xl font-semibold">Sobre esta experiencia</h2>
               <p
-                class="mt-3 whitespace-pre-line text-sm leading-relaxed text-[#C2C9BF]"
+                class="mt-3 whitespace-pre-line text-sm leading-relaxed text-[#D9CDBD]"
               >
                 {{ event()!.description }}
               </p>
@@ -142,32 +142,32 @@ import {
 
             <div class="grid gap-6 sm:grid-cols-2">
               <section
-                class="rounded-2xl border border-[#394239] bg-[#1B211D] p-6"
+                class="rounded-2xl border border-[#4A3827] bg-[#24170F] p-6"
               >
                 <h2 class="text-base font-semibold">Anfitrión</h2>
-                <p class="mt-2 font-medium text-[#D6B66E]">{{ hostName() }}</p>
+                <p class="mt-2 font-medium text-[#E0BD78]">{{ hostName() }}</p>
 
                 @if (host()?.biography; as biography) {
-                  <p class="mt-2 text-sm leading-relaxed text-[#A9B1A6]">
+                  <p class="mt-2 text-sm leading-relaxed text-[#A99C8E]">
                     {{ biography }}
                   </p>
                 } @else {
-                  <p class="mt-2 text-sm text-[#A9B1A6]">
+                  <p class="mt-2 text-sm text-[#A99C8E]">
                     Sin biografía disponible.
                   </p>
                 }
               </section>
 
               <section
-                class="rounded-2xl border border-[#394239] bg-[#1B211D] p-6"
+                class="rounded-2xl border border-[#4A3827] bg-[#24170F] p-6"
               >
                 <h2 class="text-base font-semibold">Ubicación</h2>
 
                 @if (location(); as place) {
-                  <p class="mt-2 font-medium text-[#D6B66E]">{{ place.name }}</p>
-                  <p class="mt-2 text-sm text-[#A9B1A6]">{{ place.address }}</p>
+                  <p class="mt-2 font-medium text-[#E0BD78]">{{ place.name }}</p>
+                  <p class="mt-2 text-sm text-[#A99C8E]">{{ place.address }}</p>
                 } @else {
-                  <p class="mt-2 text-sm text-[#A9B1A6]">
+                  <p class="mt-2 text-sm text-[#A99C8E]">
                     Ubicación por confirmar.
                   </p>
                 }
@@ -177,37 +177,37 @@ import {
 
           <aside class="space-y-4">
             <div
-              class="rounded-2xl border border-[#394239] bg-[#1B211D] p-6"
+              class="rounded-2xl border border-[#4A3827] bg-[#24170F] p-6"
             >
-              <p class="text-sm text-[#A9B1A6]">Precio</p>
-              <p class="text-3xl font-semibold text-[#D6B66E]">
+              <p class="text-sm text-[#A99C8E]">Precio</p>
+              <p class="text-3xl font-semibold text-[#E0BD78]">
                 {{ formatPrice(event()!.price) }}
               </p>
 
               <dl class="mt-4 space-y-3 text-sm">
                 <div class="flex justify-between gap-4">
-                  <dt class="text-[#A9B1A6]">Fecha</dt>
+                  <dt class="text-[#A99C8E]">Fecha</dt>
                   <dd class="text-right text-[#F5F0E6]">
                     {{ formatDate(event()!.date) }}
                   </dd>
                 </div>
 
                 <div class="flex justify-between gap-4">
-                  <dt class="text-[#A9B1A6]">Hora</dt>
+                  <dt class="text-[#A99C8E]">Hora</dt>
                   <dd class="text-right text-[#F5F0E6]">
                     {{ event()!.time }}
                   </dd>
                 </div>
 
                 <div class="flex justify-between gap-4">
-                  <dt class="text-[#A9B1A6]">Clase</dt>
+                  <dt class="text-[#A99C8E]">Clase</dt>
                   <dd class="text-right text-[#F5F0E6]">
                     {{ event()!.classNumber }}
                   </dd>
                 </div>
 
                 <div class="flex justify-between gap-4">
-                  <dt class="text-[#A9B1A6]">Capacidad</dt>
+                  <dt class="text-[#A99C8E]">Capacidad</dt>
                   <dd class="text-right text-[#F5F0E6]">
                     {{ event()!.capacity }} personas
                   </dd>
@@ -223,7 +223,7 @@ import {
                 Reservar (próximamente)
               </button>
 
-              <p class="mt-2 text-center text-xs text-[#899188]">
+              <p class="mt-2 text-center text-xs text-[#8E7F6F]">
                 La reserva online estará disponible pronto.
               </p>
             </div>
@@ -231,21 +231,21 @@ import {
         </div>
 
         <section
-          class="mt-8 rounded-2xl border border-[#394239] bg-[#1B211D] p-6"
+          class="mt-8 rounded-2xl border border-[#4A3827] bg-[#24170F] p-6"
         >
           <div class="flex flex-wrap items-center justify-between gap-3">
             <h2 class="text-xl font-semibold">Salidas</h2>
-            <span class="text-sm text-[#A9B1A6]">
+            <span class="text-sm text-[#A99C8E]">
               {{ store.departures().length }} programadas
             </span>
           </div>
 
           @if (!store.hasDepartures()) {
-            <p class="mt-4 text-sm text-[#A9B1A6]">
+            <p class="mt-4 text-sm text-[#A99C8E]">
               No hay salidas programadas para esta experiencia.
             </p>
           } @else {
-            <ul class="mt-2 divide-y divide-[#394239]">
+            <ul class="mt-2 divide-y divide-[#4A3827]">
               @for (departure of store.departures(); track departure._id) {
                 <li
                   class="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between"
@@ -254,7 +254,7 @@ import {
                     <p class="font-medium text-[#F5F0E6]">
                       {{ departureDateLabel(departure) }}
                     </p>
-                    <p class="mt-1 text-sm text-[#A9B1A6]">
+                    <p class="mt-1 text-sm text-[#A99C8E]">
                       {{ formatTime(departure.start_datetime) }} –
                       {{ formatTime(departure.end_datetime) }} ·
                       {{ departureAvailableSpots(departure) }} plazas
@@ -270,7 +270,7 @@ import {
                       {{ DEPARTURE_STATUS_LABELS[departure.status] }}
                     </span>
 
-                    <span class="font-semibold text-[#D6B66E]">
+                    <span class="font-semibold text-[#E0BD78]">
                       {{ formatPrice(departure.price) }}
                     </span>
 
@@ -357,14 +357,14 @@ export class ShopDetail {
   protected statusClass(status: DepartureStatus): string {
     switch (status) {
       case 'scheduled':
-        return 'bg-[#273128] text-[#D6B66E]';
+        return 'bg-[#3A291D] text-[#E0BD78]';
       case 'full':
-        return 'bg-[#352329] text-[#F0B7BF]';
+        return 'bg-[#3A211A] text-[#F0BDB2]';
       case 'cancelled':
-        return 'bg-[#352329] text-[#F0B7BF]';
+        return 'bg-[#3A211A] text-[#F0BDB2]';
       case 'completed':
       default:
-        return 'bg-[#202720] text-[#A9B1A6]';
+        return 'bg-[#24170F] text-[#A99C8E]';
     }
   }
 }

@@ -11,6 +11,7 @@ import {
 } from 'rxjs';
 import { Departure } from '../models/departure.model';
 import { Event } from '../models/event.model';
+import { shopCatalogRevision } from '../models/shop.model';
 import { DeparturesService } from '../services/departures.service';
 import { ShopService } from '../services/shop.service';
 
@@ -19,12 +20,17 @@ interface ShopDetailResult {
   departures: Departure[];
 }
 
+interface ShopDetailQuery {
+  slug: string;
+  revision: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ShopDetailStore {
   private readonly shopService = inject(ShopService);
   private readonly departuresService = inject(DeparturesService);
   private readonly destroyRef = inject(DestroyRef);
-  private readonly query = new Subject<string>();
+  private readonly query = new Subject<ShopDetailQuery>();
 
   private readonly _event = signal<Event | null>(null);
   private readonly _departures = signal<Departure[]>([]);
@@ -44,7 +50,9 @@ export class ShopDetailStore {
   constructor() {
     this.query
       .pipe(
-        distinctUntilChanged(),
+        distinctUntilChanged(
+          (a, b) => a.slug === b.slug && a.revision === b.revision
+        ),
         tap(() => {
           this._loading.set(true);
           this._error.set(null);
@@ -53,7 +61,7 @@ export class ShopDetailStore {
           this._departures.set([]);
           this._selectedDeparture.set(null);
         }),
-        switchMap((slug) =>
+        switchMap(({ slug }) =>
           this.shopService.getEventBySlug(slug).pipe(
             switchMap((event) =>
               this.departuresService.list({ event: event._id }).pipe(
@@ -90,7 +98,7 @@ export class ShopDetailStore {
       return;
     }
 
-    this.query.next(trimmed);
+    this.query.next({ slug: trimmed, revision: shopCatalogRevision() });
   }
 
   selectDeparture(departure: Departure | null): void {

@@ -24,7 +24,7 @@ import { LocationForm } from '../../components/location-form/location-form';
       <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 class="text-2xl font-semibold text-[#F5F0E6]">Ubicaciones</h1>
-          <p class="mt-1 text-sm text-[#A8B0A5]">
+          <p class="mt-1 text-sm text-[#A99C8E]">
             {{ locations().length }} ubicaciones registradas
           </p>
         </div>
@@ -45,18 +45,18 @@ import { LocationForm } from '../../components/location-form/location-form';
       } @else {
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           @for (location of locations(); track location._id) {
-            <article class="rounded-2xl border border-[#394239] bg-[#202720] p-5">
+            <article class="rounded-2xl border border-[#4A3827] bg-[#24170F] p-5">
               <div class="flex items-start justify-between gap-3">
                 <h2 class="font-semibold text-[#F5F0E6]">{{ location.name }}</h2>
-                <span class="rounded-full bg-[#2B3226] px-2.5 py-1 text-xs text-[#D6B66E]">
+                <span class="rounded-full bg-[#3B2E1C] px-2.5 py-1 text-xs text-[#E0BD78]">
                   {{ location.status === 'active' ? 'Activa' : 'Inactiva' }}
                 </span>
               </div>
 
-              <p class="mt-2 text-sm text-[#A8B0A5]">{{ location.address }}</p>
+              <p class="mt-2 text-sm text-[#A99C8E]">{{ location.address }}</p>
 
               <div class="mt-3 flex flex-wrap gap-2 text-xs">
-                <span class="rounded-full bg-[#29332A] px-2.5 py-1 text-[#A8B0A5]">
+                <span class="rounded-full bg-[#332A20] px-2.5 py-1 text-[#A99C8E]">
                   Slug: {{ location.slug }}
                 </span>
                 <span [class]="statusClass(location)">
@@ -123,8 +123,8 @@ export class LocationList implements OnInit {
 
   protected statusClass(location: Location): string {
     return location.is_active
-      ? 'rounded-full bg-[#233527] px-2.5 py-1 text-[#BFE3C2]'
-      : 'rounded-full bg-[#3A2024] px-2.5 py-1 text-[#F0B7BF]';
+      ? 'rounded-full bg-[#2E3A22] px-2.5 py-1 text-[#D6E0B8]'
+      : 'rounded-full bg-[#3A211A] px-2.5 py-1 text-[#F0BDB2]';
   }
 
   protected openCreate(): void {

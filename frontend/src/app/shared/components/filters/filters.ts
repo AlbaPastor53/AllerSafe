@@ -16,7 +16,7 @@ export interface FilterField {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="rounded-2xl border border-[#394239] bg-[#1B211D] p-4">
+    <div class="rounded-2xl border border-[#4A3827] bg-[#24170F] p-4">
       <div class="flex flex-wrap items-end gap-4">
         @for (field of fields(); track field.key) {
           <div class="min-w-40 flex-1">

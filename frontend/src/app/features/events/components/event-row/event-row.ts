@@ -10,11 +10,11 @@ import { formatDate, formatPrice } from '../../../../shared/utils/format.util';
     imports: [RouterLink],
     template: `
         <article
-            class="flex flex-col gap-4 p-5 transition-colors hover:bg-[#29332A] sm:flex-row sm:items-center"
+            class="flex flex-col gap-4 p-5 transition-colors hover:bg-[#332A20] sm:flex-row sm:items-center"
             [class.opacity-60]="!event().is_active">
 
             <div class="flex min-w-0 flex-1 items-start gap-4">
-                <div class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#8C7548]/40 bg-[#3B3425] text-[#D6B66E]">
+                <div class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#8C6A3E]/40 bg-[#3B2E1C] text-[#E0BD78]">
                     @if (coverImage(); as cover) {
                         <img
                             [src]="cover.url"
@@ -28,12 +28,12 @@ import { formatDate, formatPrice } from '../../../../shared/utils/format.util';
                 </div>
 
                 <div class="min-w-0 flex-1">
-                    <a [routerLink]="['/events',event()._id]" class="font-semibold text-[#F5F0E6] transition-colors hover:text-[#D6B66E] hover:underline">{{ event().name }}</a>
-                    <p class="mt-1 line-clamp-2 text-sm text-[#A8B0A5]">{{ event().description }}</p>
+                    <a [routerLink]="['/events',event()._id]" class="font-semibold text-[#F5F0E6] transition-colors hover:text-[#E0BD78] hover:underline">{{ event().name }}</a>
+                    <p class="mt-1 line-clamp-2 text-sm text-[#A99C8E]">{{ event().description }}</p>
 
                     <div class="mt-2 flex flex-wrap gap-2 text-xs">
-                        <span class="rounded-full bg-[#2B3226] px-2.5 py-1 text-[#D6B66E]">{{ categoryLabel() }}</span>
-                        <span class="rounded-full bg-[#2B3226] px-2.5 py-1 text-[#D6B66E]">{{ statusLabel() }}</span>
+                        <span class="rounded-full bg-[#3B2E1C] px-2.5 py-1 text-[#E0BD78]">{{ categoryLabel() }}</span>
+                        <span class="rounded-full bg-[#3B2E1C] px-2.5 py-1 text-[#E0BD78]">{{ statusLabel() }}</span>
                         <span [class]="activeClass()">{{ event().is_active ? 'Activo' : 'Inactivo' }}</span>
                     </div>
                 </div>
@@ -41,22 +41,22 @@ import { formatDate, formatPrice } from '../../../../shared/utils/format.util';
 
             <div class="grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:min-w-56">
                 <div>
-                    <p class="text-xs text-[#899188]">Fecha</p>
+                    <p class="text-xs text-[#8E7F6F]">Fecha</p>
                     <strong>{{ formatDate(event().date) }}</strong>
                 </div>
 
                 <div>
-                    <p class="text-xs text-[#899188]">Hora</p>
+                    <p class="text-xs text-[#8E7F6F]">Hora</p>
                     <strong>{{ event().time || '-' }}</strong>
                 </div>
 
                 <div>
-                    <p class="text-xs text-[#899188]">Precio</p>
+                    <p class="text-xs text-[#8E7F6F]">Precio</p>
                     <strong>{{ formatPrice(event().price) }}</strong>
                 </div>
 
                 <div>
-                    <p class="text-xs text-[#899188]">Aforo</p>
+                    <p class="text-xs text-[#8E7F6F]">Aforo</p>
                     <strong>{{ event().capacity }}</strong>
                 </div>
             </div>
@@ -91,8 +91,8 @@ export class EventRow {
 
     protected readonly activeClass = computed(() =>
         this.event().is_active
-            ? 'rounded-full bg-[#233527] px-2.5 py-1 text-[#BFE3C2]'
-            : 'rounded-full bg-[#3A2024] px-2.5 py-1 text-[#F0B7BF]');
+            ? 'rounded-full bg-[#2E3A22] px-2.5 py-1 text-[#D6E0B8]'
+            : 'rounded-full bg-[#3A211A] px-2.5 py-1 text-[#F0BDB2]');
 
     protected readonly categoryLabel = computed(() => categoryNames(this.event().categories));
     protected readonly statusLabel = computed(() =>

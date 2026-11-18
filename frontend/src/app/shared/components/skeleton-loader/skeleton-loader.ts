@@ -14,7 +14,7 @@ import { NgxSkeletonLoaderModule } from 'ngx-skeleton-loader';
           class="rounded-2xl border p-4"
           [ngClass]="
             tone() === 'dark'
-              ? 'border-[#394239] bg-[#1B211D]'
+              ? 'border-[#4A3827] bg-[#24170F]'
               : 'border-gray-200 bg-white'
           "
         >
@@ -22,7 +22,7 @@ import { NgxSkeletonLoaderModule } from 'ngx-skeleton-loader';
             appearance=""
             [theme]="
               tone() === 'dark'
-                ? { height: '160px', 'border-radius': '12px', 'background-color': '#273128' }
+                ? { height: '160px', 'border-radius': '12px', 'background-color': '#3A291D' }
                 : { height: '160px', 'border-radius': '12px' }
             "
           />
@@ -31,7 +31,7 @@ import { NgxSkeletonLoaderModule } from 'ngx-skeleton-loader';
               appearance="line"
               [theme]="
                 tone() === 'dark'
-                  ? { width: '75%', 'background-color': '#273128' }
+                  ? { width: '75%', 'background-color': '#3A291D' }
                   : { width: '75%' }
               "
             />
@@ -39,7 +39,7 @@ import { NgxSkeletonLoaderModule } from 'ngx-skeleton-loader';
               appearance="line"
               [theme]="
                 tone() === 'dark'
-                  ? { width: '50%', 'background-color': '#273128' }
+                  ? { width: '50%', 'background-color': '#3A291D' }
                   : { width: '50%' }
               "
             />

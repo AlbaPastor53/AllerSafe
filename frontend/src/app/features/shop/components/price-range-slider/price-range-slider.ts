@@ -27,14 +27,14 @@ export interface ShopPriceRange {
     <div class="min-w-56 flex-1">
       <div class="flex items-center justify-between gap-3">
         <span class="form-label mb-0">Precio</span>
-        <span class="text-xs font-medium text-[#D6B66E]">
+        <span class="text-xs font-medium text-[#E0BD78]">
           {{ currentMin() }} € – {{ currentMax() }} €
         </span>
       </div>
 
       <div class="relative mt-4 h-5">
         <div
-          class="absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-[#273128]"
+          class="absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-[#3A291D]"
         ></div>
         <div
           class="absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-brand"

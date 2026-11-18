@@ -6,6 +6,7 @@ import {
   UserPayload,
   UserStatus
 } from '../models/user.model';
+import { invalidateShopCatalog } from '../models/shop.model';
 import { UsersService } from '../services/users.service';
 
 @Injectable({ providedIn: 'root' })
@@ -58,18 +59,21 @@ export class UsersStore {
     this._users.update((items) => [user, ...items]);
     this._loaded.set(wasLoaded);
     this._error.set(null);
+    invalidateShopCatalog();
     return user;
   }
 
   async update(id: string, payload: UpdateUserPayload): Promise<User> {
     const user = await firstValueFrom(this.service.update(id, payload));
     this.patch(user);
+    invalidateShopCatalog();
     return user;
   }
 
   async setStatus(id: string, status: UserStatus): Promise<User> {
     const user = await firstValueFrom(this.service.setStatus(id, status));
     this.patch(user);
+    invalidateShopCatalog();
     return user;
   }
 
@@ -78,6 +82,7 @@ export class UsersStore {
     this._users.update((items) => items.filter((item) => item._id !== id));
     if (this._selectedUser()?._id === id) this._selectedUser.set(null);
     this._error.set(null);
+    invalidateShopCatalog();
   }
 
   patch(user: User): void {

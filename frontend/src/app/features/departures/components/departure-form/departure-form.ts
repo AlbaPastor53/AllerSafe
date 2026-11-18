@@ -26,13 +26,13 @@ import { formatDateTimeLocal } from '../../../../shared/utils/format.util';
   template: `
     <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
       @if (loadError()) {
-        <p class="rounded-xl border border-[#70404A] bg-[#352329] px-3 py-2 text-sm text-[#F0B7BF]">
+        <p class="rounded-xl border border-[#7A4A3C] bg-[#3A211A] px-3 py-2 text-sm text-[#F0BDB2]">
           {{ loadError() }}
         </p>
       }
 
       @if (formError()) {
-        <p class="rounded-xl border border-[#70404A] bg-[#352329] px-3 py-2 text-sm text-[#F0B7BF]">
+        <p class="rounded-xl border border-[#7A4A3C] bg-[#3A211A] px-3 py-2 text-sm text-[#F0BDB2]">
           {{ formError() }}
         </p>
       }
@@ -149,8 +149,8 @@ import { formatDateTimeLocal } from '../../../../shared/utils/format.util';
         />
       </div>
 
-      <label class="flex items-center gap-2 text-sm text-[#D5D8D0]">
-        <input type="checkbox" class="h-4 w-4 rounded border-[#414940]" formControlName="is_active" />
+      <label class="flex items-center gap-2 text-sm text-[#E4D8C8]">
+        <input type="checkbox" class="h-4 w-4 rounded border-[#5A4530]" formControlName="is_active" />
         Salida activa
       </label>
 

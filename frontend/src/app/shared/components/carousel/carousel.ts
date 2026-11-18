@@ -36,7 +36,7 @@ import { ErrorState } from '../error-state/error-state';
         <div>
           <h2 class="text-xl font-semibold text-[#F5F0E6]">{{ title() }}</h2>
           @if (subtitle(); as description) {
-            <p class="mt-2 text-sm text-[#A9B1A6]">{{ description }}</p>
+            <p class="mt-2 text-sm text-[#A99C8E]">{{ description }}</p>
           }
         </div>
 
@@ -44,7 +44,7 @@ import { ErrorState } from '../error-state/error-state';
           <div class="flex shrink-0 gap-2">
             <button
               type="button"
-              class="grid h-9 w-9 place-items-center rounded-lg border border-[#414940] text-[#F5F0E6] transition-colors hover:bg-[#273128]"
+              class="grid h-9 w-9 place-items-center rounded-lg border border-[#5A4530] text-[#F5F0E6] transition-colors hover:bg-[#3A291D]"
               aria-label="Ver elementos anteriores"
               (click)="scroll(-1)"
             >
@@ -63,7 +63,7 @@ import { ErrorState } from '../error-state/error-state';
 
             <button
               type="button"
-              class="grid h-9 w-9 place-items-center rounded-lg border border-[#414940] text-[#F5F0E6] transition-colors hover:bg-[#273128]"
+              class="grid h-9 w-9 place-items-center rounded-lg border border-[#5A4530] text-[#F5F0E6] transition-colors hover:bg-[#3A291D]"
               aria-label="Ver más elementos"
               (click)="scroll(1)"
             >
@@ -87,7 +87,7 @@ import { ErrorState } from '../error-state/error-state';
         <div class="flex gap-4 overflow-hidden">
           @for (item of skeletons; track item) {
             <div
-              class="shrink-0 animate-pulse rounded-2xl border border-[#394239] bg-[#1B211D]"
+              class="shrink-0 animate-pulse rounded-2xl border border-[#4A3827] bg-[#24170F]"
               [ngClass]="
                 variant() === 'large' ? 'h-80 w-full' : 'h-64 w-64'
               "
@@ -123,8 +123,8 @@ import { ErrorState } from '../error-state/error-state';
                 class="h-2 rounded-full transition-all"
                 [ngClass]="
                   dot === activeIndex()
-                    ? 'w-6 bg-[#D6B66E]'
-                    : 'w-2 bg-[#414940] hover:bg-[#5B655B]'
+                    ? 'w-6 bg-[#E0BD78]'
+                    : 'w-2 bg-[#5A4530] hover:bg-[#6B5335]'
                 "
                 [attr.aria-label]="'Ver experiencia ' + (dot + 1)"
                 [attr.aria-current]="dot === activeIndex() ? 'true' : null"

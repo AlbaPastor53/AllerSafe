@@ -13,7 +13,7 @@ import { SkeletonLoader } from '../../../../shared/components/skeleton-loader/sk
     <section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <div class="mb-6">
         <h1 class="text-2xl font-semibold text-[#F5F0E6]">Imágenes de eventos</h1>
-        <p class="mt-1 text-sm text-[#A8B0A5]">{{ images().length }} imágenes registradas</p>
+        <p class="mt-1 text-sm text-[#A99C8E]">{{ images().length }} imágenes registradas</p>
       </div>
 
       @if (loading()) {
@@ -25,7 +25,7 @@ import { SkeletonLoader } from '../../../../shared/components/skeleton-loader/sk
       } @else {
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           @for (image of images(); track image._id) {
-            <figure class="overflow-hidden rounded-2xl border border-[#394239] bg-[#202720]">
+            <figure class="overflow-hidden rounded-2xl border border-[#4A3827] bg-[#24170F]">
               <img [src]="image.url" [alt]="image.alt || 'Imagen de evento'" class="h-44 w-full object-cover" />
               <figcaption class="p-4">
                 <p class="text-sm font-medium text-[#F5F0E6]">{{ image.alt || 'Sin texto alternativo' }}</p>

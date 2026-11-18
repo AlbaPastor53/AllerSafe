@@ -11,7 +11,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
       class="rounded-2xl border px-6 py-16 text-center"
       [ngClass]="
         tone() === 'dark'
-          ? 'border-[#394239] bg-[#1B211D]'
+          ? 'border-[#4A3827] bg-[#24170F]'
           : 'border-dashed border-gray-300 bg-white'
       "
     >
@@ -23,7 +23,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
       </h2>
       <p
         class="mx-auto mt-1 max-w-md text-sm"
-        [ngClass]="tone() === 'dark' ? 'text-[#A9B1A6]' : 'text-gray-500'"
+        [ngClass]="tone() === 'dark' ? 'text-[#A99C8E]' : 'text-gray-500'"
       >
         {{ message() }}
       </p>

@@ -19,7 +19,7 @@ import { User } from '../../../../core/models/user.model';
   template: `
     <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
       @if (loadError()) {
-        <p class="rounded-xl border border-[#70404A] bg-[#352329] px-3 py-2 text-sm text-[#F0B7BF]">
+        <p class="rounded-xl border border-[#7A4A3C] bg-[#3A211A] px-3 py-2 text-sm text-[#F0BDB2]">
           {{ loadError() }}
         </p>
       }

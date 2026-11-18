@@ -13,7 +13,8 @@ import {
   ShopActiveFilter,
   ShopFilters,
   ShopHomeData,
-  ShopMeta
+  ShopMeta,
+  shopCatalogRevision
 } from '../models/shop.model';
 import { ShopService } from '../services/shop.service';
 
@@ -23,7 +24,8 @@ import { ShopService } from '../services/shop.service';
  * La página de la lista escribe los filtros en la URL y este store se
  * limita a recibirlos con applyFilters() y a cargar los datos:
  *
- *   - loadHome() / loadOptions(): carruseles y opciones de la tienda.
+ *   - loadHome(): carruseles y opciones de la tienda en una sola petición
+ *     (loadOptions() es un alias para las páginas que solo necesitan filtros).
  *   - applyFilters() / reload(): lista de experiencias.
  */
 @Injectable({ providedIn: 'root' })
@@ -34,12 +36,13 @@ export class ShopStore {
   private readonly _filters = signal<ShopFilters>({});
   private readonly _page = signal(1);
 
+  // Revisión del catálogo con la que se cargó cada bloque de datos.
+  private _homeRevision = -1;
+  private _listRevision = -1;
+
   private readonly _categories = signal<Category[]>([]);
   private readonly _hosts = signal<Host[]>([]);
   private readonly _locations = signal<Location[]>([]);
-  private readonly _optionsLoading = signal(false);
-  private readonly _optionsError = signal<string | null>(null);
-  private readonly _optionsLoaded = signal(false);
 
   private readonly _homeEvents = signal<Event[]>([]);
   private readonly _homeLoading = signal(false);
@@ -60,8 +63,10 @@ export class ShopStore {
   readonly categories = this._categories.asReadonly();
   readonly hosts = this._hosts.asReadonly();
   readonly locations = this._locations.asReadonly();
-  readonly optionsLoading = this._optionsLoading.asReadonly();
-  readonly optionsError = this._optionsError.asReadonly();
+  // Alias conservados por si algún consumidor los usa: comparten el estado
+  // de carga de la única petición que alimenta carruseles y filtros.
+  readonly optionsLoading = this._homeLoading.asReadonly();
+  readonly optionsError = this._homeError.asReadonly();
 
   readonly homeEvents = this._homeEvents.asReadonly();
   readonly homeLoading = this._homeLoading.asReadonly();
@@ -154,14 +159,15 @@ export class ShopStore {
 
   /** Carga los eventos destacados y las opciones de los carruseles. */
   async loadHome(force = false): Promise<void> {
-    if (this._homeLoaded() && !force) return;
+    const revision = shopCatalogRevision();
+    if (this._homeLoaded() && !force && this._homeRevision === revision) return;
 
     this._homeLoading.set(true);
     this._homeError.set(null);
 
     try {
       const data = await firstValueFrom(this.service.getHome());
-      this.applyHomeData(data);
+      this.applyHomeData(data, revision);
     } catch {
       this._homeError.set('No se han podido cargar las experiencias.');
     } finally {
@@ -171,19 +177,7 @@ export class ShopStore {
 
   /** Carga las opciones de los filtros (categorías, anfitriones, ubicaciones). */
   async loadOptions(force = false): Promise<void> {
-    if (this._optionsLoaded() && !force) return;
-
-    this._optionsLoading.set(true);
-    this._optionsError.set(null);
-
-    try {
-      const data = await firstValueFrom(this.service.getHome());
-      this.applyHomeData(data);
-    } catch {
-      this._optionsError.set('No se han podido cargar los filtros.');
-    } finally {
-      this._optionsLoading.set(false);
-    }
+    await this.loadHome(force);
   }
 
   reloadHome(): void {
@@ -191,7 +185,7 @@ export class ShopStore {
   }
 
   reloadOptions(): void {
-    void this.loadOptions(true);
+    this.reloadHome();
   }
 
   /**
@@ -200,9 +194,11 @@ export class ShopStore {
    */
   applyFilters(filters: ShopFilters, page = 1, force = false): void {
     const nextPage = this.normalizePage(page);
+    const revisionChanged = this._listRevision !== shopCatalogRevision();
 
     if (
       !force &&
+      !revisionChanged &&
       this.sameFilters(filters, this._filters()) &&
       nextPage === this._page()
     ) {
@@ -219,15 +215,14 @@ export class ShopStore {
     this.load();
   }
 
-  private applyHomeData(data: ShopHomeData): void {
+  private applyHomeData(data: ShopHomeData, revision: number): void {
     this._homeEvents.set(data.events);
     this._categories.set(data.categories);
     this._hosts.set(data.hosts);
     this._locations.set(data.locations);
+    this._homeRevision = revision;
     this._homeLoaded.set(true);
-    this._optionsLoaded.set(true);
     this._homeError.set(null);
-    this._optionsError.set(null);
   }
 
   private categoryName(id: string): string {
@@ -275,6 +270,7 @@ export class ShopStore {
 
     const filters = this._filters();
     const page = this._page();
+    const revision = shopCatalogRevision();
 
     this._listLoading.set(true);
     this._listError.set(null);
@@ -293,6 +289,7 @@ export class ShopStore {
 
           this._events.set(result.items);
           this._meta.set(result.meta);
+          this._listRevision = revision;
           this._listLoading.set(false);
 
           if (this.activeController === controller) {

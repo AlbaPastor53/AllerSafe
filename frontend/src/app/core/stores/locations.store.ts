@@ -1,6 +1,7 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { Location, LocationPayload } from '../models/location.model';
+import { invalidateShopCatalog } from '../models/shop.model';
 import { LocationsService } from '../services/locations.service';
 
 @Injectable({ providedIn: 'root' })
@@ -40,18 +41,21 @@ export class LocationsStore {
     this._locations.update((items) => [location, ...items]);
     this._loaded.set(wasLoaded);
     this._error.set(null);
+    invalidateShopCatalog();
     return location;
   }
 
   async update(id: string, payload: Partial<LocationPayload>): Promise<Location> {
     const location = await firstValueFrom(this.service.update(id, payload));
     this.patch(location);
+    invalidateShopCatalog();
     return location;
   }
 
   async setActive(id: string, active: boolean): Promise<Location> {
     const location = await firstValueFrom(this.service.setActive(id, active));
     this.patch(location);
+    invalidateShopCatalog();
     return location;
   }
 
@@ -59,6 +63,7 @@ export class LocationsStore {
     await firstValueFrom(this.service.remove(id));
     this._locations.update((items) => items.filter((item) => item._id !== id));
     this._error.set(null);
+    invalidateShopCatalog();
   }
 
   patch(location: Location): void {

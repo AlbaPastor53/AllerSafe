@@ -17,7 +17,7 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Search, Filters, PriceRangeSlider],
   template: `
-    <div class="space-y-4 rounded-2xl border border-[#394239] bg-[#1B211D] p-4">
+    <div class="space-y-4 rounded-2xl border border-[#4A3827] bg-[#24170F] p-4">
       <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
         <app-search
           label="Buscar"

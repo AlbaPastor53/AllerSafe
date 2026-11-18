@@ -21,7 +21,7 @@ import { UserMenu } from '../../shared/components/user-menu/user-menu';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterOutlet, Sidebar, UserMenu, Loader],
   template: `
-    <div class="min-h-screen bg-[#151A17] text-[#F5F0E6]">
+    <div class="min-h-screen bg-[#17130F] text-[#F5F0E6]">
       <app-sidebar
         [open]="menuOpen()"
         [isAuthenticated]="isAuthenticated()"
@@ -29,11 +29,11 @@ import { UserMenu } from '../../shared/components/user-menu/user-menu';
       />
 
       <div class="flex min-h-screen flex-col lg:pl-64">
-        <header class="sticky top-0 z-30 border-b border-[#394239] bg-[#151A17]/95 backdrop-blur">
+        <header class="sticky top-0 z-30 border-b border-[#4A3827] bg-[#17130F]/95 backdrop-blur">
           <div class="flex h-16 items-center gap-4 px-4 sm:px-6 lg:px-8">
             <button
               type="button"
-              class="grid h-10 w-10 place-items-center rounded-lg border border-[#414940] text-[#F5F0E6] transition-colors hover:bg-[#273128] lg:hidden"
+              class="grid h-10 w-10 place-items-center rounded-lg border border-[#5A4530] text-[#F5F0E6] transition-colors hover:bg-[#3A291D] lg:hidden"
               (click)="menuOpen.set(true)"
               aria-controls="app-sidebar"
               aria-label="Abrir menú de navegación"

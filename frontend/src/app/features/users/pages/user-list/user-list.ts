@@ -29,7 +29,7 @@ import { UserForm } from '../../components/user-form/user-form';
       <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 class="text-2xl font-semibold text-[#F5F0E6]">Usuarios</h1>
-          <p class="mt-1 text-sm text-[#A8B0A5]">{{ users().length }} usuarios registrados</p>
+          <p class="mt-1 text-sm text-[#A99C8E]">{{ users().length }} usuarios registrados</p>
         </div>
 
         @if (isAdmin()) {
@@ -46,21 +46,21 @@ import { UserForm } from '../../components/user-form/user-form';
       } @else if (users().length === 0) {
         <app-empty-state title="No hay usuarios" message="Todavía no hay usuarios registrados." />
       } @else {
-        <div class="divide-y divide-[#394239] overflow-hidden rounded-2xl border border-[#394239] bg-[#202720]">
+        <div class="divide-y divide-[#4A3827] overflow-hidden rounded-2xl border border-[#4A3827] bg-[#24170F]">
           @for (user of users(); track user._id) {
             <article class="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
               <div class="min-w-0">
                 <a
                   [routerLink]="['/users', user._id]"
-                  class="font-semibold text-[#F5F0E6] transition-colors hover:text-[#D6B66E] hover:underline"
+                  class="font-semibold text-[#F5F0E6] transition-colors hover:text-[#E0BD78] hover:underline"
                 >
                   {{ user.name }}
                 </a>
-                <p class="truncate text-sm text-[#A8B0A5]">{{ user.email }}</p>
+                <p class="truncate text-sm text-[#A99C8E]">{{ user.email }}</p>
               </div>
 
               <div class="flex flex-wrap items-center gap-2 text-xs">
-                <span class="rounded-full bg-[#2B3226] px-2.5 py-1 text-[#D6B66E]">
+                <span class="rounded-full bg-[#3B2E1C] px-2.5 py-1 text-[#E0BD78]">
                   {{ user.role === 'Admin' ? 'Administrador' : 'Cliente' }}
                 </span>
                 <span [class]="statusClass(user)">{{ statusLabel(user) }}</span>
@@ -130,12 +130,12 @@ export class UserList implements OnInit {
 
   protected statusClass(user: User): string {
     if (user.status === 'blocked') {
-      return 'rounded-full bg-[#3A2024] px-2.5 py-1 text-[#F0B7BF]';
+      return 'rounded-full bg-[#3A211A] px-2.5 py-1 text-[#F0BDB2]';
     }
 
     return user.is_active
-      ? 'rounded-full bg-[#233527] px-2.5 py-1 text-[#BFE3C2]'
-      : 'rounded-full bg-[#3A2024] px-2.5 py-1 text-[#F0B7BF]';
+      ? 'rounded-full bg-[#2E3A22] px-2.5 py-1 text-[#D6E0B8]'
+      : 'rounded-full bg-[#3A211A] px-2.5 py-1 text-[#F0BDB2]';
   }
 
   protected openCreate(): void {

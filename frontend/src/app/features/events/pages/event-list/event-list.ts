@@ -2,7 +2,6 @@ import {
     ChangeDetectionStrategy,
     Component,
     OnInit,
-    computed,
     inject,
     signal
 } from '@angular/core';
@@ -49,8 +48,8 @@ import {
                         Eventos AllerSafe
                     </h1>
 
-                    <p class="mt-1 text-sm text-[#A8B0A5]">
-                        {{filteredEvents().length}} eventos encontrados
+                    <p class="mt-1 text-sm text-[#A99C8E]">
+                        {{events().length}} eventos encontrados
                     </p>
                 </div>
 
@@ -74,7 +73,7 @@ import {
                     (retry)="load()"
                 />
 
-            } @else if(filteredEvents().length === 0) {
+            } @else if(events().length === 0) {
                 <app-empty-state
                     title="No hay eventos"
                     message="Todavía no hay eventos para mostrar."
@@ -90,9 +89,9 @@ import {
                 </app-empty-state>
 
             } @else {
-                <div class="divide-y divide-[#394239] overflow-hidden rounded-2xl border border-[#394239] bg-[#202720] shadow-xl shadow-black/10">
+                <div class="divide-y divide-[#4A3827] overflow-hidden rounded-2xl border border-[#4A3827] bg-[#24170F] shadow-xl shadow-black/10">
 
-                    @for(event of filteredEvents(); track event._id) {
+                    @for(event of events(); track event._id) {
                         <app-event-row
                             [event]="event"
                             [pending]="isPending(event._id)"
@@ -121,9 +120,7 @@ export class EventList implements OnInit {
 
     private readonly pending = signal<ReadonlySet<string>>(new Set());
 
-    protected readonly filteredEvents = computed(() =>
-        this.store.events()
-    );
+    protected readonly events = this.store.events;
 
     protected readonly isAdmin = this.auth.isAdmin;
 

@@ -1,6 +1,7 @@
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { Event, EventPayload } from '../models/event.model';
+import { invalidateShopCatalog } from '../models/shop.model';
 import { EventsService } from '../services/events.service';
 
 @Injectable({ providedIn: 'root' })
@@ -69,18 +70,21 @@ export class EventsStore {
     this._loaded.set(false);
     this.markStale();
     this._error.set(null);
+    invalidateShopCatalog();
     return event;
   }
 
   async update(id: string, payload: Partial<EventPayload>): Promise<Event> {
     const event = await firstValueFrom(this.service.update(id, payload));
     this.patchEvent(event);
+    invalidateShopCatalog();
     return event;
   }
 
   async setActive(id: string, active: boolean): Promise<Event> {
     const event = await firstValueFrom(this.service.setActive(id, active));
     this.patchEvent(event);
+    invalidateShopCatalog();
     return event;
   }
 
@@ -90,6 +94,7 @@ export class EventsStore {
     if (this._selectedEvent()?._id === id) this._selectedEvent.set(null);
     this.markStale();
     this._error.set(null);
+    invalidateShopCatalog();
   }
 
   setError(value: string | null): void {

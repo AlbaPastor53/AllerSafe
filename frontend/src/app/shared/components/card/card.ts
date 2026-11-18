@@ -8,10 +8,10 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
   imports: [NgClass],
   template: `
     <article
-      class="group flex h-full flex-col overflow-hidden rounded-2xl border border-[#394239] bg-[#1B211D] transition-colors hover:border-brand/60"
+      class="group flex h-full flex-col overflow-hidden rounded-2xl border border-[#4A3827] bg-[#24170F] transition-colors hover:border-brand/60"
     >
       <div
-        class="relative overflow-hidden bg-[#273128]"
+        class="relative overflow-hidden bg-[#3A291D]"
         [ngClass]="variant() === 'large' ? 'h-64 sm:h-80' : 'h-40'"
       >
         @if (imageUrl(); as url) {
@@ -22,14 +22,14 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
             class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         } @else {
-          <div class="grid h-full place-items-center text-4xl font-semibold text-[#D6B66E]">
+          <div class="grid h-full place-items-center text-4xl font-semibold text-[#E0BD78]">
             {{ initial() || '·' }}
           </div>
         }
 
         @if (badge(); as badgeLabel) {
           <span
-            class="absolute left-3 top-3 max-w-[calc(100%-1.5rem)] truncate rounded-full bg-[#151A17]/85 px-2.5 py-1 text-xs font-medium text-[#D6B66E]"
+            class="absolute left-3 top-3 max-w-[calc(100%-1.5rem)] truncate rounded-full bg-[#17130F]/85 px-2.5 py-1 text-xs font-medium text-[#E0BD78]"
           >
             {{ badgeLabel }}
           </span>
@@ -48,7 +48,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
         </h3>
 
         @if (subtitle(); as description) {
-          <p class="line-clamp-2 text-sm text-[#A9B1A6]">{{ description }}</p>
+          <p class="line-clamp-2 text-sm text-[#A99C8E]">{{ description }}</p>
         }
 
         <div class="mt-auto pt-2 text-sm">

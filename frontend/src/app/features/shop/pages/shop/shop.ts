@@ -21,6 +21,21 @@ import {
   imports: [RouterLink, EventCarousel, FilterCarousel],
   template: `
     <section class="mx-auto max-w-7xl space-y-12 px-4 py-8 sm:px-6 lg:px-8">
+      <section class="shop-hero" aria-labelledby="shop-hero-title">
+        <div class="shop-hero-content">
+          <p class="shop-hero-kicker">Tienda</p>
+
+          <h1 id="shop-hero-title" class="shop-hero-title">
+            Descubre experiencias
+          </h1>
+
+          <p class="shop-hero-text">
+            Explora las próximas clases y talleres. Elige una categoría,
+            ubicación o anfitrión para ver los resultados.
+          </p>
+        </div>
+      </section>
+
       <app-event-carousel
         [events]="store.homeEvents()"
         [loading]="store.homeLoading()"
@@ -29,23 +44,8 @@ import {
       />
 
       <div class="space-y-4">
-        <header class="space-y-3">
-          <p class="text-sm font-semibold uppercase tracking-wider text-brand">
-            Tienda
-          </p>
-
-          <h1 class="text-3xl font-semibold sm:text-4xl">
-            Descubre experiencias
-          </h1>
-
-          <p class="max-w-2xl text-sm leading-relaxed text-[#A9B1A6]">
-            Explora las próximas clases y talleres. Elige una categoría,
-            ubicación o anfitrión para ver los resultados.
-          </p>
-        </header>
-
         <div
-          class="flex flex-wrap items-center justify-between gap-3 text-sm text-[#A9B1A6]"
+          class="flex flex-wrap items-center justify-between gap-3 text-sm text-[#A99C8E]"
         >
           <span>
             @if (store.homeLoading()) {
@@ -57,7 +57,7 @@ import {
 
           <a
             routerLink="/shop-list"
-            class="font-medium text-brand transition-colors hover:text-[#D6B66E]"
+            class="font-medium text-brand transition-colors hover:text-[#E0BD78]"
           >
             Ver todas las experiencias
           </a>

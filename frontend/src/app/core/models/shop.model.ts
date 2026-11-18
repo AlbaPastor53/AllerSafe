@@ -1,3 +1,4 @@
+import { signal } from '@angular/core';
 import { Category } from './category.model';
 import { Event, EventSort } from './event.model';
 import { Host } from './host.model';
@@ -71,3 +72,13 @@ export const SHOP_SORT_OPTIONS: readonly ShopSortOption[] = [
   { value: 'name_asc', label: 'Nombre: A-Z' },
   { value: 'name_desc', label: 'Nombre: Z-A' }
 ];
+
+/**
+ * Revisión del catálogo público. Administración la incrementa cuando cambia
+ * un dato que la tienda muestra; la tienda la lee y recarga su caché al entrar.
+ */
+export const shopCatalogRevision = signal(0);
+
+export function invalidateShopCatalog(): void {
+  shopCatalogRevision.update((value) => value + 1);
+}
