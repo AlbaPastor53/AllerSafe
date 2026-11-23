@@ -8,8 +8,8 @@ const DEPARTURE_POPULATE = [
     path: "event",
     select: "name slug description status is_active date time price capacity categories location",
     populate: [
-      { path: "categories", select: "name slug status is_active" },
-      { path: "location", select: "name address slug status is_active" }
+      { path: "categories", select: "name slug image_url status is_active" },
+      { path: "location", select: "name address slug image_url status is_active" }
     ]
   }
 ];

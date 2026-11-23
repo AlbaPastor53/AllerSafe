@@ -70,6 +70,20 @@ import { User } from '../../../../core/models/user.model';
       </div>
 
       <div>
+        <label class="form-label" for="host-image">URL de imagen (opcional)</label>
+        <input
+          id="host-image"
+          class="form-input"
+          formControlName="image_url"
+          maxlength="500"
+          placeholder="https://..."
+        />
+        @if (errorFor('image_url')) {
+          <p class="form-error">{{ errorFor('image_url') }}</p>
+        }
+      </div>
+
+      <div>
         <label class="form-label" for="host-status">Estado</label>
         <select id="host-status" class="form-input" formControlName="status">
           <option value="active">Activo</option>
@@ -109,6 +123,7 @@ export class HostForm {
     user_id: ['', [Validators.required]],
     biography: ['', [Validators.maxLength(1000)]],
     slug: [''],
+    image_url: ['', [Validators.maxLength(500), Validators.pattern(/^https?:\/\/.+/i)]],
     status: ['active' as HostStatus, [Validators.required]]
   });
 
@@ -122,6 +137,7 @@ export class HostForm {
         user_id: this.currentUserId() ?? '',
         biography: host.biography ?? '',
         slug: host.slug,
+        image_url: host.image_url ?? '',
         status: host.status
       });
     });
@@ -138,6 +154,7 @@ export class HostForm {
 
     if (control.errors?.['required']) return 'Este campo es obligatorio.';
     if (control.errors?.['maxlength']) return 'Has superado la longitud máxima.';
+    if (control.errors?.['pattern']) return 'Introduce una URL válida (http o https).';
 
     return 'Revisa este campo.';
   }
@@ -154,6 +171,7 @@ export class HostForm {
       user_id: value.user_id,
       biography: value.biography.trim() || undefined,
       slug: value.slug.trim() || undefined,
+      image_url: value.image_url.trim() || undefined,
       status,
       is_active: status === 'active'
     });

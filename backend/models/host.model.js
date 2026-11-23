@@ -13,6 +13,12 @@ const hostSchema = new mongoose.Schema(
       maxlength: 1000,
       default: ""
     },
+    image_url: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+      default: ""
+    },
     slug: {
       type: String,
       required: true,

@@ -60,6 +60,20 @@ import {
       </div>
 
       <div>
+        <label class="form-label" for="category-image">URL de imagen (opcional)</label>
+        <input
+          id="category-image"
+          class="form-input"
+          formControlName="image_url"
+          maxlength="500"
+          placeholder="https://..."
+        />
+        @if (errorFor('image_url')) {
+          <p class="form-error">{{ errorFor('image_url') }}</p>
+        }
+      </div>
+
+      <div>
         <label class="form-label" for="category-status">Estado</label>
         <select id="category-status" class="form-input" formControlName="status">
           <option value="active">Activa</option>
@@ -89,6 +103,7 @@ export class CategoryForm {
     name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(80)]],
     slug: [''],
     description: ['', [Validators.maxLength(500)]],
+    image_url: ['', [Validators.maxLength(500), Validators.pattern(/^https?:\/\/.+/i)]],
     status: ['active' as CatalogStatus, [Validators.required]]
   });
 
@@ -102,6 +117,7 @@ export class CategoryForm {
         name: category.name,
         slug: category.slug,
         description: category.description ?? '',
+        image_url: category.image_url ?? '',
         status: category.status
       });
     });
@@ -115,6 +131,7 @@ export class CategoryForm {
     if (control.errors?.['required']) return 'Este campo es obligatorio.';
     if (control.errors?.['minlength']) return 'Introduce al menos 2 caracteres.';
     if (control.errors?.['maxlength']) return 'Has superado la longitud máxima.';
+    if (control.errors?.['pattern']) return 'Introduce una URL válida (http o https).';
 
     return 'Revisa este campo.';
   }
@@ -131,6 +148,7 @@ export class CategoryForm {
       name: value.name.trim(),
       slug: value.slug.trim() || undefined,
       description: value.description.trim() || undefined,
+      image_url: value.image_url.trim() || undefined,
       status,
       is_active: status === 'active'
     });

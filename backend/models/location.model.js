@@ -21,6 +21,12 @@ const locationSchema = new mongoose.Schema(
       lowercase: true,
       trim: true
     },
+    image_url: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+      default: ""
+    },
     status: {
       type: String,
       enum: ["active", "inactive"],

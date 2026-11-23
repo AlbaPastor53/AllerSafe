@@ -12,8 +12,8 @@ const EVENT_POPULATE = [
     path: "host",
     populate: { path: "user_id", select: "name email role status is_active" }
   },
-  { path: "categories", select: "name slug status is_active" },
-  { path: "location", select: "name address slug status is_active" },
+  { path: "categories", select: "name slug image_url status is_active" },
+  { path: "location", select: "name address slug image_url status is_active" },
   {
     path: "images",
     match: { deleted_at: null },

@@ -112,7 +112,8 @@ export class Shop implements OnInit {
       id: category._id,
       title: category.name,
       subtitle: category.description ?? null,
-      initial: this.initialOf(category.name)
+      initial: this.initialOf(category.name),
+      imageUrl: category.image_url ?? null
     }))
   );
 
@@ -123,7 +124,8 @@ export class Shop implements OnInit {
         id: host._id,
         title: name,
         subtitle: host.biography || null,
-        initial: this.initialOf(name)
+        initial: this.initialOf(name),
+        imageUrl: host.image_url ?? null
       };
     })
   );
@@ -133,7 +135,8 @@ export class Shop implements OnInit {
       id: location._id,
       title: location.name,
       subtitle: location.address,
-      initial: this.initialOf(location.name)
+      initial: this.initialOf(location.name),
+      imageUrl: location.image_url ?? null
     }))
   );
 

@@ -59,6 +59,20 @@ import {
       </div>
 
       <div>
+        <label class="form-label" for="location-image">URL de imagen (opcional)</label>
+        <input
+          id="location-image"
+          class="form-input"
+          formControlName="image_url"
+          maxlength="500"
+          placeholder="https://..."
+        />
+        @if (errorFor('image_url')) {
+          <p class="form-error">{{ errorFor('image_url') }}</p>
+        }
+      </div>
+
+      <div>
         <label class="form-label" for="location-status">Estado</label>
         <select id="location-status" class="form-input" formControlName="status">
           <option value="active">Activa</option>
@@ -88,6 +102,7 @@ export class LocationForm {
     name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(120)]],
     address: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(255)]],
     slug: [''],
+    image_url: ['', [Validators.maxLength(500), Validators.pattern(/^https?:\/\/.+/i)]],
     status: ['active' as CatalogStatus, [Validators.required]]
   });
 
@@ -101,6 +116,7 @@ export class LocationForm {
         name: location.name,
         address: location.address,
         slug: location.slug,
+        image_url: location.image_url ?? '',
         status: location.status
       });
     });
@@ -114,6 +130,7 @@ export class LocationForm {
     if (control.errors?.['required']) return 'Este campo es obligatorio.';
     if (control.errors?.['minlength']) return 'Introduce al menos 2 caracteres.';
     if (control.errors?.['maxlength']) return 'Has superado la longitud máxima.';
+    if (control.errors?.['pattern']) return 'Introduce una URL válida (http o https).';
 
     return 'Revisa este campo.';
   }
@@ -130,6 +147,7 @@ export class LocationForm {
       name: value.name.trim(),
       address: value.address.trim(),
       slug: value.slug.trim() || undefined,
+      image_url: value.image_url.trim() || undefined,
       status,
       is_active: status === 'active'
     });

@@ -7,6 +7,7 @@ export interface FilterCarouselItem {
   title: string;
   subtitle?: string | null;
   initial?: string | null;
+  imageUrl?: string | null;
 }
 
 @Component({
@@ -35,6 +36,7 @@ export interface FilterCarouselItem {
             [title]="item.title"
             [subtitle]="item.subtitle ?? null"
             [initial]="item.initial ?? null"
+            [imageUrl]="item.imageUrl ?? null"
           />
         </button>
       }

@@ -20,6 +20,12 @@ const categorySchema = new mongoose.Schema(
       trim: true,
       maxlength: 500
     },
+    image_url: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+      default: ""
+    },
     status: {
       type: String,
       enum: ["active", "inactive"],

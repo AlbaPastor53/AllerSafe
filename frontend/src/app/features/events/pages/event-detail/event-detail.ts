@@ -50,19 +50,21 @@ import { AuthService } from '../../../../core/services/auth.service';
     ],
 
     template: `
-        <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
 
             @if(loading()) {
-                <app-skeleton-loader [count]="4"/>
+                <app-skeleton-loader tone="dark" [count]="4"/>
 
             } @else if(loadError()) {
                 <app-error-state
+                    tone="dark"
                     [message]="loadError()!"
                     (retry)="reload()"
                 />
 
             } @else if(notFound() || !event()) {
                 <app-empty-state
+                    tone="dark"
                     title="Evento no encontrado"
                     message="No existe ningún evento con ese ID o no está disponible."
                 >
@@ -75,243 +77,225 @@ import { AuthService } from '../../../../core/services/auth.service';
                 </app-empty-state>
 
             } @else {
-                <nav class="mb-6 flex items-center gap-2 text-sm text-gray-500">
+                <nav class="mb-6 flex items-center gap-2 text-sm text-[#A99C8E]">
 
                     <a
                         routerLink="/events"
-                        class="hover:text-gray-800 hover:underline"
+                        class="transition-colors hover:text-[#E0BD78] hover:underline"
                     >
                         Eventos
                     </a>
 
                     <span>/</span>
 
-                    <span class="truncate font-medium text-gray-800">
+                    <span class="truncate font-medium text-[#F5F0E6]">
                         {{event()!.name}}
                     </span>
 
                 </nav>
 
-                <div class="grid gap-8 lg:grid-cols-3">
-
-                    <section class="space-y-6 lg:col-span-2">
-
-                        @if(coverImage(); as cover) {
-                            <div class="rounded-2xl border border-gray-200 bg-white overflow-hidden">
-                                <div class="relative h-64 w-full sm:h-80 lg:h-96">
-                                    <img
-                                        [src]="cover.url"
-                                        [alt]="cover.alt || event()!.name"
-                                        class="h-full w-full object-cover"
-                                        loading="lazy"
-                                    />
-                                </div>
-                                @if(eventImages().length > 1) {
-                                    <div class="grid grid-cols-2 gap-2 p-3 sm:grid-cols-3 lg:grid-cols-4">
-                                        @for(img of eventImages(); track img._id) {
-                                            @if(img._id !== cover._id) {
-                                                <img
-                                                    [src]="img.url"
-                                                    [alt]="img.alt || event()!.name"
-                                                    class="h-24 w-full rounded-lg object-cover sm:h-28"
-                                                    loading="lazy"
-                                                />
-                                            }
-                                        }
-                                    </div>
+                @if(coverImage(); as cover) {
+                    <div class="overflow-hidden rounded-2xl border border-[#4A3827] bg-[#24170F]">
+                        <div class="relative h-64 w-full sm:h-80 lg:h-96">
+                            <img
+                                [src]="cover.url"
+                                [alt]="cover.alt || event()!.name"
+                                class="h-full w-full object-cover"
+                                loading="lazy"
+                            />
+                        </div>
+                        @if(eventImages().length > 1) {
+                            <div class="grid grid-cols-2 gap-2 p-3 sm:grid-cols-3 lg:grid-cols-4">
+                                @for(img of eventImages(); track img._id) {
+                                    @if(img._id !== cover._id) {
+                                        <img
+                                            [src]="img.url"
+                                            [alt]="img.alt || event()!.name"
+                                            class="h-24 w-full rounded-lg object-cover sm:h-28"
+                                            loading="lazy"
+                                        />
+                                    }
                                 }
                             </div>
                         }
+                    </div>
+                }
 
-                        <div class="rounded-2xl border border-gray-200 bg-white p-6">
+                <div class="mt-4 flex flex-wrap gap-2">
 
-                            <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
+                    @if(isAdmin()) {
+                        <a
+                            [routerLink]="['/events', event()!._id, 'edit']"
+                            class="button-primary px-2.5 py-1 text-xs"
+                        >
+                            Editar
+                        </a>
 
-                                <div>
-                                    <h1 class="text-3xl font-semibold text-gray-900">
-                                        {{event()!.name}}
-                                    </h1>
+                        <button
+                            type="button"
+                            class="button-secondary px-2.5 py-1 text-xs"
+                            (click)="toggleStatus()"
+                        >
+                            {{event()!.is_active ? 'Desactivar' : 'Activar'}}
+                        </button>
 
-                                    <p class="mt-2 text-sm text-gray-500">
-                                        Slug: {{event()!.slug}}
-                                    </p>
-                                </div>
+                        <button
+                            type="button"
+                            class="button-danger px-2.5 py-1 text-xs"
+                            (click)="remove()"
+                        >
+                            Eliminar
+                        </button>
+                    }
 
-                                <span
-                                    class="rounded-full px-3 py-1 text-sm"
-                                    [class.bg-green-100]="event()!.is_active"
-                                    [class.text-green-800]="event()!.is_active"
-                                    [class.bg-red-100]="!event()!.is_active"
-                                    [class.text-red-800]="!event()!.is_active"
-                                >
-                                    {{event()!.is_active ? 'Activo' : 'Inactivo'}}
-                                </span>
+                    <a
+                        routerLink="/events"
+                        class="button-secondary px-2.5 py-1 text-xs"
+                    >
+                        Volver a la lista
+                    </a>
 
+                </div>
+
+                <div class="mt-6 space-y-6">
+
+                    <section class="rounded-2xl border border-[#4A3827] bg-[#24170F] p-6">
+
+                        <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
+
+                            <div>
+                                <h1 class="text-3xl font-semibold text-[#F5F0E6]">
+                                    {{event()!.name}}
+                                </h1>
+
+                                <p class="mt-2 text-sm text-[#A99C8E]">
+                                    Slug: {{event()!.slug}}
+                                </p>
                             </div>
 
-                            <p class="whitespace-pre-line leading-7 text-gray-700">
-                                {{event()!.description}}
-                            </p>
+                            <span [class]="statusBadgeClass()">
+                                {{event()!.is_active ? 'Activo' : 'Inactivo'}}
+                            </span>
 
                         </div>
 
-                        <div class="rounded-2xl border border-gray-200 bg-white p-6">
-
-                            <h2 class="mb-4 text-lg font-semibold">
-                                Información del evento
-                            </h2>
-
-                            <dl class="grid gap-5 sm:grid-cols-2">
-
-                                <div>
-                                    <dt class="text-sm text-gray-500">
-                                        Fecha
-                                    </dt>
-
-                                    <dd class="mt-1 font-semibold">
-                                        {{formatDate(event()!.date)}}
-                                    </dd>
-                                </div>
-
-                                <div>
-                                    <dt class="text-sm text-gray-500">
-                                        Precio
-                                    </dt>
-
-                                    <dd class="mt-1 font-semibold">
-                                        {{formatPrice(event()!.price)}}
-                                    </dd>
-                                </div>
-
-                                <div>
-                                    <dt class="text-sm text-gray-500">
-                                        Hora
-                                    </dt>
-
-                                    <dd class="mt-1 font-semibold">
-                                        {{event()!.time || '-'}}
-                                    </dd>
-                                </div>
-
-                                <div>
-                                    <dt class="text-sm text-gray-500">
-                                        Categoría
-                                    </dt>
-
-                                    <dd class="mt-1 font-semibold">
-                                        {{categoryLabel()}}
-                                    </dd>
-                                </div>
-
-                                <div>
-                                    <dt class="text-sm text-gray-500">
-                                        Anfitrión
-                                    </dt>
-
-                                    <dd class="mt-1 font-semibold">
-                                        {{hostName()}}
-                                    </dd>
-                                </div>
-
-                                <div>
-                                    <dt class="text-sm text-gray-500">
-                                        Ubicación
-                                    </dt>
-
-                                    <dd class="mt-1 font-semibold">
-                                        {{locationLabel()}}
-                                    </dd>
-                                </div>
-
-                                <div>
-                                    <dt class="text-sm text-gray-500">
-                                        Número de clase
-                                    </dt>
-
-                                    <dd class="mt-1 font-semibold">
-                                        {{event()!.classNumber}}
-                                    </dd>
-                                </div>
-
-                                <div>
-                                    <dt class="text-sm text-gray-500">
-                                        Aforo
-                                    </dt>
-
-                                    <dd class="mt-1 font-semibold">
-                                        {{event()!.capacity}} personas
-                                    </dd>
-                                </div>
-
-                                <div>
-                                    <dt class="text-sm text-gray-500">
-                                        Estado
-                                    </dt>
-
-                                    <dd class="mt-1 font-semibold">
-                                        {{statusLabel()}}
-                                    </dd>
-                                </div>
-
-                                <div>
-                                    <dt class="text-sm text-gray-500">
-                                        Actualizado
-                                    </dt>
-
-                                    <dd class="mt-1 font-semibold">
-                                        {{formatDate(event()!.updated_at)}}
-                                    </dd>
-                                </div>
-
-                            </dl>
-
-                        </div>
+                        <p class="whitespace-pre-line leading-7 text-[#D9CDBD]">
+                            {{event()!.description}}
+                        </p>
 
                     </section>
 
-                    <aside class="h-fit rounded-2xl border border-gray-200 bg-white p-6">
+                    <section class="rounded-2xl border border-[#4A3827] bg-[#24170F] p-6">
 
-                        <h2 class="text-lg font-semibold">
-                            Acciones
+                        <h2 class="mb-4 text-lg font-semibold text-[#F5F0E6]">
+                            Información del evento
                         </h2>
 
-                        <div class="mt-4 flex flex-col gap-3">
+                        <dl class="grid gap-5 sm:grid-cols-2">
 
-                            @if(isAdmin()) {
-                                <a
-                                    [routerLink]="['/events', event()!._id, 'edit']"
-                                    class="button-primary text-center"
-                                >
-                                    Editar evento
-                                </a>
+                            <div>
+                                <dt class="text-sm text-[#A99C8E]">
+                                    Fecha
+                                </dt>
 
-                                <button
-                                    type="button"
-                                    class="button-secondary"
-                                    (click)="toggleStatus()"
-                                >
-                                    {{event()!.is_active ? 'Desactivar evento' : 'Activar evento'}}
-                                </button>
+                                <dd class="mt-1 font-semibold text-[#F5F0E6]">
+                                    {{formatDate(event()!.date)}}
+                                </dd>
+                            </div>
 
-                                <button
-                                    type="button"
-                                    class="button-danger"
-                                    (click)="remove()"
-                                >
-                                    Eliminar evento
-                                </button>
-                            }
+                            <div>
+                                <dt class="text-sm text-[#A99C8E]">
+                                    Precio
+                                </dt>
 
-                            <a
-                                routerLink="/events"
-                                class="button-secondary text-center"
-                            >
-                                Volver a la lista
-                            </a>
+                                <dd class="mt-1 font-semibold text-[#F5F0E6]">
+                                    {{formatPrice(event()!.price)}}
+                                </dd>
+                            </div>
 
-                        </div>
+                            <div>
+                                <dt class="text-sm text-[#A99C8E]">
+                                    Hora
+                                </dt>
 
-                    </aside>
+                                <dd class="mt-1 font-semibold text-[#F5F0E6]">
+                                    {{event()!.time || '-'}}
+                                </dd>
+                            </div>
+
+                            <div>
+                                <dt class="text-sm text-[#A99C8E]">
+                                    Categoría
+                                </dt>
+
+                                <dd class="mt-1 font-semibold text-[#F5F0E6]">
+                                    {{categoryLabel()}}
+                                </dd>
+                            </div>
+
+                            <div>
+                                <dt class="text-sm text-[#A99C8E]">
+                                    Anfitrión
+                                </dt>
+
+                                <dd class="mt-1 font-semibold text-[#F5F0E6]">
+                                    {{hostName()}}
+                                </dd>
+                            </div>
+
+                            <div>
+                                <dt class="text-sm text-[#A99C8E]">
+                                    Ubicación
+                                </dt>
+
+                                <dd class="mt-1 font-semibold text-[#F5F0E6]">
+                                    {{locationLabel()}}
+                                </dd>
+                            </div>
+
+                            <div>
+                                <dt class="text-sm text-[#A99C8E]">
+                                    Número de clase
+                                </dt>
+
+                                <dd class="mt-1 font-semibold text-[#F5F0E6]">
+                                    {{event()!.classNumber}}
+                                </dd>
+                            </div>
+
+                            <div>
+                                <dt class="text-sm text-[#A99C8E]">
+                                    Aforo
+                                </dt>
+
+                                <dd class="mt-1 font-semibold text-[#F5F0E6]">
+                                    {{event()!.capacity}} personas
+                                </dd>
+                            </div>
+
+                            <div>
+                                <dt class="text-sm text-[#A99C8E]">
+                                    Estado
+                                </dt>
+
+                                <dd class="mt-1 font-semibold text-[#F5F0E6]">
+                                    {{statusLabel()}}
+                                </dd>
+                            </div>
+
+                            <div>
+                                <dt class="text-sm text-[#A99C8E]">
+                                    Actualizado
+                                </dt>
+
+                                <dd class="mt-1 font-semibold text-[#F5F0E6]">
+                                    {{formatDate(event()!.updated_at)}}
+                                </dd>
+                            </div>
+
+                        </dl>
+
+                    </section>
 
                 </div>
             }
@@ -393,6 +377,13 @@ export class EventDetail implements OnInit {
     };
 
 
+    protected readonly statusBadgeClass = computed(() =>
+        this.event()?.is_active
+            ? 'rounded-full px-3 py-1 text-sm bg-[#3B2E1C] text-[#E0BD78]'
+            : 'rounded-full px-3 py-1 text-sm bg-[#3A211A] text-[#F0BDB2]'
+    );
+
+
     private id = '';
 
 
@@ -447,7 +438,7 @@ export class EventDetail implements OnInit {
         if (!e) return;
 
         try {
-            const updated = await this.store.setActive(e._id, !e.is_active);
+            const updated = await this.store.setActive(e._id, !e.is_active );
 
             this.event.set({ ...updated, images: e.images ?? [] });
 

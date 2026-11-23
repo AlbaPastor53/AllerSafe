@@ -4,6 +4,13 @@ const locationBodySchema = z.object({
   name: z.string().trim().min(2).max(120),
   address: z.string().trim().min(2).max(255),
   slug: z.string().trim().min(2).max(200).optional(),
+  image_url: z
+    .string()
+    .trim()
+    .max(500)
+    .regex(/^https?:\/\/.+/i, "La URL de la imagen no es válida")
+    .optional()
+    .or(z.literal("")),
   status: z.enum(["active", "inactive"]).optional(),
   is_active: z.boolean().optional()
 });

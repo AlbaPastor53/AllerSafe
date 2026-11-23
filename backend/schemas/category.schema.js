@@ -4,6 +4,13 @@ const categoryBodySchema = z.object({
   name: z.string().trim().min(2).max(80),
   slug: z.string().trim().min(2).max(80).optional(),
   description: z.string().trim().max(500).optional(),
+  image_url: z
+    .string()
+    .trim()
+    .max(500)
+    .regex(/^https?:\/\/.+/i, "La URL de la imagen no es válida")
+    .optional()
+    .or(z.literal("")),
   status: z.enum(["active", "inactive"]).optional(),
   is_active: z.boolean().optional()
 });

@@ -5,6 +5,7 @@ export interface Location {
   name: string;
   address: string;
   slug: string;
+  image_url?: string;
   status: CatalogStatus;
   is_active: boolean;
   created_at?: string;
@@ -16,6 +17,7 @@ export interface LocationPayload {
   name: string;
   address: string;
   slug?: string;
+  image_url?: string;
   status?: CatalogStatus;
   is_active?: boolean;
 }

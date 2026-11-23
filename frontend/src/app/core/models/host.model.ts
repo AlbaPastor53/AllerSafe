@@ -6,6 +6,7 @@ export interface Host {
   _id: string;
   user_id: UserSummary | string;
   biography?: string;
+  image_url?: string;
   slug: string;
   status: HostStatus;
   is_active: boolean;
@@ -17,6 +18,7 @@ export interface Host {
 export interface HostPayload {
   user_id: string;
   biography?: string;
+  image_url?: string;
   slug?: string;
   status?: HostStatus;
   is_active?: boolean;

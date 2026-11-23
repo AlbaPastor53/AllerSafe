@@ -6,8 +6,9 @@ import {
   inject,
   signal
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { filter } from 'rxjs';
 import {
   Departure,
   DEPARTURE_STATUS_LABELS,
@@ -15,6 +16,7 @@ import {
   departureAvailableSpots
 } from '../../../../core/models/departure.model';
 import {
+  Event,
   STATUS_LABELS,
   categoryNames
 } from '../../../../core/models/event.model';
@@ -30,6 +32,8 @@ import {
   formatPrice,
   formatTime
 } from '../../../../shared/utils/format.util';
+import { ChatbotService } from '../../../../core/services/chatbot.service';
+import { FaqEventContext, FaqItem } from '../../../../core/models/chatbot.model';
 
 @Component({
   selector: 'app-shop-detail',
@@ -186,20 +190,6 @@ import {
 
               <dl class="mt-4 space-y-3 text-sm">
                 <div class="flex justify-between gap-4">
-                  <dt class="text-[#A99C8E]">Fecha</dt>
-                  <dd class="text-right text-[#F5F0E6]">
-                    {{ formatDate(event()!.date) }}
-                  </dd>
-                </div>
-
-                <div class="flex justify-between gap-4">
-                  <dt class="text-[#A99C8E]">Hora</dt>
-                  <dd class="text-right text-[#F5F0E6]">
-                    {{ event()!.time }}
-                  </dd>
-                </div>
-
-                <div class="flex justify-between gap-4">
                   <dt class="text-[#A99C8E]">Clase</dt>
                   <dd class="text-right text-[#F5F0E6]">
                     {{ event()!.classNumber }}
@@ -229,6 +219,55 @@ import {
             </div>
           </aside>
         </div>
+
+        <section
+          class="mt-8 rounded-2xl border border-[#4A3827] bg-[#24170F] p-6"
+        >
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <h2 class="text-xl font-semibold">Preguntas frecuentes</h2>
+
+            <button
+              type="button"
+              class="button-secondary px-2.5 py-1 text-xs"
+              [disabled]="faqsLoading()"
+              (click)="reloadFaqs()"
+            >
+              Regenerar
+            </button>
+          </div>
+
+          @if (faqsLoading()) {
+            <p class="mt-4 text-sm text-[#A99C8E]">Generando preguntas…</p>
+          } @else if (faqsError()) {
+            <p class="mt-4 text-sm text-[#F0BDB2]">{{ faqsError() }}</p>
+
+            <button
+              type="button"
+              class="button-secondary mt-3"
+              (click)="reloadFaqs()"
+            >
+              Reintentar
+            </button>
+          } @else {
+            <div class="mt-4 divide-y divide-[#4A3827]">
+              @for (faq of faqs(); track $index) {
+                <details class="py-3">
+                  <summary class="cursor-pointer list-none font-medium text-[#F5F0E6]">
+                    {{ faq.question }}
+                  </summary>
+
+                  <p class="mt-2 whitespace-pre-line text-sm leading-relaxed text-[#D9CDBD]">
+                    {{ faq.answer }}
+                  </p>
+                </details>
+              } @empty {
+                <p class="mt-4 text-sm text-[#A99C8E]">
+                  No hay preguntas frecuentes disponibles.
+                </p>
+              }
+            </div>
+          }
+        </section>
 
         <section
           class="mt-8 rounded-2xl border border-[#4A3827] bg-[#24170F] p-6"
@@ -298,7 +337,14 @@ export class ShopDetail {
   private readonly slug = signal('');
 
   protected readonly store = inject(ShopDetailStore);
+
+  private readonly chatbotService = inject(ChatbotService);
+
   protected readonly event = this.store.event;
+
+  protected readonly faqs = signal<FaqItem[]>([]);
+  protected readonly faqsLoading = signal(false);
+  protected readonly faqsError = signal<string | null>(null);
 
   protected readonly images = computed(() => this.event()?.images ?? []);
 
@@ -337,6 +383,61 @@ export class ShopDetail {
         this.slug.set(slug);
         this.store.load(slug);
       });
+
+    toObservable(this.event)
+      .pipe(
+        filter((event): event is Event => Boolean(event)),
+        takeUntilDestroyed()
+      )
+      .subscribe((event) => {
+        void this.reloadFaqs(event);
+      });
+  }
+
+  protected async reloadFaqs(event = this.event()): Promise<void> {
+    if (!event) return;
+
+    this.faqsLoading.set(true);
+    this.faqsError.set(null);
+
+    try {
+      this.faqs.set(
+        await this.chatbotService.getFaqs(this.buildFaqContext(event))
+      );
+    } catch (error) {
+      this.faqs.set([]);
+      this.faqsError.set(
+        error instanceof Error
+          ? error.message
+          : 'No se han podido cargar las preguntas frecuentes.'
+      );
+    } finally {
+      this.faqsLoading.set(false);
+    }
+  }
+
+  private buildFaqContext(event: Event): FaqEventContext {
+    const host =
+      event.host && typeof event.host !== 'string'
+        ? hostDisplayName(event.host)
+        : '';
+    const location =
+      event.location && typeof event.location !== 'string'
+        ? event.location.name
+        : '';
+
+    return {
+      name: event.name,
+      description: event.description ?? '',
+      categories: (event.categories ?? []).map((category) => category.name),
+      host,
+      location,
+      classNumber: event.classNumber,
+      date: '',
+      time: '',
+      price: event.price,
+      capacity: event.capacity
+    };
   }
 
   protected reload(): void {

@@ -5,6 +5,13 @@ const objectIdRegex = /^[0-9a-fA-F]{24}$/;
 const hostBodySchema = z.object({
   user_id: z.string().regex(objectIdRegex, "user_id debe ser un ObjectId válido"),
   biography: z.string().trim().max(1000).optional(),
+  image_url: z
+    .string()
+    .trim()
+    .max(500)
+    .regex(/^https?:\/\/.+/i, "La URL de la imagen no es válida")
+    .optional()
+    .or(z.literal("")),
   slug: z.string().trim().min(2).max(160).optional(),
   status: z.enum(["active", "inactive", "suspended"]).optional(),
   is_active: z.boolean().optional()

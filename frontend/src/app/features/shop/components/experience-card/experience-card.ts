@@ -7,7 +7,7 @@ import {
   eventLocationName
 } from '../../../../core/models/event.model';
 import { Card } from '../../../../shared/components/card/card';
-import { formatDate, formatPrice } from '../../../../shared/utils/format.util';
+import { formatPrice } from '../../../../shared/utils/format.util';
 
 @Component({
   selector: 'app-experience-card',
@@ -28,8 +28,7 @@ import { formatDate, formatPrice } from '../../../../shared/utils/format.util';
         <div class="space-y-1">
           <p class="truncate text-xs text-[#A99C8E]">{{ hostName() }}</p>
 
-          <div class="flex items-center justify-between gap-3">
-            <span class="text-xs text-[#A99C8E]">{{ dateLabel() }}</span>
+          <div class="flex items-center justify-end gap-3">
             <span class="font-semibold text-[#E0BD78]">{{ priceLabel() }}</span>
           </div>
         </div>
@@ -47,7 +46,6 @@ export class ExperienceCard {
   protected readonly categoryLabel = computed(
     () => this.event().categories?.[0]?.name ?? null
   );
-  protected readonly dateLabel = computed(() => formatDate(this.event().date));
   protected readonly priceLabel = computed(() => formatPrice(this.event().price));
   protected readonly initial = computed(
     () => this.event().name.trim().charAt(0).toUpperCase() || null
