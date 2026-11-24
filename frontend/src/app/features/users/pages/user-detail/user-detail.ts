@@ -15,7 +15,6 @@ import { UsersStore } from '../../../../core/stores/users.store';
 import { ErrorState } from '../../../../shared/components/error-state/error-state';
 import { SkeletonLoader } from '../../../../shared/components/skeleton-loader/skeleton-loader';
 import { buildProfileName } from '../../../../shared/utils/avatar.util';
-import { formatDate } from '../../../../shared/utils/format.util';
 import { UserForm } from '../../components/user-form/user-form';
 
 @Component({
@@ -85,66 +84,15 @@ import { UserForm } from '../../components/user-form/user-form';
           </p>
         }
 
-        <div class="grid gap-6 lg:grid-cols-2">
-          <div class="rounded-2xl border border-[#4A3827] bg-[#24170F] p-6">
-            <h2 class="mb-4 text-lg font-semibold text-[#F5F0E6]">Datos de la cuenta</h2>
+        <div class="rounded-2xl border border-[#4A3827] bg-[#24170F] p-6">
+          <h2 class="mb-4 text-lg font-semibold text-[#F5F0E6]">Datos del usuario</h2>
 
-            <app-user-form
-              [user]="currentUser"
-              [showCancel]="false"
-              (formSubmit)="save($event)"
-            />
-          </div>
-
-          <div class="rounded-2xl border border-[#4A3827] bg-[#24170F] p-6">
-            <h2 class="mb-4 text-lg font-semibold text-[#F5F0E6]">Perfil</h2>
-
-            @if (profile(); as currentProfile) {
-              <dl class="space-y-3 text-sm">
-                <div class="flex justify-between gap-4">
-                  <dt class="text-[#8E7F6F]">Nombre completo</dt>
-                  <dd class="text-right text-[#F5F0E6]">{{ fullName(currentProfile) }}</dd>
-                </div>
-                <div class="flex justify-between gap-4">
-                  <dt class="text-[#8E7F6F]">Teléfono</dt>
-                  <dd class="text-right text-[#F5F0E6]">{{ currentProfile.phone || '-' }}</dd>
-                </div>
-                <div class="flex justify-between gap-4">
-                  <dt class="text-[#8E7F6F]">Fecha de nacimiento</dt>
-                  <dd class="text-right text-[#F5F0E6]">{{ formatDate(currentProfile.birth_date ?? undefined) }}</dd>
-                </div>
-                <div class="flex justify-between gap-4">
-                  <dt class="text-[#8E7F6F]">Dirección</dt>
-                  <dd class="text-right text-[#F5F0E6]">{{ currentProfile.address || '-' }}</dd>
-                </div>
-                <div class="flex justify-between gap-4">
-                  <dt class="text-[#8E7F6F]">Ciudad</dt>
-                  <dd class="text-right text-[#F5F0E6]">{{ currentProfile.city || '-' }}</dd>
-                </div>
-                <div class="flex justify-between gap-4">
-                  <dt class="text-[#8E7F6F]">Código postal</dt>
-                  <dd class="text-right text-[#F5F0E6]">{{ currentProfile.postal_code || '-' }}</dd>
-                </div>
-                <div class="flex justify-between gap-4">
-                  <dt class="text-[#8E7F6F]">Alergias</dt>
-                  <dd class="text-right text-[#F5F0E6]">{{ listLabel(currentProfile.allergies) }}</dd>
-                </div>
-                <div class="flex justify-between gap-4">
-                  <dt class="text-[#8E7F6F]">Restricciones</dt>
-                  <dd class="text-right text-[#F5F0E6]">{{ listLabel(currentProfile.dietary_restrictions) }}</dd>
-                </div>
-              </dl>
-
-              @if (currentProfile.bio) {
-                <div class="mt-4 border-t border-[#4A3827] pt-4">
-                  <p class="text-xs font-semibold uppercase tracking-wide text-[#8E7F6F]">Biografía</p>
-                  <p class="mt-2 whitespace-pre-line text-sm text-[#E4D8C8]">{{ currentProfile.bio }}</p>
-                </div>
-              }
-            } @else {
-              <p class="text-sm text-[#A99C8E]">Este usuario todavía no ha completado su perfil.</p>
-            }
-          </div>
+          <app-user-form
+            [user]="currentUser"
+            [profile]="profile()"
+            [showCancel]="false"
+            (formSubmit)="save($event)"
+          />
         </div>
         }
       }
@@ -165,8 +113,6 @@ export class UserDetail implements OnInit {
   protected readonly saveError = signal<string | null>(null);
 
   private readonly failedSrc = signal<string | null>(null);
-
-  protected readonly formatDate = formatDate;
 
   private readonly profileName = computed(() =>
     buildProfileName(this.profile())
@@ -210,19 +156,6 @@ export class UserDetail implements OnInit {
       : 'rounded-full bg-[#3A211A] px-2.5 py-1 text-[#F0BDB2]';
   }
 
-  protected fullName(profile: Profile): string {
-    const name = [profile.first_name, profile.last_name]
-      .map((part) => part?.trim())
-      .filter((part): part is string => Boolean(part))
-      .join(' ');
-
-    return name || '-';
-  }
-
-  protected listLabel(values: string[] | undefined): string {
-    return values && values.length > 0 ? values.join(', ') : '-';
-  }
-
   protected onAvatarError(): void {
     this.failedSrc.set(this.avatarSrc());
   }
@@ -238,6 +171,13 @@ export class UserDetail implements OnInit {
     try {
       await this.usersStore.update(current._id, payload);
       this.saved.set(true);
+
+      // Recargamos el perfil para que el formulario quede sincronizado tras guardar.
+      try {
+        this.profile.set(await firstValueFrom(this.usersService.getProfile(current._id)));
+      } catch {
+        // Si falla la recarga, el perfil se verá al volver a abrir la ficha.
+      }
     } catch {
       this.saveError.set('No se ha podido actualizar el usuario.');
     } finally {

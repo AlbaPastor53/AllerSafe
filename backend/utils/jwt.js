@@ -4,20 +4,36 @@ const jwt = require("jsonwebtoken");
 const AppError = require("../services/utils/appError");
 
 const MIN_SECRET_LENGTH = 32;
-const DEFAULT_EXPIRES_IN = "1h";
-const ACCESS_TOKEN_COOKIE = "allersafe_token";
 
-function getAccessTokenCookieOptions() {
+const ACCESS_TOKEN_COOKIE = "access_token";
+const REFRESH_TOKEN_COOKIE = "refresh_token";
+
+// Duración fija de cada token (en segundos para JWT y en ms para la cookie).
+const ACCESS_TOKEN_EXPIRES_IN = "1h";
+const REFRESH_TOKEN_EXPIRES_IN = "7d";
+const ACCESS_TOKEN_MAX_AGE = 60 * 60 * 1000;
+const REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
+
+function cookieOptions(maxAge, path) {
   return {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    path: "/api"
+    path,
+    maxAge
   };
 }
 
-function getSecret() {
-  const secret = process.env.JWT_SECRET;
+function getAccessTokenCookieOptions() {
+  return cookieOptions(ACCESS_TOKEN_MAX_AGE, "/api");
+}
+
+function getRefreshTokenCookieOptions() {
+  return cookieOptions(REFRESH_TOKEN_MAX_AGE, "/api/auth");
+}
+
+function getSecret(envName) {
+  const secret = process.env[envName];
 
   if (!secret || secret.length < MIN_SECRET_LENGTH) {
     throw new AppError(
@@ -30,21 +46,16 @@ function getSecret() {
   return secret;
 }
 
-function getExpiresIn() {
-  return process.env.JWT_EXPIRES_IN || DEFAULT_EXPIRES_IN;
+function getAccessTokenSecret() {
+  return getSecret("JWT_SECRET");
 }
 
-function signAccessToken({ userId, role, tokenVersion = 0 }) {
-  const token = jwt.sign(
-    {
-      sub: String(userId),
-      role,
-      ver: Number(tokenVersion) || 0
-    },
-    getSecret(),
-    { expiresIn: getExpiresIn() }
-  );
+function getRefreshTokenSecret() {
+  return getSecret("JWT_REFRESH_SECRET");
+}
 
+function signToken(payload, secret, expiresIn) {
+  const token = jwt.sign(payload, secret, { expiresIn });
   const decoded = jwt.decode(token);
 
   return {
@@ -53,18 +64,60 @@ function signAccessToken({ userId, role, tokenVersion = 0 }) {
   };
 }
 
-function verifyAccessToken(token) {
-  const secret = getSecret();
+function signAccessToken({ userId, role, tokenVersion = 0 }) {
+  return signToken(
+    {
+      sub: String(userId),
+      role,
+      ver: Number(tokenVersion) || 0
+    },
+    getAccessTokenSecret(),
+    ACCESS_TOKEN_EXPIRES_IN
+  );
+}
 
+// typ sirve para que un access token nunca pueda usarse como refresh token.
+function signRefreshToken({ userId, role, tokenVersion = 0 }) {
+  return signToken(
+    {
+      sub: String(userId),
+      role,
+      ver: Number(tokenVersion) || 0,
+      typ: "refresh"
+    },
+    getRefreshTokenSecret(),
+    REFRESH_TOKEN_EXPIRES_IN
+  );
+}
+
+function verifyWithSecret(token, secret, expiredMessage) {
   try {
     return jwt.verify(token, secret);
   } catch (error) {
     if (error.name === "TokenExpiredError") {
-      throw new AppError("La sesión ha caducado.", 401, "TOKEN_EXPIRED");
+      throw new AppError(expiredMessage, 401, "TOKEN_EXPIRED");
     }
 
     throw new AppError("El token no es válido.", 401, "INVALID_TOKEN");
   }
+}
+
+function verifyAccessToken(token) {
+  return verifyWithSecret(token, getAccessTokenSecret(), "La sesión ha caducado.");
+}
+
+function verifyRefreshToken(token) {
+  const payload = verifyWithSecret(
+    token,
+    getRefreshTokenSecret(),
+    "La sesión ha caducado."
+  );
+
+  if (payload.typ !== "refresh") {
+    throw new AppError("El token no es válido.", 401, "INVALID_TOKEN");
+  }
+
+  return payload;
 }
 
 function hashToken(token) {
@@ -76,14 +129,21 @@ function hashToken(token) {
 }
 
 function validateJwtConfig() {
-  getSecret();
+  getAccessTokenSecret();
+  getRefreshTokenSecret();
 }
 
 module.exports = {
   ACCESS_TOKEN_COOKIE,
+  REFRESH_TOKEN_COOKIE,
+  ACCESS_TOKEN_MAX_AGE,
+  REFRESH_TOKEN_MAX_AGE,
   getAccessTokenCookieOptions,
+  getRefreshTokenCookieOptions,
   signAccessToken,
+  signRefreshToken,
   verifyAccessToken,
+  verifyRefreshToken,
   hashToken,
   validateJwtConfig
 };

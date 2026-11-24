@@ -3,6 +3,7 @@ const userRepository = require("../repository/user.repository");
 const revokedTokenRepository = require("../repository/revokedToken.repository");
 const {
   ACCESS_TOKEN_COOKIE,
+  REFRESH_TOKEN_COOKIE,
   verifyAccessToken,
   hashToken
 } = require("../utils/jwt");
@@ -11,6 +12,11 @@ const objectIdRegex = /^[0-9a-fA-F]{24}$/;
 
 function extractToken(req) {
   const token = req.cookies?.[ACCESS_TOKEN_COOKIE];
+  return typeof token === "string" && token.trim() ? token.trim() : null;
+}
+
+function extractRefreshToken(req) {
+  const token = req.cookies?.[REFRESH_TOKEN_COOKIE];
   return typeof token === "string" && token.trim() ? token.trim() : null;
 }
 
@@ -96,5 +102,6 @@ async function authentication(req, res, next) {
 
 module.exports = {
   authentication,
-  extractToken
+  extractToken,
+  extractRefreshToken
 };

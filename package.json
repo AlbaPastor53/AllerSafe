@@ -1,0 +1,14 @@
+{
+  "name": "allersafe",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AllerSafe: frontend, API REST, API IA y API Gateway.",
+  "scripts": {
+    "dev": "concurrently -k -n API,IA,GATEWAY,WEB -c cyan,magenta,yellow,green \"npm --prefix backend run dev\" \"npm --prefix backend_ia run dev\" \"npm --prefix gateway run dev\" \"npm --prefix frontend start\"",
+    "dev:api": "concurrently -k -n API,IA,GATEWAY -c cyan,magenta,yellow \"npm --prefix backend run dev\" \"npm --prefix backend_ia run dev\" \"npm --prefix gateway run dev\"",
+    "seed": "npm --prefix backend run seed"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
+}

@@ -39,4 +39,5 @@ export interface UserFormPayload {
   password?: string;
   role?: UserRole;
   status?: UserStatus;
+  profile?: ProfilePayload;
 }

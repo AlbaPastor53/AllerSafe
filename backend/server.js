@@ -17,7 +17,7 @@ async function startServer() {
   } catch (error) {
     console.error("No se pudo iniciar el servidor:", error.message);
     console.error(
-      "Comprueba que MongoDB esté en marcha, que MONGODB_URI sea correcta y que JWT_SECRET tenga al menos 32 caracteres."
+      "Comprueba que MongoDB esté en marcha, que MONGODB_URI sea correcta y que JWT_SECRET y JWT_REFRESH_SECRET tengan al menos 32 caracteres."
     );
     process.exit(1);
   }

@@ -1,0 +1,58 @@
+# Dependencias (raíz, backend, backend_ia, frontend y gateway)
+node_modules/
+
+# Variables de entorno y secretos: solo se versionan los archivos de ejemplo
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Artefactos generados por compilaciones y herramientas
+dist/
+build/
+out/
+out-tsc/
+coverage/
+.angular/
+*.tsbuildinfo
+
+# Artefactos específicos del build de Angular
+bazel-out/
+connect.lock
+libpeerconnection.log
+typings/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Archivos temporales y cachés
+tmp/
+temp/
+.cache/
+.sass-cache/
+*.tmp
+*.swp
+
+# IDEs y editores
+.idea/
+.project
+.classpath
+.c9/
+.settings/
+*.launch
+*.sublime-workspace
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini

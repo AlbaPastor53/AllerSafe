@@ -6,12 +6,15 @@ import {
   signal
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
+import { Profile } from '../../../../core/models/profile.model';
 import {
   User,
   UserFormPayload,
   UserPayload
 } from '../../../../core/models/user.model';
 import { AuthService } from '../../../../core/services/auth.service';
+import { UsersService } from '../../../../core/services/users.service';
 import { UsersStore } from '../../../../core/stores/users.store';
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import { ErrorState } from '../../../../shared/components/error-state/error-state';
@@ -99,6 +102,7 @@ import { UserForm } from '../../components/user-form/user-form';
         @if (showForm()) {
           <app-user-form
             [user]="editing()"
+            [profile]="editingProfile()"
             (formSubmit)="save($event)"
             (cancelled)="closeForm()"
           />
@@ -110,6 +114,7 @@ import { UserForm } from '../../components/user-form/user-form';
 export class UserList implements OnInit {
   protected readonly store = inject(UsersStore);
   private readonly auth = inject(AuthService);
+  private readonly usersService = inject(UsersService);
 
   protected readonly isAdmin = this.auth.isAdmin;
   protected readonly users = this.store.users;
@@ -118,6 +123,7 @@ export class UserList implements OnInit {
   protected readonly pendingId = signal<string | null>(null);
   protected readonly showForm = signal(false);
   protected readonly editing = signal<User | null>(null);
+  protected readonly editingProfile = signal<Profile | null>(null);
 
   ngOnInit(): void {
     this.load();
@@ -140,17 +146,28 @@ export class UserList implements OnInit {
 
   protected openCreate(): void {
     this.editing.set(null);
+    this.editingProfile.set(null);
     this.showForm.set(true);
   }
 
-  protected openEdit(user: User): void {
+  protected async openEdit(user: User): Promise<void> {
     this.editing.set(user);
+    this.editingProfile.set(null);
     this.showForm.set(true);
+
+    try {
+      this.editingProfile.set(
+        await firstValueFrom(this.usersService.getProfile(user._id))
+      );
+    } catch {
+      this.editingProfile.set(null);
+    }
   }
 
   protected closeForm(): void {
     this.showForm.set(false);
     this.editing.set(null);
+    this.editingProfile.set(null);
   }
 
   protected async save(payload: UserFormPayload): Promise<void> {
