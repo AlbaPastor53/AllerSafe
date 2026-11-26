@@ -26,7 +26,7 @@ const userSchema = new mongoose.Schema(
       default: "Client",
       index: true
     },
-    // Permite invalidar todos los tokens de un usuario sin recorrer la blacklist.
+    // Permite invalidar todos los tokens de un usuario sin recorrer los registros.
     token_version: {
       type: Number,
       default: 0,

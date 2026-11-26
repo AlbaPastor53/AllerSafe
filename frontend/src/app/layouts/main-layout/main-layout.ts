@@ -6,10 +6,11 @@ import {
   signal
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
-import { Router, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { catchError, of, switchMap } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { ProfileService } from '../../core/services/profile.service';
+import { CartStore } from '../../core/stores/cart.store';
 import { buildProfileName } from '../../shared/utils/avatar.util';
 import { Loader } from '../../shared/components/loader/loader';
 import { Sidebar } from '../../shared/components/sidebar/sidebar';
@@ -19,7 +20,7 @@ import { UserMenu } from '../../shared/components/user-menu/user-menu';
   selector: 'app-main-layout',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, Sidebar, UserMenu, Loader],
+  imports: [RouterOutlet, RouterLink, Sidebar, UserMenu, Loader],
   template: `
     <div class="min-h-screen bg-[#17130F] text-[#F5F0E6]">
       <app-sidebar
@@ -51,7 +52,7 @@ import { UserMenu } from '../../shared/components/user-menu/user-menu';
               </svg>
             </button>
 
-            <div class="ml-auto">
+            <div class="ml-auto flex items-center gap-3">
               <app-user-menu
                 [user]="user()"
                 [isAuthenticated]="isAuthenticated()"
@@ -59,6 +60,35 @@ import { UserMenu } from '../../shared/components/user-menu/user-menu';
                 [profileName]="profileName()"
                 (logout)="logout()"
               />
+
+              @if (isAuthenticated()) {
+                <a
+                  routerLink="/cart"
+                  class="flex items-center gap-2 rounded-lg border border-[#5A4530] px-3 py-2 text-sm font-medium text-[#D9CDBD] transition-colors hover:bg-[#3A291D] hover:text-[#E0BD78]"
+                  aria-label="Ver carrito"
+                >
+                  <svg
+                    class="h-5 w-5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <circle cx="9" cy="20" r="1" />
+                    <circle cx="18" cy="20" r="1" />
+                    <path d="M2 3h2l2.4 11.2a2 2 0 0 0 2 1.6h8.3a2 2 0 0 0 2-1.6L21 7H6" />
+                  </svg>
+                  <span class="hidden sm:inline">Carrito</span>
+                  <span
+                    class="grid h-5 min-w-5 place-items-center rounded-full bg-brand px-1 text-xs font-semibold text-gray-950"
+                  >
+                    {{ cart.totalProducts() }}
+                  </span>
+                </a>
+              }
             </div>
           </div>
         </header>
@@ -75,6 +105,7 @@ import { UserMenu } from '../../shared/components/user-menu/user-menu';
 export class MainLayout {
   private readonly auth = inject(AuthService);
   private readonly profileService = inject(ProfileService);
+  protected readonly cart = inject(CartStore);
   private readonly router = inject(Router);
 
   protected readonly menuOpen = signal(false);
@@ -95,9 +126,11 @@ export class MainLayout {
         switchMap((user) => {
           if (!user) {
             this.profileService.clear();
+            this.cart.clear();
             return of(null);
           }
 
+          void this.cart.load();
           return this.profileService.get().pipe(catchError(() => of(null)));
         }),
         takeUntilDestroyed()

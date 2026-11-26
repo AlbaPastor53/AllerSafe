@@ -71,6 +71,15 @@ import { AuthService } from '../../../core/services/auth.service';
 
         @if (isAuthenticated()) {
           <a
+            routerLink="/cart"
+            routerLinkActive="bg-[#3A291D] text-brand"
+            class="block rounded-lg px-3 py-2 text-sm font-medium text-[#D9CDBD] transition-colors hover:bg-[#3A291D] hover:text-[#E0BD78]"
+            (click)="close.emit()"
+          >
+            Carrito
+          </a>
+
+          <a
             routerLink="/departures"
             routerLinkActive="bg-[#3A291D] text-brand"
             [routerLinkActiveOptions]="{ exact: true }"
@@ -126,6 +135,7 @@ export class Sidebar {
     { path: '/categories', label: 'Categorías' },
     { path: '/locations', label: 'Ubicaciones' },
     { path: '/hosts', label: 'Anfitriones' },
-    { path: '/users', label: 'Usuarios' }
+    { path: '/users', label: 'Usuarios' },
+    { path: '/reviews', label: 'Valoraciones' }
   ];
 }

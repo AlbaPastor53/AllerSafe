@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { adminGuard } from './core/guards/admin.guard';
 import { SHOP_ROUTES } from './features/shop/shop.routes';
+import { REVIEWS_ROUTES } from './features/reviews/reviews.routes';
 import { MainLayout } from './layouts/main-layout/main-layout';
 
 export const routes: Routes = [
@@ -67,6 +68,12 @@ export const routes: Routes = [
             canActivate: [adminGuard],
             loadChildren: () =>
               import('./features/users/users.routes').then((m) => m.USERS_ROUTES)
+          },
+          {
+            path: 'reviews',
+            canActivate: [adminGuard],
+            loadChildren: () =>
+              import('./features/reviews/reviews.routes').then((m) => m.REVIEWS_ROUTES)
           }
         ]
       }

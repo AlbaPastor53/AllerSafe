@@ -4,11 +4,12 @@ import {
   Component,
   computed,
   inject,
-  signal
+  signal,
+  viewChild
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, RouterLink } from '@angular/router';
-import { filter } from 'rxjs';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { filter, firstValueFrom } from 'rxjs';
 import {
   Departure,
   DEPARTURE_STATUS_LABELS,
@@ -22,6 +23,7 @@ import {
 } from '../../../../core/models/event.model';
 import { Host, hostDisplayName } from '../../../../core/models/host.model';
 import { Location } from '../../../../core/models/location.model';
+import { CartStore } from '../../../../core/stores/cart.store';
 import { ShopDetailStore } from '../../../../core/stores/shop-detail.store';
 import { Carousel } from '../../../../shared/components/carousel/carousel';
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
@@ -34,6 +36,12 @@ import {
 } from '../../../../shared/utils/format.util';
 import { ChatbotService } from '../../../../core/services/chatbot.service';
 import { FaqEventContext, FaqItem } from '../../../../core/models/chatbot.model';
+import { AuthService } from '../../../../core/services/auth.service';
+import { CommentsService } from '../../../../core/services/comments.service';
+import { CommentPayload, RatingSummary } from '../../../../core/models/comment.model';
+import { CommentsAccordion } from '../../components/comments-accordion/comments-accordion';
+import { CommentForm } from '../../components/comment-form/comment-form';
+import { ReviewSummary } from '../../components/review-summary/review-summary';
 
 @Component({
   selector: 'app-shop-detail',
@@ -45,7 +53,10 @@ import { FaqEventContext, FaqItem } from '../../../../core/models/chatbot.model'
     Carousel,
     EmptyState,
     ErrorState,
-    SkeletonLoader
+    SkeletonLoader,
+    CommentsAccordion,
+    CommentForm,
+    ReviewSummary
   ],
   template: `
     <section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -112,7 +123,7 @@ import { FaqEventContext, FaqItem } from '../../../../core/models/chatbot.model'
         </div>
 
         <div class="grid gap-8 lg:grid-cols-3">
-          <div class="space-y-6 lg:col-span-2">
+          <div class="lg:col-span-2">
             <app-carousel
               title="Galería"
               [itemCount]="images().length"
@@ -132,63 +143,18 @@ import { FaqEventContext, FaqItem } from '../../../../core/models/chatbot.model'
                 </div>
               }
             </app-carousel>
-
-            <section
-              class="rounded-2xl border border-[#4A3827] bg-[#24170F] p-6"
-            >
-              <h2 class="text-xl font-semibold">Sobre esta experiencia</h2>
-              <p
-                class="mt-3 whitespace-pre-line text-sm leading-relaxed text-[#D9CDBD]"
-              >
-                {{ event()!.description }}
-              </p>
-            </section>
-
-            <div class="grid gap-6 sm:grid-cols-2">
-              <section
-                class="rounded-2xl border border-[#4A3827] bg-[#24170F] p-6"
-              >
-                <h2 class="text-base font-semibold">Anfitrión</h2>
-                <p class="mt-2 font-medium text-[#E0BD78]">{{ hostName() }}</p>
-
-                @if (host()?.biography; as biography) {
-                  <p class="mt-2 text-sm leading-relaxed text-[#A99C8E]">
-                    {{ biography }}
-                  </p>
-                } @else {
-                  <p class="mt-2 text-sm text-[#A99C8E]">
-                    Sin biografía disponible.
-                  </p>
-                }
-              </section>
-
-              <section
-                class="rounded-2xl border border-[#4A3827] bg-[#24170F] p-6"
-              >
-                <h2 class="text-base font-semibold">Ubicación</h2>
-
-                @if (location(); as place) {
-                  <p class="mt-2 font-medium text-[#E0BD78]">{{ place.name }}</p>
-                  <p class="mt-2 text-sm text-[#A99C8E]">{{ place.address }}</p>
-                } @else {
-                  <p class="mt-2 text-sm text-[#A99C8E]">
-                    Ubicación por confirmar.
-                  </p>
-                }
-              </section>
-            </div>
           </div>
 
           <aside class="space-y-4">
             <div
-              class="rounded-2xl border border-[#4A3827] bg-[#24170F] p-6"
+              class="flex h-full flex-col rounded-2xl border border-[#4A3827] bg-[#24170F] p-6"
             >
               <p class="text-sm text-[#A99C8E]">Precio</p>
               <p class="text-3xl font-semibold text-[#E0BD78]">
                 {{ formatPrice(event()!.price) }}
               </p>
 
-              <dl class="mt-4 space-y-3 text-sm">
+              <dl class="mt-4 flex flex-1 flex-col justify-between gap-3 text-sm">
                 <div class="flex justify-between gap-4">
                   <dt class="text-[#A99C8E]">Clase</dt>
                   <dd class="text-right text-[#F5F0E6]">
@@ -202,23 +168,163 @@ import { FaqEventContext, FaqItem } from '../../../../core/models/chatbot.model'
                     {{ event()!.capacity }} personas
                   </dd>
                 </div>
+
+                <div class="flex justify-between gap-4">
+                  <dt class="text-[#A99C8E]">Ubicación</dt>
+                  <dd class="text-right text-[#F5F0E6]">
+                    {{ locationName() }}
+                  </dd>
+                </div>
+
+                <div class="flex justify-between gap-4">
+                  <dt class="text-[#A99C8E]">Salidas</dt>
+                  <dd class="text-right text-[#F5F0E6]">
+                    {{ store.departures().length }}
+                  </dd>
+                </div>
               </dl>
 
-              <button
-                type="button"
-                class="button-primary mt-6 w-full"
-                disabled
-                title="La reserva online estará disponible próximamente"
-              >
-                Reservar (próximamente)
-              </button>
-
-              <p class="mt-2 text-center text-xs text-[#8E7F6F]">
-                La reserva online estará disponible pronto.
-              </p>
             </div>
           </aside>
         </div>
+
+        <section
+          class="mt-8 rounded-2xl border border-[#4A3827] bg-[#24170F] p-6"
+        >
+          <h2 class="text-xl font-semibold">Sobre esta experiencia</h2>
+          <p
+            class="mt-3 whitespace-pre-line text-sm leading-relaxed text-[#D9CDBD]"
+          >
+            {{ event()!.description }}
+          </p>
+        </section>
+
+        <div class="mt-8 grid gap-6 sm:grid-cols-2">
+          <section
+            class="h-full rounded-2xl border border-[#4A3827] bg-[#24170F] p-6"
+          >
+            <h2 class="text-base font-semibold">Anfitrión</h2>
+            <p class="mt-2 font-medium text-[#E0BD78]">{{ hostName() }}</p>
+
+            @if (host()?.biography; as biography) {
+              <p class="mt-2 text-sm leading-relaxed text-[#A99C8E]">
+                {{ biography }}
+              </p>
+            } @else {
+              <p class="mt-2 text-sm text-[#A99C8E]">
+                Sin biografía disponible.
+              </p>
+            }
+          </section>
+
+          <section
+            class="h-full rounded-2xl border border-[#4A3827] bg-[#24170F] p-6"
+          >
+            <h2 class="text-base font-semibold">Ubicación</h2>
+
+            @if (location(); as place) {
+              <p class="mt-2 font-medium text-[#E0BD78]">{{ place.name }}</p>
+              <p class="mt-2 text-sm text-[#A99C8E]">{{ place.address }}</p>
+            } @else {
+              <p class="mt-2 text-sm text-[#A99C8E]">
+                Ubicación por confirmar.
+              </p>
+            }
+          </section>
+        </div>
+
+        <section
+          class="mt-8 rounded-2xl border border-[#4A3827] bg-[#24170F] p-6"
+        >
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <h2 class="text-xl font-semibold">Salidas</h2>
+            <span class="text-sm text-[#A99C8E]">
+              {{ store.departures().length }} programadas
+            </span>
+          </div>
+
+          @if (reserveMessage()) {
+            <p
+              role="status"
+              class="mt-4 rounded-xl border border-[#5A6A3E] bg-[#2E3A22] px-3 py-2 text-sm text-[#D6E0B8]"
+            >
+              {{ reserveMessage() }}
+            </p>
+          }
+
+          @if (!store.hasDepartures()) {
+            <p class="mt-4 text-sm text-[#A99C8E]">
+              No hay salidas programadas para esta experiencia.
+            </p>
+          } @else {
+            <ul class="mt-2 divide-y divide-[#4A3827]">
+              @for (departure of store.departures(); track departure._id) {
+                <li
+                  class="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div>
+                    <p class="font-medium text-[#F5F0E6]">
+                      {{ departureDateLabel(departure) }}
+                    </p>
+                    <p class="mt-1 text-sm text-[#A99C8E]">
+                      {{ formatTime(departure.start_datetime) }} –
+                      {{ formatTime(departure.end_datetime) }} ·
+                      {{ departureAvailableSpots(departure) }} plazas
+                      disponibles
+                    </p>
+                  </div>
+
+                  <div class="flex flex-wrap items-center gap-3">
+                    <span
+                      class="rounded-full px-3 py-1 text-xs font-medium"
+                      [ngClass]="statusClass(departure.status)"
+                    >
+                      {{ DEPARTURE_STATUS_LABELS[departure.status] }}
+                    </span>
+
+                    <span class="font-semibold text-[#E0BD78]">
+                      {{ formatPrice(departure.price) }}
+                    </span>
+
+                    <button
+                      type="button"
+                      class="button-primary"
+                      [disabled]="reservingId() === departure._id"
+                      (click)="reserve(departure)"
+                    >
+                      Reservar
+                    </button>
+                  </div>
+                </li>
+              }
+            </ul>
+          }
+        </section>
+
+        <section class="mt-8 grid gap-6 lg:grid-cols-2">
+          <app-review-summary class="h-full" [summary]="summary()" />
+
+          <div class="flex flex-col gap-6">
+            @if (auth.isAuthenticated()) {
+              <app-comment-form
+                [eventId]="event()!._id"
+                [saving]="commentSaving()"
+                [error]="commentError()"
+                (created)="onCommentCreated($event)"
+              />
+            } @else {
+              <p class="text-sm text-[#A99C8E]">
+                <a routerLink="/login" class="text-[#E0BD78] underline">Inicia sesión</a>
+                para dejar tu opinión.
+              </p>
+            }
+
+            <app-comments-accordion
+              [eventId]="event()!._id"
+              [total]="summary()?.total ?? 0"
+            />
+          </div>
+        </section>
 
         <section
           class="mt-8 rounded-2xl border border-[#4A3827] bg-[#24170F] p-6"
@@ -268,65 +374,6 @@ import { FaqEventContext, FaqItem } from '../../../../core/models/chatbot.model'
             </div>
           }
         </section>
-
-        <section
-          class="mt-8 rounded-2xl border border-[#4A3827] bg-[#24170F] p-6"
-        >
-          <div class="flex flex-wrap items-center justify-between gap-3">
-            <h2 class="text-xl font-semibold">Salidas</h2>
-            <span class="text-sm text-[#A99C8E]">
-              {{ store.departures().length }} programadas
-            </span>
-          </div>
-
-          @if (!store.hasDepartures()) {
-            <p class="mt-4 text-sm text-[#A99C8E]">
-              No hay salidas programadas para esta experiencia.
-            </p>
-          } @else {
-            <ul class="mt-2 divide-y divide-[#4A3827]">
-              @for (departure of store.departures(); track departure._id) {
-                <li
-                  class="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div>
-                    <p class="font-medium text-[#F5F0E6]">
-                      {{ departureDateLabel(departure) }}
-                    </p>
-                    <p class="mt-1 text-sm text-[#A99C8E]">
-                      {{ formatTime(departure.start_datetime) }} –
-                      {{ formatTime(departure.end_datetime) }} ·
-                      {{ departureAvailableSpots(departure) }} plazas
-                      disponibles
-                    </p>
-                  </div>
-
-                  <div class="flex flex-wrap items-center gap-3">
-                    <span
-                      class="rounded-full px-3 py-1 text-xs font-medium"
-                      [ngClass]="statusClass(departure.status)"
-                    >
-                      {{ DEPARTURE_STATUS_LABELS[departure.status] }}
-                    </span>
-
-                    <span class="font-semibold text-[#E0BD78]">
-                      {{ formatPrice(departure.price) }}
-                    </span>
-
-                    <button
-                      type="button"
-                      class="button-primary"
-                      disabled
-                      title="La reserva online estará disponible próximamente"
-                    >
-                      Reservar (próximamente)
-                    </button>
-                  </div>
-                </li>
-              }
-            </ul>
-          }
-        </section>
       }
     </section>
   `
@@ -334,13 +381,24 @@ import { FaqEventContext, FaqItem } from '../../../../core/models/chatbot.model'
 export class ShopDetail {
   private readonly route = inject(ActivatedRoute);
   private readonly routerLocation = inject(RouterLocation);
+  private readonly router = inject(Router);
   private readonly slug = signal('');
 
   protected readonly store = inject(ShopDetailStore);
+  private readonly cartStore = inject(CartStore);
 
   private readonly chatbotService = inject(ChatbotService);
+  private readonly commentsService = inject(CommentsService);
+  private readonly commentsAccordion = viewChild(CommentsAccordion);
 
+  protected readonly auth = inject(AuthService);
   protected readonly event = this.store.event;
+
+  protected readonly summary = signal<RatingSummary | null>(null);
+  protected readonly commentSaving = signal(false);
+  protected readonly commentError = signal<string | null>(null);
+  protected readonly reserveMessage = signal<string | null>(null);
+  protected readonly reservingId = signal<string | null>(null);
 
   protected readonly faqs = signal<FaqItem[]>([]);
   protected readonly faqsLoading = signal(false);
@@ -391,7 +449,50 @@ export class ShopDetail {
       )
       .subscribe((event) => {
         void this.reloadFaqs(event);
+        void this.loadSummary(event._id);
       });
+  }
+
+  protected async loadSummary(eventId: string): Promise<void> {
+    try {
+      this.summary.set(await firstValueFrom(this.commentsService.summary(eventId)));
+    } catch {
+      this.summary.set(null);
+    }
+  }
+
+  protected async onCommentCreated(payload: CommentPayload): Promise<void> {
+    this.commentSaving.set(true);
+    this.commentError.set(null);
+
+    try {
+      await firstValueFrom(this.commentsService.create(payload));
+      await this.loadSummary(payload.event_id);
+      this.commentsAccordion()?.refresh();
+    } catch {
+      this.commentError.set('No se ha podido publicar la opinión.');
+    } finally {
+      this.commentSaving.set(false);
+    }
+  }
+
+  protected async reserve(departure: Departure): Promise<void> {
+    if (!this.auth.isAuthenticated()) {
+      void this.router.navigate(['/login'], {
+        queryParams: { returnUrl: this.router.url }
+      });
+      return;
+    }
+
+    this.reservingId.set(departure._id);
+    this.reserveMessage.set(null);
+
+    const added = await this.cartStore.add(departure._id);
+    if (added) {
+      this.reserveMessage.set('Reserva añadida al carrito.');
+    }
+
+    this.reservingId.set(null);
   }
 
   protected async reloadFaqs(event = this.event()): Promise<void> {

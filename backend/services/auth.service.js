@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const userService = require("./user.service");
 const userRepository = require("../repository/user.repository");
-const revokedTokenRepository = require("../repository/revokedToken.repository");
+const tokenRepository = require("../repository/token.repository");
 const AppError = require("./utils/appError");
 const { verifyPassword } = require("../utils/password");
 const {
@@ -76,12 +76,27 @@ class AuthService {
 
     // Admin solo recibe access token; Client recibe access + refresh.
     const { token, expiresAt } = signAccessToken(tokenData);
+    const accessHash = hashToken(token);
+
+    await tokenRepository.registerAccess({
+      tokenHash: accessHash,
+      userId: user._id,
+      expiresAt
+    });
+
     const result = { token, expiresAt, user: toSafeUser(user) };
 
     if (user.role === "Client") {
       const refresh = signRefreshToken(tokenData);
       result.refreshToken = refresh.token;
       result.refreshExpiresAt = refresh.expiresAt;
+
+      await tokenRepository.registerRefresh({
+        tokenHash: hashToken(refresh.token),
+        userId: user._id,
+        expiresAt: refresh.expiresAt,
+        accessHash
+      });
     }
 
     return result;
@@ -92,15 +107,33 @@ class AuthService {
       throw new AppError("No hay una sesión que renovar.", 401, "UNAUTHORIZED");
     }
 
-    const payload = verifyRefreshToken(refreshToken.trim());
+    const refresh = refreshToken.trim();
+    const tokenHash = hashToken(refresh);
+
+    let payload;
+    try {
+      payload = verifyRefreshToken(refresh);
+    } catch (error) {
+      if (error.code === "TOKEN_EXPIRED") {
+        // El JWT caducado ya no se puede verificar, pero su hash identifica
+        // el registro: se revocan el refresh y su access antes de cerrar la sesión.
+        await tokenRepository.revokeSessionByRefreshHash(tokenHash);
+        throw new AppError(
+          "La sesión ha caducado. Vuelve a iniciar sesión.",
+          401,
+          "SESSION_EXPIRED"
+        );
+      }
+      throw error;
+    }
 
     if (!payload.sub || !mongoose.Types.ObjectId.isValid(String(payload.sub))) {
       throw new AppError("El token no es válido.", 401, "INVALID_TOKEN");
     }
 
-    const tokenHash = hashToken(refreshToken.trim());
-    const isRevoked = await revokedTokenRepository.existsByHash(tokenHash);
-    if (isRevoked) {
+    const refreshRecord = await tokenRepository.findRefresh(tokenHash);
+    if (!refreshRecord || refreshRecord.revoked) {
+      await tokenRepository.revokeSessionByRefreshHash(tokenHash);
       throw new AppError(
         "El token ha sido revocado.",
         401,
@@ -132,6 +165,7 @@ class AuthService {
     }
 
     if ((payload.ver ?? 0) !== (user.token_version ?? 0)) {
+      await tokenRepository.revokeSessionByRefreshHash(tokenHash);
       throw new AppError(
         "El token ha sido revocado.",
         401,
@@ -139,19 +173,80 @@ class AuthService {
       );
     }
 
+    // Se revoca el access token anterior para que solo quede uno vigente.
+    if (refreshRecord.access_hash) {
+      await tokenRepository.revokeAccess(refreshRecord.access_hash);
+    }
+
+    const { token, expiresAt } = signAccessToken({
+      userId: user._id,
+      role: user.role,
+      tokenVersion: user.token_version
+    });
+    const accessHash = hashToken(token);
+
+    await tokenRepository.registerAccess({
+      tokenHash: accessHash,
+      userId: user._id,
+      expiresAt
+    });
+    await tokenRepository.setRefreshAccessHash(tokenHash, accessHash);
+
+    return { token, expiresAt, user: toSafeUser(user) };
+  }
+
+  // Renovación preventiva del Admin: se llama con el access todavía vigente
+  // (middleware authentication), por lo que no interviene ningún refresh token.
+  async renewAccess({ userId, tokenHash }) {
+    if (!userId || !tokenHash) {
+      throw new AppError(
+        "No se pudo renovar la sesión.",
+        400,
+        "INVALID_TOKEN"
+      );
+    }
+
+    const user = await userRepository.findById(userId);
+
+    if (!user) {
+      throw new AppError("El token no es válido.", 401, "INVALID_TOKEN");
+    }
+
+    if (user.role !== "Admin") {
+      throw new AppError(
+        "Este tipo de usuario no puede renovar el access por esta vía.",
+        403,
+        "RENEW_NOT_ALLOWED"
+      );
+    }
+
+    if (!user.is_active || user.status !== "active") {
+      throw new AppError(
+        "Tu cuenta no está activa.",
+        403,
+        "USER_INACTIVE"
+      );
+    }
+
+    // El access anterior no se revoca aquí: sigue vigente hasta su caducidad
+    // natural para no provocar un 401 en peticiones ya en vuelo (p. ej. /me).
     const { token, expiresAt } = signAccessToken({
       userId: user._id,
       role: user.role,
       tokenVersion: user.token_version
     });
 
-    return { token, expiresAt, user: toSafeUser(user) };
+    await tokenRepository.registerAccess({
+      tokenHash: hashToken(token),
+      userId: user._id,
+      expiresAt
+    });
+
+    return { token, expiresAt };
   }
 
-  async logout({ tokenHash, userId, exp, refreshToken }) {
-    const expiresAt = new Date(Number(exp) * 1000);
-
-    if (!tokenHash || !userId || Number.isNaN(expiresAt.getTime())) {
+  async logout({ tokenHash, userId, refreshToken }) {
+    if (!tokenHash || !userId) {
       throw new AppError(
         "No se pudo revocar el token.",
         400,
@@ -159,12 +254,7 @@ class AuthService {
       );
     }
 
-    await revokedTokenRepository.revoke({
-      tokenHash,
-      userId,
-      expiresAt,
-      reason: "logout"
-    });
+    await tokenRepository.revokeAccess(tokenHash);
 
     if (!refreshToken) return;
 
@@ -172,12 +262,7 @@ class AuthService {
       const payload = verifyRefreshToken(refreshToken);
 
       if (String(payload.sub) === String(userId)) {
-        await revokedTokenRepository.revoke({
-          tokenHash: hashToken(refreshToken),
-          userId,
-          expiresAt: new Date(Number(payload.exp) * 1000),
-          reason: "logout"
-        });
+        await tokenRepository.revokeRefresh(hashToken(refreshToken));
       }
     } catch {
       // Un refresh caducado o inválido no impide cerrar la sesión.

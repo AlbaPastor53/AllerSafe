@@ -3,13 +3,15 @@ require("dotenv").config();
 const connectDB = require("./config/db");
 const User = require("./models/user.model");
 const Profile = require("./models/profile.model");
-const RevokedToken = require("./models/revokedToken.model");
+const AccessToken = require("./models/accessToken.model");
+const RefreshToken = require("./models/refreshToken.model");
 const Host = require("./models/host.model");
 const Category = require("./models/category.model");
 const Location = require("./models/location.model");
 const Event = require("./models/event.model");
 const EventImage = require("./models/eventImage.model");
 const Departure = require("./models/departure.model");
+const Comment = require("./models/comment.model");
 const { hashPassword } = require("./utils/password");
 
 const DEFAULT_PASSWORD = "AllerSafe123!";
@@ -717,6 +719,177 @@ const seedEvents = [
   }
 ];
 
+const seedComments = [
+  {
+    eventSlug: "cocina-sin-gluten-menus-seguros",
+    userEmail: "marta@allersafe.com",
+    rating: 5,
+    comment: "Excelente taller: explicaron muy bien cómo separar utensilios y evitar la contaminación cruzada. Salí con menús seguros para toda la semana.",
+    created_at: new Date("2026-11-20T10:15:00Z")
+  },
+  {
+    eventSlug: "cocina-sin-gluten-menus-seguros",
+    userEmail: "cliente@allersafe.com",
+    rating: 3,
+    comment: "El contenido sobre el gluten estuvo bien, aunque el ritmo fue rápido y me costó seguir las recetas sin gluten al principio.",
+    created_at: new Date("2026-11-19T16:40:00Z")
+  },
+  {
+    eventSlug: "cocina-sin-gluten-menus-seguros",
+    userEmail: "javier-ortega@allersafe.com",
+    rating: 2,
+    comment: "Me esperaba más práctica con contaminación cruzada. Solo vimos una demo y apenas hubo tiempo para cocinar por nuestra cuenta.",
+    created_at: new Date("2026-11-18T09:05:00Z")
+  },
+  {
+    eventSlug: "cocina-sin-lactosa-desde-cero",
+    userEmail: "sara-puig@allersafe.com",
+    rating: 5,
+    comment: "Las alternativas vegetales a la leche quedaron clarísimas y las recetas salieron riquísimas. Repetiría sin dudarlo.",
+    created_at: new Date("2026-11-20T12:30:00Z")
+  },
+  {
+    eventSlug: "cocina-sin-lactosa-desde-cero",
+    userEmail: "marta@allersafe.com",
+    rating: 3,
+    comment: "Aprendí bastante sobre etiquetado sin lactosa, pero echo en falta una lista de productos concretos para comprar en el supermercado.",
+    created_at: new Date("2026-11-18T18:20:00Z")
+  },
+  {
+    eventSlug: "cocina-sin-lactosa-desde-cero",
+    userEmail: "cliente@allersafe.com",
+    rating: 2,
+    comment: "La clase se quedó corta de tiempo y no pudimos hornear nada. Para ser un taller práctico, casi todo fue teoría.",
+    created_at: new Date("2026-11-17T11:10:00Z")
+  },
+  {
+    eventSlug: "taller-de-comida-para-bebes",
+    userEmail: "marta-rios@allersafe.com",
+    rating: 5,
+    comment: "Muy útil la introducción progresiva de alérgenos. Las papillas son sencillas y mi hija se las comió encantada.",
+    created_at: new Date("2026-11-21T08:45:00Z")
+  },
+  {
+    eventSlug: "taller-de-comida-para-bebes",
+    userEmail: "lucia-ferrer@allersafe.com",
+    rating: 3,
+    comment: "Las recetas para bebés están bien explicadas, aunque me gustaría que se profundizara más en las porciones según la edad.",
+    created_at: new Date("2026-11-19T13:25:00Z")
+  },
+  {
+    eventSlug: "taller-de-comida-para-bebes",
+    userEmail: "diego-navarro@allersafe.com",
+    rating: 2,
+    comment: "La documentación sobre primeros sólidos fue interesante, pero el aula se quedó pequeña y no veía bien las demostraciones.",
+    created_at: new Date("2026-11-16T17:00:00Z")
+  },
+  {
+    eventSlug: "reposteria-para-alergicos-a-frutos-secos",
+    userEmail: "chef@allersafe.com",
+    rating: 5,
+    comment: "Bizcochos y cremas sin frutos secos con riesgo de trazas cero. La explicación de los sustitutos fue excelente y todo salió perfecto.",
+    created_at: new Date("2026-11-21T14:10:00Z")
+  },
+  {
+    eventSlug: "reposteria-para-alergicos-a-frutos-secos",
+    userEmail: "marta@allersafe.com",
+    rating: 3,
+    comment: "Las galletas quedaron muy bien, pero el taller asumió que ya sabíamos manejar la mantequilla de semillas y yo iba perdida.",
+    created_at: new Date("2026-11-20T09:30:00Z")
+  },
+  {
+    eventSlug: "reposteria-para-alergicos-a-frutos-secos",
+    userEmail: "cliente@allersafe.com",
+    rating: 1,
+    comment: "Decepcionante: no trabajamos el tema de las trazas en profundidad y los ingredientes no estaban etiquetados en la mesa.",
+    created_at: new Date("2026-11-15T19:55:00Z")
+  },
+  {
+    eventSlug: "cocina-segura-sin-pescado",
+    userEmail: "elena-vidal@allersafe.com",
+    rating: 5,
+    comment: "Los sustitutos del pescado y del marisco funcionan mejor de lo que esperaba. Muy bien explicado el tema de la contaminación cruzada.",
+    created_at: new Date("2026-11-21T16:05:00Z")
+  },
+  {
+    eventSlug: "cocina-segura-sin-pescado",
+    userEmail: "diego-navarro@allersafe.com",
+    rating: 3,
+    comment: "Aprendí técnicas nuevas, aunque faltó tiempo para probar los sustitutos en casa durante la sesión.",
+    created_at: new Date("2026-11-19T10:50:00Z")
+  },
+  {
+    eventSlug: "cocina-segura-sin-pescado",
+    userEmail: "sara-puig@allersafe.com",
+    rating: 2,
+    comment: "Me gustó la teoría, pero la clase se centró demasiado en el marisco y casi no vimos alternativas para el pescado.",
+    created_at: new Date("2026-11-14T12:15:00Z")
+  },
+  {
+    eventSlug: "reposteria-vegana-sin-alergenos",
+    userEmail: "javier-ortega@allersafe.com",
+    rating: 5,
+    comment: "Dulces vegetales sin frutos secos, gluten ni lactosa y con un sabor increíble. La mejor clase de repostería vegana que he hecho.",
+    created_at: new Date("2026-11-22T09:20:00Z")
+  },
+  {
+    eventSlug: "reposteria-vegana-sin-alergenos",
+    userEmail: "elena-vidal@allersafe.com",
+    rating: 3,
+    comment: "Los ingredientes vegetales estuvieron muy bien seleccionados, pero las recetas eran algo básicas para el precio del taller.",
+    created_at: new Date("2026-11-20T15:35:00Z")
+  },
+  {
+    eventSlug: "reposteria-vegana-sin-alergenos",
+    userEmail: "marta-rios@allersafe.com",
+    rating: 2,
+    comment: "El resultado fue correcto, pero no se explicó cómo evitar la contaminación cruzada con el gluten en el horno compartido.",
+    created_at: new Date("2026-11-17T20:00:00Z")
+  },
+  {
+    eventSlug: "cocina-para-personas-con-diabetes",
+    userEmail: "cliente@allersafe.com",
+    rating: 5,
+    comment: "El conteo de hidratos y la lectura de etiquetas me han resultado clarísimos. Menús equilibrados y fáciles de aplicar cada día.",
+    created_at: new Date("2026-11-22T11:45:00Z")
+  },
+  {
+    eventSlug: "cocina-para-personas-con-diabetes",
+    userEmail: "marta@allersafe.com",
+    rating: 3,
+    comment: "La parte de etiquetado estuvo muy bien, aunque me habría gustado más tiempo para calcular las raciones de cada plato.",
+    created_at: new Date("2026-11-21T18:10:00Z")
+  },
+  {
+    eventSlug: "cocina-para-personas-con-diabetes",
+    userEmail: "javier-ortega@allersafe.com",
+    rating: 2,
+    comment: "Buenos ejemplos de menús, pero las tablas de hidratos pasaron muy rápido y no nos dieron material para llevárnoslo.",
+    created_at: new Date("2026-11-16T13:40:00Z")
+  },
+  {
+    eventSlug: "batch-cooking-infantil-sin-gluten-ni-lactosa",
+    userEmail: "sara-puig@allersafe.com",
+    rating: 5,
+    comment: "Organizamos la comida infantil de toda la semana sin gluten ni lactosa. Las recetas son prácticas y el etiquetado de los tuppers, una idea genial.",
+    created_at: new Date("2026-11-23T10:00:00Z")
+  },
+  {
+    eventSlug: "batch-cooking-infantil-sin-gluten-ni-lactosa",
+    userEmail: "elena-vidal@allersafe.com",
+    rating: 3,
+    comment: "El batch cooking quedó claro, pero echo en falta ideas para variar más los menús infantiles de una semana a otra.",
+    created_at: new Date("2026-11-21T19:25:00Z")
+  },
+  {
+    eventSlug: "batch-cooking-infantil-sin-gluten-ni-lactosa",
+    userEmail: "lucia-ferrer@allersafe.com",
+    rating: 2,
+    comment: "Preparar comidas sin gluten ni lactosa estuvo bien, pero el precio me pareció alto para solo tres recetas y dos horas de clase.",
+    created_at: new Date("2026-11-18T08:55:00Z")
+  }
+];
+
 async function upsertUser(data, passwordHash) {
   const { profile, ...userData } = data;
 
@@ -791,13 +964,21 @@ async function upsertLocation(data) {
 async function seed() {
   try {
     await connectDB();
-    await Promise.all([User.init(), Profile.init(), RevokedToken.init()]);
+    await Promise.all([
+      User.init(),
+      Profile.init(),
+      AccessToken.init(),
+      RefreshToken.init(),
+      Comment.init()
+    ]);
 
+    await Comment.deleteMany({});
     await EventImage.deleteMany({});
     await Departure.deleteMany({});
     await Event.deleteMany({});
     await Host.deleteMany({});
-    await RevokedToken.deleteMany({});
+    await AccessToken.deleteMany({});
+    await RefreshToken.deleteMany({});
     await User.updateMany({}, { $set: { host_id: null } });
 
     const passwordHash = await hashPassword(DEFAULT_PASSWORD);
@@ -865,6 +1046,22 @@ async function seed() {
       })
     );
 
+    const eventBySlug = new Map(events.map((event) => [event.slug, event._id]));
+
+    const comments = seedComments.map(({ eventSlug, userEmail, ...comment }) => {
+      const eventId = eventBySlug.get(eventSlug);
+      const user = userByEmail.get(userEmail);
+
+      if (!eventId) throw new Error(`Evento no encontrado: ${eventSlug}`);
+      if (!user) throw new Error(`Usuario no encontrado: ${userEmail}`);
+
+      return {
+        ...comment,
+        event_id: eventId,
+        user_id: user._id
+      };
+    });
+
     const images = [];
     const departures = [];
 
@@ -903,12 +1100,13 @@ async function seed() {
 
     await EventImage.insertMany(images);
     await Departure.insertMany(departures);
+    await Comment.insertMany(comments);
 
     console.log(
       `Seed completado: ${events.length} eventos, ${images.length} imágenes, ` +
-        `${departures.length} salidas, ${categories.length} categorías, ` +
-        `${seedUsers.length} usuarios, ${hosts.length} anfitriones y ` +
-        `${locations.length} ubicaciones.`
+        `${departures.length} salidas, ${comments.length} comentarios, ` +
+        `${categories.length} categorías, ${seedUsers.length} usuarios, ` +
+        `${hosts.length} anfitriones y ${locations.length} ubicaciones.`
     );
     console.log(`Contraseña de los usuarios de prueba: ${DEFAULT_PASSWORD}`);
   } catch (error) {

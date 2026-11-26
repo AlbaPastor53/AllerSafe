@@ -90,9 +90,9 @@ function signRefreshToken({ userId, role, tokenVersion = 0 }) {
   );
 }
 
-function verifyWithSecret(token, secret, expiredMessage) {
+function verifyWithSecret(token, secret, expiredMessage, options = {}) {
   try {
-    return jwt.verify(token, secret);
+    return jwt.verify(token, secret, options);
   } catch (error) {
     if (error.name === "TokenExpiredError") {
       throw new AppError(expiredMessage, 401, "TOKEN_EXPIRED");
@@ -102,8 +102,15 @@ function verifyWithSecret(token, secret, expiredMessage) {
   }
 }
 
-function verifyAccessToken(token) {
-  return verifyWithSecret(token, getAccessTokenSecret(), "La sesión ha caducado.");
+// `ignoreExpiration` se usa solo en /auth/renew: la firma sigue siendo
+// obligatoria, pero se permite rotar un access recién caducado.
+function verifyAccessToken(token, options = {}) {
+  return verifyWithSecret(
+    token,
+    getAccessTokenSecret(),
+    "La sesión ha caducado.",
+    options
+  );
 }
 
 function verifyRefreshToken(token) {

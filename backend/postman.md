@@ -147,8 +147,9 @@ Requiere la cookie establecida durante el login y devuelve el usuario actual.
 
 **POST** `/auth/logout`
 
-Requiere la cookie de sesión. Devuelve `204`, borra la cookie y registra
-`sha256(JWT)` en la blacklist. El token no puede reutilizarse.
+Requiere la cookie de sesión. Devuelve `200` con un mensaje, borra las cookies
+y marca los tokens como `revoked: true` en la base de datos, por lo que no
+pueden reutilizarse.
 
 ### Perfil
 

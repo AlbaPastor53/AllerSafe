@@ -72,8 +72,9 @@ debe guardarse en `localStorage`.
 valida los permisos en cada petición; el rol devuelto al frontend solo se usa
 para mostrar la interfaz.
 
-El servidor guarda en la blacklist únicamente `sha256(JWT)`, nunca el token
-completo. Los tokens revocados no se pueden reutilizar aunque no hayan
-expirado.
+El servidor registra cada token en `accesstokens` o `refreshtokens` guardando
+únicamente `sha256(JWT)`, nunca el token completo. El campo `revoked` permite
+revocar un token sin esperar a que expire; al renovar la sesión se revoca el
+access token anterior, de modo que solo queda uno vigente.
 
 La documentación completa está en `postman.md`.

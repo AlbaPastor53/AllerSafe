@@ -74,6 +74,20 @@ class AuthController {
     }
   }
 
+  async renew(req, res, next) {
+    try {
+      const result = await authService.renewAccess({
+        userId: req.user.id,
+        tokenHash: req.auth.tokenHash
+      });
+
+      res.cookie(ACCESS_TOKEN_COOKIE, result.token, getAccessTokenCookieOptions());
+      res.json({ success: true });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async logout(req, res, next) {
     try {
       const isClient = req.user.role === "Client";
@@ -81,7 +95,6 @@ class AuthController {
       await authService.logout({
         tokenHash: req.auth.tokenHash,
         userId: req.user.id,
-        exp: req.auth.exp,
         refreshToken: isClient ? extractRefreshToken(req) : null
       });
 

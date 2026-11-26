@@ -13,7 +13,14 @@ import {
     RouterLink
 } from '@angular/router';
 
+import { firstValueFrom } from 'rxjs';
+
 import Swal from 'sweetalert2';
+
+import {
+    SentimentAnalysis,
+    SentimentLabel
+} from '../../../../core/models/comment.model';
 
 import { Event, STATUS_LABELS, categoryNames } from '../../../../core/models/event.model';
 import { EventsStore } from '../../../../core/stores/events.store';
@@ -35,6 +42,8 @@ import {
 } from '../../../../shared/utils/error.util';
 
 import { AuthService } from '../../../../core/services/auth.service';
+
+import { CommentsService } from '../../../../core/services/comments.service';
 
 
 @Component({
@@ -91,6 +100,31 @@ import { AuthService } from '../../../../core/services/auth.service';
                     <span class="truncate font-medium text-[#F5F0E6]">
                         {{event()!.name}}
                     </span>
+
+                    @if (isAdmin() && sentimentLoaded()) {
+                        @if (sentiment(); as s) {
+                            @if (s.enoughData && s.sentiment) {
+                                <span
+                                    class="ml-auto shrink-0 rounded-full px-3 py-1 text-xs font-medium"
+                                    [class]="sentimentBadgeClass(s.sentiment)"
+                                >
+                                    {{s.sentiment}} · {{s.average}}/5
+                                </span>
+                            } @else {
+                                <span
+                                    class="ml-auto shrink-0 rounded-full bg-[#3A291D] px-3 py-1 text-xs font-medium text-[#E0BD78]"
+                                >
+                                    Sin análisis
+                                </span>
+                            }
+                        } @else {
+                            <span
+                                class="ml-auto shrink-0 rounded-full bg-[#3A291D] px-3 py-1 text-xs font-medium text-[#E0BD78]"
+                            >
+                                Sin análisis
+                            </span>
+                        }
+                    }
 
                 </nav>
 
@@ -315,6 +349,8 @@ export class EventDetail implements OnInit {
 
     private readonly auth = inject(AuthService);
 
+    private readonly commentsService = inject(CommentsService);
+
     protected readonly isAdmin = this.auth.isAdmin;
 
 
@@ -325,6 +361,10 @@ export class EventDetail implements OnInit {
     protected readonly notFound = signal(false);
 
     protected readonly loadError = signal<string | null>(null);
+
+    protected readonly sentiment = signal<SentimentAnalysis | null>(null);
+
+    protected readonly sentimentLoaded = signal(false);
 
 
     protected readonly eventImages = computed(() => this.event()?.images ?? []);
@@ -384,6 +424,14 @@ export class EventDetail implements OnInit {
     );
 
 
+    protected sentimentBadgeClass(label: SentimentLabel | null): string {
+        if (label === 'Positivo') return 'bg-[#2E3A22] text-[#D6E0B8]';
+        if (label === 'Negativo') return 'bg-[#3A211A] text-[#F0BDB2]';
+
+        return 'bg-[#3A291D] text-[#E0BD78]';
+    }
+
+
     private id = '';
 
 
@@ -399,6 +447,8 @@ export class EventDetail implements OnInit {
     protected reload(): void {
         this.loadError.set(null);
         this.notFound.set(false);
+        this.sentiment.set(null);
+        this.sentimentLoaded.set(false);
 
         if (!isValidObjectId(this.id)) {
             this.notFound.set(true);
@@ -417,6 +467,8 @@ export class EventDetail implements OnInit {
 
             this.event.set(e);
 
+            void this.loadSentiment();
+
         } catch (error) {
             if (isHttpError(error) && error.status === 404) {
                 this.notFound.set(true);
@@ -428,6 +480,24 @@ export class EventDetail implements OnInit {
 
         } finally {
             this.loading.set(false);
+        }
+    }
+
+
+    private async loadSentiment(): Promise<void> {
+        const eventId = this.id;
+
+        this.sentimentLoaded.set(true);
+
+        try {
+            const data = await firstValueFrom(
+                this.commentsService.sentiment(eventId)
+            );
+
+            if (this.id === eventId) this.sentiment.set(data);
+
+        } catch {
+            if (this.id === eventId) this.sentiment.set(null);
         }
     }
 

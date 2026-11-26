@@ -1,15 +1,17 @@
-import { HttpErrorResponse } from '@angular/common/http';
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
   Observable,
+  Subscription,
   catchError,
-  firstValueFrom,
   map,
-  of,
+  switchMap,
+  takeWhile,
   tap,
-  throwError
+  throwError,
+  timer
 } from 'rxjs';
 import { ApiService } from './api.service';
+import { AuthStore } from '../stores/auth.store';
 import { CategoriesStore } from '../stores/categories.store';
 import { DeparturesStore } from '../stores/departures.store';
 import { EventImagesStore } from '../stores/event-images.store';
@@ -18,16 +20,19 @@ import { HostsStore } from '../stores/hosts.store';
 import { LocationsStore } from '../stores/locations.store';
 import { UsersStore } from '../stores/users.store';
 import {
-  AuthMeResponse,
   AuthUser,
   LoginCredentials,
   LoginData,
   LoginResponse
 } from '../models/auth.model';
 
+// El access dura 1 h; se renueva 10 min antes para no perder la ventana.
+const ADMIN_RENEW_INTERVAL_MS = 50 * 60 * 1000;
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly api = inject(ApiService);
+  private readonly authStore = inject(AuthStore);
   private readonly categoriesStore = inject(CategoriesStore);
   private readonly departuresStore = inject(DeparturesStore);
   private readonly eventImagesStore = inject(EventImagesStore);
@@ -35,59 +40,17 @@ export class AuthService {
   private readonly hostsStore = inject(HostsStore);
   private readonly locationsStore = inject(LocationsStore);
   private readonly usersStore = inject(UsersStore);
+  private renewSubscription?: Subscription;
+  private renewalUserId?: string;
 
-  private readonly _user = signal<AuthUser | null>(null);
-  private initialized = false;
-  private initialization: Promise<void> | null = null;
+  readonly user = this.authStore.user;
 
-  readonly user = this._user.asReadonly();
+  readonly isAuthenticated = this.authStore.isAuthenticated;
 
-  readonly isAuthenticated = computed(() => this._user() !== null);
-
-  readonly isAdmin = computed(() => this._user()?.role === 'Admin');
-
-  constructor() {
-    try {
-      localStorage.removeItem('allersafe.auth.token');
-      localStorage.removeItem('allersafe.auth.user');
-    } catch (error) {
-      console.warn(
-        'No se pudo limpiar la sesión anterior del almacenamiento local.',
-        error
-      );
-    }
-  }
+  readonly isAdmin = this.authStore.isAdmin;
 
   initialize(): Promise<void> {
-    if (this.initialized) return Promise.resolve();
-    if (this.initialization) return this.initialization;
-
-    this.initialization = firstValueFrom(
-      this.api.get<AuthMeResponse>('auth/me').pipe(
-        map((response) => {
-          if (!response?.data?.user) {
-            throw new Error('INVALID_RESPONSE');
-          }
-          this._user.set(response.data.user);
-        }),
-        catchError((error: unknown) => {
-          if (error instanceof HttpErrorResponse && error.status === 401) {
-            this._user.set(null);
-            return of(undefined);
-          }
-          return throwError(() => error);
-        })
-      )
-    )
-      .then(() => {
-        this.initialized = true;
-      })
-      .catch((error: unknown) => {
-        this.initialization = null;
-        throw error;
-      });
-
-    return this.initialization;
+    return this.authStore.ready;
   }
 
   login(credentials: LoginCredentials): Observable<AuthUser> {
@@ -96,6 +59,18 @@ export class AuthService {
       tap(({ user }) => this.setSession(user)),
       map(({ user }) => user)
     );
+  }
+
+  refresh(): Observable<AuthUser> {
+    return this.api.post<LoginResponse>('auth/refresh', {}).pipe(
+      map((response) => this.extractLoginData(response).user),
+      tap((user) => this.setSession(user))
+    );
+  }
+
+  // El admin no tiene refresh token: /auth/renew solo rota la cookie del access.
+  renew(): Observable<void> {
+    return this.api.post<void>('auth/renew', {});
   }
 
   logout(): Observable<void> {
@@ -119,8 +94,10 @@ export class AuthService {
   }
 
   clearSession(): void {
-    this._user.set(null);
-    this.initialized = true;
+    this.renewSubscription?.unsubscribe();
+    this.renewSubscription = undefined;
+    this.renewalUserId = undefined;
+    this.authStore.clear();
     this.categoriesStore.reset();
     this.departuresStore.reset();
     this.eventImagesStore.reset();
@@ -131,7 +108,37 @@ export class AuthService {
   }
 
   private setSession(user: AuthUser): void {
-    this._user.set(user);
-    this.initialized = true;
+    this.authStore.setUser(user);
+    this.syncRenewalTimer();
+  }
+
+  // El Admin no tiene refresh token: se le renueva el access antes de que caduque.
+  // `me()` se llama en cada navegación, así que el temporizador no se reinicia
+  // mientras siga siendo la misma sesión.
+  syncRenewalTimer(): void {
+    const user = this.authStore.user();
+
+    if (this.renewSubscription && this.renewalUserId === user?._id) {
+      return;
+    }
+
+    this.renewSubscription?.unsubscribe();
+    this.renewSubscription = undefined;
+    this.renewalUserId = undefined;
+
+    if (!user || user.role !== 'Admin') {
+      return;
+    }
+
+    this.renewalUserId = user._id;
+    this.renewSubscription = timer(ADMIN_RENEW_INTERVAL_MS, ADMIN_RENEW_INTERVAL_MS)
+      .pipe(
+        takeWhile(
+          () => this.authStore.isAuthenticated() && this.authStore.isAdmin()
+        ),
+        switchMap(() => this.renew())
+      )
+      // El interceptor gestiona cualquier 401 de /auth/renew (sesión -> /login).
+      .subscribe({ error: () => undefined });
   }
 }

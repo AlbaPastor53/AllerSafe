@@ -61,6 +61,20 @@ class DepartureRepository {
       { new: true, runValidators: true }
     );
   }
+
+  async reserveSpot(id) {
+    return Departure.findOneAndUpdate(
+      {
+        _id: id,
+        deleted_at: null,
+        is_active: true,
+        status: "scheduled",
+        $expr: { $lt: ["$booked_participants", "$capacity"] }
+      },
+      { $inc: { booked_participants: 1 } },
+      { new: true, runValidators: true }
+    );
+  }
 }
 
 module.exports = new DepartureRepository();

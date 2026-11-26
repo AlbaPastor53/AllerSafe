@@ -14,6 +14,8 @@ const eventImageRoutes = require("./routes/eventImage.routes");
 const hostRoutes = require("./routes/host.routes");
 const departureRoutes = require("./routes/departure.routes");
 const shopRoutes = require("./routes/shop.routes");
+const cartRoutes = require("./routes/cart.routes");
+const commentRoutes = require("./routes/comment.routes");
 const errorHandler = require("./middlewares/errorHandler");
 const { authentication } = require("./middlewares/authentication");
 const { admin } = require("./middlewares/admin");
@@ -50,6 +52,7 @@ app.get("/api/health", (req, res) => {
 });
 
 app.use("/api/profile", authentication, profileRoutes);
+app.use("/api/cart", authentication, cartRoutes);
 app.use("/api/users", authentication, admin, userRoutes);
 app.use("/api/events", adminOnlyMutations, eventRoutes);
 app.use("/api/categories", adminOnlyMutations, categoryRoutes);
@@ -58,6 +61,7 @@ app.use("/api/event-images", adminOnlyMutations, eventImageRoutes);
 app.use("/api/hosts", adminOnlyMutations, hostRoutes);
 app.use("/api/departures", adminOnlyMutations, departureRoutes);
 app.use("/api/shop", shopRoutes);
+app.use("/api/comments", commentRoutes);
 
 app.use((req, res) => {
   res.status(404).json({

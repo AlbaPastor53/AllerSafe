@@ -5,6 +5,7 @@ const morgan = require("morgan");
 const corsMiddleware = require("./config/cors");
 const chatbotRoutes = require("./routes/chatbot.routes");
 const faqRoutes = require("./routes/faq.routes");
+const reviewRoutes = require("./routes/review.routes");
 const errorHandler = require("./middlewares/errorHandler");
 
 const app = express();
@@ -16,6 +17,7 @@ app.use(morgan("dev"));
 
 app.use("/api/chatbot", chatbotRoutes);
 app.use("/api/faq", faqRoutes);
+app.use("/api/reviews", reviewRoutes);
 
 app.get("/api/health", (req, res) => {
   res.json({

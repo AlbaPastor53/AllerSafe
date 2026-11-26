@@ -39,6 +39,7 @@ export interface EventSummary {
   time?: string;
   price?: number;
   capacity?: number;
+  images?: EventImage[];
 }
 
 export interface EventPayload {
